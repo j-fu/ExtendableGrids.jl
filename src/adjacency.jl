@@ -1,3 +1,4 @@
+
 ##########################################################################################################
 """
    Adjacency interface.
@@ -39,16 +40,20 @@
    show(a): print stuff
 """
 
-struct VariableColumnAdjacency{T}
+struct VariableTargetAdjacency{T}
     colentries::Vector{T}
     colstart::Vector{T}
 end
 
-VariableColumnAdjacency(t::Type{T}) where T=VariableColumnAdjacency{T}(Vector{T}(undef,0),[one(T)])
-VariableColumnAdjacency()=VariableColumnAdjacency(Int64)
-VariableColumnAdjacency(m::Matrix{T}) where T=VariableColumnAdjacency{T}(vec(m),collect(1:size(m,1):size(m,1)*size(m,2)+1))
+function Base.:(==)(a::VariableTargetAdjacency{Ta}, b::VariableTargetAdjacency{Tb}) where {Ta,Tb}
+    Ta==Tb && a.colentries==b.colentries &&  a.colstart==b.colstart
+end             
 
-function Base.show(adj::VariableColumnAdjacency)
+VariableTargetAdjacency(t::Type{T}) where T=VariableTargetAdjacency{T}(Vector{T}(undef,0),[one(T)])
+VariableTargetAdjacency()=VariableTargetAdjacency(Int64)
+VariableTargetAdjacency(m::Matrix{T}) where T=VariableTargetAdjacency{T}(vec(m),collect(1:size(m,1):size(m,1)*size(m,2)+1))
+
+function Base.show(io::IO,adj::VariableTargetAdjacency)
     for isource=1:nsources(adj)
         for itarget=1:ntargets(adj,isource)
             print(adj[itarget,isource], " ")
@@ -57,13 +62,13 @@ function Base.show(adj::VariableColumnAdjacency)
     end
 end
 
-Base.getindex(adj::VariableColumnAdjacency,i,isource)=adj.colentries[adj.colstart[isource]+i-1]
-ntargets(adj::VariableColumnAdjacency,isource)=adj.colstart[isource+1]-adj.colstart[isource]
-nsources(adj::VariableColumnAdjacency)=length(adj.colstart)-1
-ntargets(adj::VariableColumnAdjacency)=maximum(adj.colentries)
-nlinks(adj::VariableColumnAdjacency)=length(adj.colentries)
+Base.getindex(adj::VariableTargetAdjacency,i,isource)=adj.colentries[adj.colstart[isource]+i-1]
+ntargets(adj::VariableTargetAdjacency,isource)=adj.colstart[isource+1]-adj.colstart[isource]
+nsources(adj::VariableTargetAdjacency)=length(adj.colstart)-1
+ntargets(adj::VariableTargetAdjacency)=maximum(adj.colentries)
+nlinks(adj::VariableTargetAdjacency)=length(adj.colentries)
 
-function append!(adj::VariableColumnAdjacency,column)
+function Base.append!(adj::VariableTargetAdjacency,column)
     for i=1:length(column)
         push!(adj.colentries,column[i])
     end
@@ -76,12 +81,12 @@ nsources(adj::Matrix)=size(adj)[2]
 ntargets(adj::Matrix)=maximum(vec(adj))
 nlinks(adj::Matrix)=length(adj)
 
-const Adjacency{T}=Union{Matrix{T},VariableColumnAdjacency{T}}
+const Adjacency{T}=Union{Matrix{T},VariableTargetAdjacency{T}}
 
 
 function atranspose(adj::Adjacency{T}) where T
     # 0th pass: calculate number of rows !!! todo: how to call ?
-    t_adj=VariableColumnAdjacency(zeros(T,nlinks(adj)),zeros(T,ntargets(adj)+1))
+    t_adj=VariableTargetAdjacency(zeros(T,nlinks(adj)),zeros(T,ntargets(adj)+1))
     
     # 1st pass: calculate new column sizes, store them in t_adj.colstart
     for isource=1:nsources(adj)
