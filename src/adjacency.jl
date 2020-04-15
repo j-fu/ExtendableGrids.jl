@@ -12,24 +12,24 @@
    
    For the general case, it is sufficient to only store the column start
    indieces and the column entries (row numbers), and to implicitely assume
-   that nonzero entries are 1.
+   that nonzero entries are 1. This kind of storage is realised in a
+   VariableTargetAdjacency.
 
-   Im many cases, this can be compressed even more, if each column has the
+   In many cases, this can be compressed even more, if each column has the
    same length. In that case, a Matrix is sufficient to store the data.
    This is the usual base for implementing FEM/FVM assembly, and the interface
    for the general case should be similar.
 
    From these ideas we develop the following interface for an adjacency a.
 
-   In order to avoid name confusion,
-   we introduce the following notation which should be consistent with the use
-   in assembly loops
+   In order to avoid name confusion, we introduce the following notation which 
+   should be consistent with the use in assembly loops.
 
    source:  source of adjacency link
    target:  target of adjacency link
  
    E.g. the cell-node adjacency for FEM assembly links  a number of
-   cells with a collection of nodes.  The cells are the surces,
+   cells with a collection of nodes.  The cells are the sources,
    and the targets are the nodes. 
 
    getindex(a,i,isource) aka a[i,isource]: return i-th target of  source j
@@ -38,8 +38,13 @@
    ntargets(a,isource): number of targets for source given by isource
    nlinks(a): number of links aka nonzero entries of adjacency matrix
    show(a): print stuff
-"""
 
+   Further API ideas:
+   - 
+   - Convert between Matrix and Variable target stuff using 0 entries as "padding"
+
+
+"""
 struct VariableTargetAdjacency{T}
     colentries::Vector{T}
     colstart::Vector{T}
@@ -49,10 +54,25 @@ function Base.:(==)(a::VariableTargetAdjacency{Ta}, b::VariableTargetAdjacency{T
     Ta==Tb && a.colentries==b.colentries &&  a.colstart==b.colstart
 end             
 
+"""
+Create an empty VariableTargetAdjacency
+"""
 VariableTargetAdjacency(t::Type{T}) where T=VariableTargetAdjacency{T}(Vector{T}(undef,0),[one(T)])
+
+"""
+Create an empty VariableTargetAdjacency with default type
+"""
 VariableTargetAdjacency()=VariableTargetAdjacency(Int64)
+
+
+"""
+    Create a VariableTargetAdjacency from Matrix
+"""
 VariableTargetAdjacency(m::Matrix{T}) where T=VariableTargetAdjacency{T}(vec(m),collect(1:size(m,1):size(m,1)*size(m,2)+1))
 
+"""
+    Show adjacency (in trasposed form; preliminary)
+"""
 function Base.show(io::IO,adj::VariableTargetAdjacency)
     for isource=1:nsources(adj)
         for itarget=1:ntargets(adj,isource)
@@ -62,12 +82,35 @@ function Base.show(io::IO,adj::VariableTargetAdjacency)
     end
 end
 
+"""
+    Access adjacency as if it is a 2D Array
+"""
 Base.getindex(adj::VariableTargetAdjacency,i,isource)=adj.colentries[adj.colstart[isource]+i-1]
+
+"""
+    Number of targets for given source
+"""
 ntargets(adj::VariableTargetAdjacency,isource)=adj.colstart[isource+1]-adj.colstart[isource]
+
+"""
+    Number of sources in adjacency
+"""
 nsources(adj::VariableTargetAdjacency)=length(adj.colstart)-1
+
+"""
+    Number of targeta
+"""
 ntargets(adj::VariableTargetAdjacency)=maximum(adj.colentries)
+
+"""
+    Number of links
+"""
 nlinks(adj::VariableTargetAdjacency)=length(adj.colentries)
 
+
+"""
+    Append a column to adjacency.
+"""
 function Base.append!(adj::VariableTargetAdjacency,column)
     for i=1:length(column)
         push!(adj.colentries,column[i])
@@ -75,13 +118,32 @@ function Base.append!(adj::VariableTargetAdjacency,column)
     push!(adj.colstart,length(adj.colentries)+1)
 end
 
+"""
+    Use Matrix to store fixed target adjacency
+"""
+const FixedTargetAdjacency=Matrix
 
-ntargets(adj::Matrix,isource)=size(adj)[1]
-nsources(adj::Matrix)=size(adj)[2]
-ntargets(adj::Matrix)=maximum(vec(adj))
-nlinks(adj::Matrix)=length(adj)
+"""
+    Number of targets per source if adjacency is a matrix
+"""
+ntargets(adj::FixedTargetAdjacency,isource)=size(adj)[1]
 
-const Adjacency{T}=Union{Matrix{T},VariableTargetAdjacency{T}}
+"""
+    Number of sources in adjacency
+"""
+nsources(adj::FixedTargetAdjacency)=size(adj)[2]
+
+"""
+    Overall number of targets 
+"""
+ntargets(adj::FixedTargetAdjacency)=maximum(vec(adj))
+
+"""
+    Number of entries
+"""
+nlinks(adj::FixedTargetAdjacency)=length(adj)
+
+const Adjacency{T}=Union{FixedTargetAdjacency{T},VariableTargetAdjacency{T}}
 
 
 function atranspose(adj::Adjacency{T}) where T
