@@ -87,6 +87,8 @@ end
 """
 Base.getindex(adj::VariableTargetAdjacency,i,isource)=adj.colentries[adj.colstart[isource]+i-1]
 
+Base.getindex(adj::VariableTargetAdjacency,::Colon,isource)=adj.colentries[adj.colstart[isource]:adj.colstart[isource+1]-1]
+
 """
     Number of targets for given source
 """
@@ -145,6 +147,8 @@ nlinks(adj::FixedTargetAdjacency)=length(adj)
 
 const Adjacency{T}=Union{FixedTargetAdjacency{T},VariableTargetAdjacency{T}}
 
+Adjacency{T}(a::FixedTargetAdjacency{T}) where T =a
+Adjacency{T}(a::VariableTargetAdjacency{T}) where T =a
 
 function atranspose(adj::Adjacency{T}) where T
     # 0th pass: calculate number of rows !!! todo: how to call ?
