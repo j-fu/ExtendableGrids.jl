@@ -57,6 +57,7 @@ function plot(grid::ExtendableGrid; Plotter=nothing)
     if ispyplot(Plotter)
         Plotter.clf()
         ax=Plotter.matplotlib.pyplot.gca()
+        ax.set_aspect(1)
         tridat=tridata(grid)
         cellregions=grid[CellRegions]
         coord=grid[Coordinates]
@@ -66,9 +67,10 @@ function plot(grid::ExtendableGrid; Plotter=nothing)
         Plotter.triplot(tridat...,color="k",linewidth=0.5)
         
         # see https://gist.github.com/gizmaa/7214002
-        # xc=[coord[bfacenodes[1,i]] for i=1:size(bfacenodes,2)]
-        # yc=[coord[bfacenodes[2,i]] for i=1:size(bfacenodes,2)]
-        # rgb=[frgb(Plotter,bfaceregions[i],length(bfaceregions)) for i=1:length(bfaceregions)]
-        # ax.add_collection(Plotter.matplotlib.collections.LineCollection(collect(zip(xc,yc)),colors=rgb,linewidth=3))
+        xc=[coord[:,bfacenodes[1,i]] for i=1:size(bfacenodes,2)]
+        yc=[coord[:,bfacenodes[2,i]] for i=1:size(bfacenodes,2)]
+        rgb=[frgb(Plotter,bfaceregions[i],maximum(bfaceregions)) for i=1:length(bfaceregions)]
+        ax.add_collection(Plotter.matplotlib.collections.LineCollection(collect(zip(xc,yc)),colors=rgb,linewidth=3))
     end
 end
+
