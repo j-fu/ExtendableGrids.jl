@@ -31,9 +31,9 @@ function generate(flags::String, input::Triangulate.TriangulateIO)
     grid=ExtendableGrid{Float64,Int32}()
     grid[Coordinates]=pointlist
     grid[CellRegions]=cellregions
-    grid[CellTypes]=VectorOfConstants(Simplex2D,size(cellregions,2))
+    grid[CellTypes]=VectorOfConstants(Simplex2D,length(cellregions))
     grid[BFaceRegions]=segmentmarkerlist
-    grid[BFaceTypes]=VectorOfConstants(Simplex1D,size(cellregions,2))
+    grid[BFaceTypes]=VectorOfConstants(Simplex1D,length(cellregions))
     grid[CellNodes]=trianglelist
     grid[BFaceNodes]=segmentlist
     return grid
