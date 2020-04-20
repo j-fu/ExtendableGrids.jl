@@ -30,7 +30,7 @@ abstract type AbstractElementTypes <: AbstractGridComponent end
 abstract type AbstractElementRegions <: AbstractGridComponent end
 
 """
-Basic Grid components with classification
+Basic Grid components with classification via intermediate types
 """
 abstract type Coordinates <: AbstractGridArray2D end
 
@@ -48,15 +48,18 @@ abstract type BFaceRegions <: AbstractElementRegions end
 Grid type wrapping Dict
 """
 mutable struct ExtendableGrid{Tc,Ti}
-    components::Dict{DataType,Any}
-    ExtendableGrid{Tc,Ti}() where{Tc,Ti} =new(Dict{AbstractGridComponent,Any}())
+    components::Dict{Type{<:AbstractGridComponent},Any}
+    ExtendableGrid{Tc,Ti}() where{Tc,Ti} =new(Dict{Type{<:AbstractGridComponent},Any}())
 end
 
 """
 Default veryform method.
 
 "veryform"  means "verify and/or transform"  and is called to check
-and possibly transform components to be added to the grid
+and possibly transform components to be added to the grid.
+
+
+The default method just passes data through.
 """
 veryform(grid::ExtendableGrid,v,::Type{<:AbstractGridComponent})=v
 
@@ -80,11 +83,11 @@ Base.get!(grid::ExtendableGrid,T::Type{<:AbstractGridComponent})= get!( ()->very
 
 
 """
-"Hook" for method instantiating lazy components. 
-We need to have at least one method here to define a function which then can 
-get more user-defined methodsa
+"Hook" for methods instantiating lazy components. 
+See https://white.ucc.asn.au/2020/04/19/Julia-Antipatterns.html
 """
-instantiate(grid, ::Type{T}) where T = nothing
+function instantiate end
+
 
 """
 Generic method for obtaining grid component.
@@ -106,14 +109,14 @@ function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridAdjacen
 end
 
 """
-Type specific method to obtain grid vector
+Type specific method to obtain 2D array from grid
 """
 function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{AbstractGridArray2D})::Array{Tc,2} where{Tc,Ti}
     get!(grid,T)
 end
 
 """
-Type specific method to obtain grid vector
+Type specific method to obtain 1D array from grid
 """
 function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{AbstractGridArray1D})::Array{Tc,1} where{Tc,Ti}
     get!(grid,T)

@@ -8,10 +8,8 @@ using XGrid
 # Introduce an abstract type denoting the component
 abstract type NodeCells <: AbstractGridAdjacency end
 
-# write a prepare method which constructs the the component is not available
-function XGrid.instantiate(grid, ::Type{NodeCells})
-    atranspose(grid[CellNodes])
-end
+# Write an instantiate method which constructs the component if it is not available
+XGrid.instantiate(grid, ::Type{NodeCells})=atranspose(grid[CellNodes])
 
 function test_create_circle(;nref=5)
     nrad=10*2^nref
