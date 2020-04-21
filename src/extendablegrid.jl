@@ -139,7 +139,7 @@ end
 """
 Type specific method to obtain  element type
 """
-function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractElementTypes})::ElementInfo{AbstractElementType} where{Tc,Ti}
+function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractElementTypes})::ElementInfo{DataType} where{Tc,Ti}
     get!(grid,T)
 end
 
