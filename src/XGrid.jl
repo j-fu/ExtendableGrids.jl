@@ -1,9 +1,10 @@
 module XGrid
 # -> ExtendableGrids
 using Triangulate
+using DocStringExtensions
 
 include("adjacency.jl")
-export atranspose,ntargets,nsources,nlinks,append!
+export atranspose,num_targets,num_sources,num_links,append!
 export Adjacency,VariableTargetAdjacency,FixedTargetAdjacency
 
 include("vectorofconstants.jl")

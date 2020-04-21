@@ -71,8 +71,8 @@ end
 
 function sum_adj(a,n)
     sum=0
-    for isource=1:nsources(a)
-        for itarget=1:ntargets(a,isource)
+    for isource=1:num_sources(a)
+        for itarget=1:num_targets(a,isource)
             sum+=a[itarget,isource]
         end
     end
@@ -81,11 +81,11 @@ end
 
 function test_performance(grid)
     cellnodes=grid[CellNodes]
-    n=nsources(cellnodes)
+    n=num_sources(cellnodes)
     @time begin
         sum=0
-        for isource=1:nsources(cellnodes)
-            for itarget=1:ntargets(cellnodes,isource)
+        for isource=1:num_sources(cellnodes)
+            for itarget=1:num_targets(cellnodes,isource)
                 sum+=cellnodes[itarget,isource]
             end
         end
@@ -95,5 +95,30 @@ function test_performance(grid)
     @time sum_adj(vadj,n)
     matrix=Matrix(cellnodes)
     @time sum_adj(matrix,n)
+    nothing
+end
+
+
+function test_performance2(grid)
+    sum=0
+    @time begin
+        sum=0
+        for isource=1:num_sources(grid[CellNodes])
+            for itarget=1:num_targets(grid[CellNodes],isource)
+                sum+=grid[CellNodes][itarget,isource]
+            end
+        end
+    end
+    @show sum
+    cellnodes=grid[CellNodes]
+    @time begin
+        sum=0
+        for isource=1:num_sources(cellnodes)
+            for itarget=1:num_targets(cellnodes,isource)
+                sum+=cellnodes[itarget,isource]
+            end
+        end
+    end
+    @show sum
     nothing
 end

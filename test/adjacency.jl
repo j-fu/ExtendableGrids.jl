@@ -49,8 +49,8 @@ end
 function sum_adj(a)
     sum=0
     for irun=1:100
-        for isource::Int64=1:nsources(a)
-            for itarget=1:ntargets(a,isource)
+        for isource::Int64=1:num_sources(a)
+            for itarget=1:num_targets(a,isource)
                 sum+=a[itarget,isource]
             end
         end
@@ -78,8 +78,8 @@ function test_adj_performance(n=100_000)
     @time begin
         for irun=1:100
             sum=0
-            for isource=1:nsources(matrix)
-                for itarget=1:ntargets(matrix,isource)
+            for isource=1:num_sources(matrix)
+                for itarget=1:num_targets(matrix,isource)
                     sum+=matrix[itarget,isource]
                 end
             end
@@ -102,8 +102,8 @@ function test_adj_performance(n=100_000)
     @time begin
         for irun=1:100
             sum=0
-            for isource=1:nsources(vadj)
-                for itarget=1:ntargets(vadj,isource)
+            for isource=1:num_sources(vadj)
+                for itarget=1:num_targets(vadj,isource)
                     sum+=vadj[itarget,isource]
                 end
             end
@@ -129,8 +129,8 @@ function test_adj_performance(n=100_000)
     @time begin
         for irun=1:100
             sum=0
-            for isource=1:nsources(tadj)
-                for itarget=1:ntargets(tadj,isource)
+            for isource=1:num_sources(tadj)
+                for itarget=1:num_targets(tadj,isource)
                     sum+=tadj[itarget,isource]
                 end
             end
@@ -156,8 +156,8 @@ function test_adj_performance(n=100_000)
     @time begin
         for irun=1:100
             sum=0
-            for isource=1:nsources(tvadj)
-                for itarget=1:ntargets(tvadj,isource)
+            for isource=1:num_sources(tvadj)
+                for itarget=1:num_targets(tvadj,isource)
                     sum+=tvadj[itarget,isource]
                 end
             end
@@ -182,8 +182,8 @@ function test_adj_performance(n=100_000)
     @time begin
         for irun=1:100
             sum=0
-            for isource=1:nsources(aadj)
-                for itarget=1:ntargets(aadj,isource)
+            for isource=1:num_sources(aadj)
+                for itarget=1:num_targets(aadj,isource)
                     sum+=aadj[itarget,isource]
                 end
             end

@@ -63,13 +63,14 @@ function plot(grid::ExtendableGrid; Plotter=nothing)
         coord=grid[Coordinates]
         bfacenodes=grid[BFaceNodes]
         bfaceregions=grid[BFaceRegions]
+        nbfaceregions=grid[NumBFaceRegions]
         Plotter.tripcolor(tridat...,facecolors=grid[CellRegions],cmap="Pastel2")
         Plotter.triplot(tridat...,color="k",linewidth=0.5)
         
         # see https://gist.github.com/gizmaa/7214002
         xc=[coord[:,bfacenodes[1,i]] for i=1:size(bfacenodes,2)]
         yc=[coord[:,bfacenodes[2,i]] for i=1:size(bfacenodes,2)]
-        rgb=[frgb(Plotter,bfaceregions[i],maximum(bfaceregions)) for i=1:length(bfaceregions)]
+        rgb=[frgb(Plotter,bfaceregions[i],nbfaceregions) for i=1:length(bfaceregions)]
         ax.add_collection(Plotter.matplotlib.collections.LineCollection(collect(zip(xc,yc)),colors=rgb,linewidth=3))
     end
 end

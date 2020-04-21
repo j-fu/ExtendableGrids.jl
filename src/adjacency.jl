@@ -33,10 +33,10 @@
    and the targets are the nodes. 
 
    getindex(a,i,isource) aka a[i,isource]: return i-th target of  source j
-   nsources(a): overall number of sources, e.g. number of cells
-   ntargets(a): overall number of targets
-   ntargets(a,isource): number of targets for source given by isource
-   nlinks(a): number of links aka nonzero entries of adjacency matrix
+   num_sources(a): overall number of sources, e.g. number of cells
+   num_targets(a): overall number of targets
+   num_targets(a,isource): number of targets for source given by isource
+   num_links(a): number of links aka nonzero entries of adjacency matrix
    show(a): print stuff
 
    Further API ideas:
@@ -74,8 +74,8 @@ VariableTargetAdjacency(m::Matrix{T}) where T=VariableTargetAdjacency{T}(vec(m),
     Show adjacency (in trasposed form; preliminary)
 """
 function Base.show(io::IO,adj::VariableTargetAdjacency)
-    for isource=1:nsources(adj)
-        for itarget=1:ntargets(adj,isource)
+    for isource=1:num_sources(adj)
+        for itarget=1:num_targets(adj,isource)
             print(adj[itarget,isource], " ")
         end
         println()
@@ -92,22 +92,22 @@ Base.getindex(adj::VariableTargetAdjacency,::Colon,isource)=adj.colentries[adj.c
 """
     Number of targets for given source
 """
-ntargets(adj::VariableTargetAdjacency,isource)=adj.colstart[isource+1]-adj.colstart[isource]
+num_targets(adj::VariableTargetAdjacency,isource)=adj.colstart[isource+1]-adj.colstart[isource]
 
 """
     Number of sources in adjacency
 """
-nsources(adj::VariableTargetAdjacency)=length(adj.colstart)-1
+num_sources(adj::VariableTargetAdjacency)=length(adj.colstart)-1
 
 """
     Number of targeta
 """
-ntargets(adj::VariableTargetAdjacency)=maximum(adj.colentries)
+num_targets(adj::VariableTargetAdjacency)=maximum(adj.colentries)
 
 """
     Number of links
 """
-nlinks(adj::VariableTargetAdjacency)=length(adj.colentries)
+num_links(adj::VariableTargetAdjacency)=length(adj.colentries)
 
 
 """
@@ -128,22 +128,22 @@ const FixedTargetAdjacency=Matrix
 """
     Number of targets per source if adjacency is a matrix
 """
-ntargets(adj::FixedTargetAdjacency,isource)=size(adj)[1]
+num_targets(adj::FixedTargetAdjacency,isource)=size(adj)[1]
 
 """
     Number of sources in adjacency
 """
-nsources(adj::FixedTargetAdjacency)=size(adj)[2]
+num_sources(adj::FixedTargetAdjacency)=size(adj)[2]
 
 """
     Overall number of targets 
 """
-ntargets(adj::FixedTargetAdjacency)=maximum(vec(adj))
+num_targets(adj::FixedTargetAdjacency)=maximum(vec(adj))
 
 """
     Number of entries
 """
-nlinks(adj::FixedTargetAdjacency)=length(adj)
+num_links(adj::FixedTargetAdjacency)=length(adj)
 
 const Adjacency{T}=Union{FixedTargetAdjacency{T},VariableTargetAdjacency{T}}
 
@@ -152,11 +152,11 @@ Adjacency{T}(a::VariableTargetAdjacency{T}) where T =a
 
 function atranspose(adj::Adjacency{T}) where T
     # 0th pass: calculate number of rows !!! todo: how to call ?
-    t_adj=VariableTargetAdjacency(zeros(T,nlinks(adj)),zeros(T,ntargets(adj)+1))
+    t_adj=VariableTargetAdjacency(zeros(T,num_links(adj)),zeros(T,num_targets(adj)+1))
     
     # 1st pass: calculate new column sizes, store them in t_adj.colstart
-    for isource=1:nsources(adj)
-        for itarget=1:ntargets(adj,isource)
+    for isource=1:num_sources(adj)
+        for itarget=1:num_targets(adj,isource)
             t_adj.colstart[adj[itarget,isource]]+=1
         end
     end
@@ -171,7 +171,7 @@ function atranspose(adj::Adjacency{T}) where T
     
     delta=t_adj.colstart[1];
     t_adj.colstart[1]=1;
-    for isource=2:nsources(t_adj)
+    for isource=2:num_sources(t_adj)
 	save=t_adj.colstart[isource];
 	t_adj.colstart[isource]=t_adj.colstart[isource-1]+delta; 
 	if delta>0
@@ -179,15 +179,15 @@ function atranspose(adj::Adjacency{T}) where T
         end
 	delta=save;
     end
-    isource=nsources(t_adj)+1
+    isource=num_sources(t_adj)+1
     t_adj.colstart[isource]=t_adj.colstart[isource-1]+delta;
     if delta>0
         t_adj.colentries[t_adj.colstart[isource]-1]=t_adj.colstart[isource-1];
     end
     
     # 3rd pass: assemble new columns
-    for isource=1:nsources(adj)
-        for itarget=1:ntargets(adj,isource)
+    for isource=1:num_sources(adj)
+        for itarget=1:num_targets(adj,isource)
 	    asm_idx=t_adj.colstart[adj[itarget,isource]+1]-1;
 	    asm_loc=t_adj.colentries[asm_idx];
 	    t_adj.colentries[asm_idx]+=1; 

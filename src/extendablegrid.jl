@@ -4,14 +4,25 @@ Apex type for grid components
 abstract type AbstractGridComponent end
 
 """
-2D Array on grid components
+2D Array on grid components (e.g. coordinates)
 """
-abstract type AbstractGridArray2D <: AbstractGridComponent end
+abstract type AbstractGridFloatArray2D <: AbstractGridComponent end
 
 """
 1D Array on grid components
 """
-abstract type AbstractGridArray1D <: AbstractGridComponent end
+abstract type AbstractGridFloatArray1D <: AbstractGridComponent end
+
+"""
+Integer number
+"""
+abstract type AbstractGridIntegerConstant <: AbstractGridComponent end
+
+"""
+Floating point  number
+"""
+abstract type AbstractGridFloatConstant <: AbstractGridComponent end
+
 
 """
 Any kind of adjacency between grid components
@@ -32,7 +43,10 @@ abstract type AbstractElementRegions <: AbstractGridComponent end
 """
 Basic Grid components with classification via intermediate types
 """
-abstract type Coordinates <: AbstractGridArray2D end
+abstract type Coordinates <: AbstractGridFloatArray2D end
+
+abstract type NumCellRegions <: AbstractGridIntegerConstant end
+abstract type NumBFaceRegions <: AbstractGridIntegerConstant end
 
 abstract type CellNodes <: AbstractGridAdjacency end
 abstract type BFaceNodes <: AbstractGridAdjacency end
@@ -111,30 +125,129 @@ end
 """
 Type specific method to obtain 2D array from grid
 """
-function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{AbstractGridArray2D})::Array{Tc,2} where{Tc,Ti}
+function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridFloatArray2D})::Array{Tc,2} where{Tc,Ti}
     get!(grid,T)
 end
 
 """
 Type specific method to obtain 1D array from grid
 """
-function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{AbstractGridArray1D})::Array{Tc,1} where{Tc,Ti}
+function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridFloatArray1D})::Array{Tc,1} where{Tc,Ti}
     get!(grid,T)
 end
 
 """
 Type specific method to obtain  element type
 """
-function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{AbstractElementTypes})::ElementInfo{AbstractElementType} where{Tc,Ti}
+function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractElementTypes})::ElementInfo{AbstractElementType} where{Tc,Ti}
     get!(grid,T)
 end
 
 """
 Type specific method to obtain  element type
 """
-function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{AbstractElementRegions})::ElementInfo{Ti} where{Tc,Ti}
+function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractElementRegions})::ElementInfo{Ti} where{Tc,Ti}
     get!(grid,T)
 end
 
 
+function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridIntegerConstant})::Ti where{Tc,Ti}
+    get!(grid,T)
+end
 
+function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridFloatConstant})::Tc where{Tc,Ti}
+    get!(grid,T)
+end
+
+
+instantiate(grid, ::Type{NumCellRegions})=maximum(grid[CellRegions])
+instantiate(grid, ::Type{NumBFaceRegions})=maximum(grid[BFaceRegions])
+
+######################################################################################################################
+#Definition of interface methods for grid.
+
+#  ... die könnten alle als lazyconstants gehen
+
+
+
+##########################################################
+"""
+$(TYPEDSIGNATURES)
+
+Space dimension of grid
+"""
+dim_space(grid::ExtendableGrid)= size(grid[Coordinates],1)
+
+
+##########################################################
+"""
+$(TYPEDSIGNATURES)
+
+
+Number of nodes in grid
+"""
+num_nodes(grid::ExtendableGrid)= size(grid[Coordinates],2)
+
+
+##########################################################
+"""
+$(TYPEDSIGNATURES)
+
+Number of cells in grid
+"""
+num_cells(grid::ExtendableGrid)= num_sources(grid[CellNodes])
+
+##########################################################
+"""
+$(TYPEDSIGNATURES)
+
+Number of edges in grid
+"""
+num_edges(grid::ExtendableGrid)= num_sources(grid[EdgeNodes])
+
+
+################################################
+"""
+$(TYPEDSIGNATURES)
+
+Number of boundary faces in grid.
+"""
+num_bfaces(grid::ExtendableGrid)= num_sources(grid[BFaceNodes])
+
+################################################
+"""
+$(TYPEDSIGNATURES)
+
+Maximum  cell  region number
+"""
+num_cellregions(grid::ExtendableGrid)=grid[NumCellRegions]
+
+
+################################################
+"""
+$(TYPEDSIGNATURES)
+
+Maximum  boundary face region number
+"""
+num_bfaceregions(grid::ExtendableGrid)=grid[NumBFaceRegions]
+
+
+
+
+################################################
+"""
+$(TYPEDSIGNATURES)
+
+Map a function onto grid coordinates.
+"""
+function map(f::Function, grid::ExtendableGrid)
+    coord=grid[Coordinates]
+    dim=dim_space(grid)
+    if dim==1
+        @views map(f,coord[1,:])
+    elseif dim==2
+        @views map(f,coord[1,:], coord[2,:])
+    else
+        @views map(f,coord[1,:], coord[2,:], coord[3,:])
+    end
+end
