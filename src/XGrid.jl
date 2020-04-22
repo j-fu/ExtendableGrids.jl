@@ -12,19 +12,25 @@ export VectorOfConstants
 
 include("elementinfo.jl")
 export AbstractElementType, ElementInfo
-export Simplex1D, Simplex2D, Simplex3D
+export Simplex0D, Simplex1D, Simplex2D, Simplex3D
+export Cartesian1D,Cartesian2D,Cartesian3D
+export Cylindrical2D,Cylindrical3D
+export Polar2D,Polar1D ,Spherical3D,Spherical1D  
 
+ 
 include("extendablegrid.jl")
 export ExtendableGrid
 export instantiate, veryform
 export AbstractGridComponent
 export AbstractGridArray1D,AbstractGridArray2D, AbstractGridAdjacency,AbstractElementTypes,AbstractElementRegions
 export Coordinates,CellNodes,BFaceNodes,CellTypes,BFaceTypes,CellRegions,BFaceRegions
-    
+export NumCellRegions,NumBFaceRegions,CoordinateSystem
+
 include("generate.jl")
-export generate
+export generate, simplexgrid
 
 include("plot.jl")
 export plot
+
 
 end # module

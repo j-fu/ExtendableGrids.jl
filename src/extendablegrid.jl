@@ -45,8 +45,6 @@ Basic Grid components with classification via intermediate types
 """
 abstract type Coordinates <: AbstractGridFloatArray2D end
 
-abstract type NumCellRegions <: AbstractGridIntegerConstant end
-abstract type NumBFaceRegions <: AbstractGridIntegerConstant end
 
 abstract type CellNodes <: AbstractGridAdjacency end
 abstract type BFaceNodes <: AbstractGridAdjacency end
@@ -57,6 +55,9 @@ abstract type BFaceTypes <: AbstractElementTypes end
 abstract type CellRegions <: AbstractElementRegions end
 abstract type BFaceRegions <: AbstractElementRegions end
 
+abstract type NumCellRegions <: AbstractGridIntegerConstant end
+abstract type NumBFaceRegions <: AbstractGridIntegerConstant end
+abstract type CoordinateSystem <: AbstractGridComponent end
 
 """
 Grid type wrapping Dict
@@ -251,3 +252,6 @@ function map(f::Function, grid::ExtendableGrid)
         @views map(f,coord[1,:], coord[2,:], coord[3,:])
     end
 end
+
+
+
