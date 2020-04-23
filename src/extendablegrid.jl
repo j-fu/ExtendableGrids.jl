@@ -19,6 +19,11 @@ abstract type AbstractGridFloatArray1D <: AbstractGridComponent end
 abstract type AbstractGridIntegerArray1D <: AbstractGridComponent end
 
 """
+2D Array on grid components
+"""
+abstract type AbstractGridIntegerArray2D <: AbstractGridComponent end
+
+"""
 Integer number
 """
 abstract type AbstractGridIntegerConstant <: AbstractGridComponent end

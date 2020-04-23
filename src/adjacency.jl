@@ -40,10 +40,7 @@
    show(a): print stuff
 
    Further API ideas:
-   - 
    - Convert between Matrix and Variable target stuff using 0 entries as "padding"
-
-
 """
 struct VariableTargetAdjacency{T}
     colentries::Vector{T}
@@ -109,6 +106,11 @@ num_targets(adj::VariableTargetAdjacency)=maximum(adj.colentries)
 """
 num_links(adj::VariableTargetAdjacency)=length(adj.colentries)
 
+"""
+    Maximum number of targets per source
+"""
+max_num_targets_per_source(adj::VariableTargetAdjacency)=maximum(adj.colstart[2:end].-adj.colstart[1:end-1])
+
 
 """
     Append a column to adjacency.
@@ -144,6 +146,12 @@ num_targets(adj::FixedTargetAdjacency)=maximum(vec(adj))
     Number of entries
 """
 num_links(adj::FixedTargetAdjacency)=length(adj)
+
+"""
+    Maximum number of targets per source
+"""
+max_num_targets_per_source(adj::FixedTargetAdjacency)=size(adj,1)
+
 
 const Adjacency{T}=Union{FixedTargetAdjacency{T},VariableTargetAdjacency{T}}
 

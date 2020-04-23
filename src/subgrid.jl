@@ -19,6 +19,7 @@ function subgrid(parent,
                  subregions::AbstractArray;
                  transform::Function=_copytransform!,
                  boundary=false)
+
     Tc=coord_type(parent)
     Ti=index_type(parent)
     
@@ -108,7 +109,7 @@ end
 """
 $(TYPEDEF)
 
-Struct holding information for solution array view on subgrid
+Struct holding information for vector view on subgrid
 
 $(TYPEDFIELDS)
 """
@@ -123,7 +124,7 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Create a view of the solution array on a subgrid.
+Create a view of the vector on a subgrid.
 """
 Base.view(a::AbstractVector,subgrid::ExtendableGrid)  = XSubgridVectorView(a,subgrid[NodeInParent])
 
@@ -132,7 +133,7 @@ Base.view(a::AbstractVector,subgrid::ExtendableGrid)  = XSubgridVectorView(a,sub
 """
 $(TYPEDSIGNATURES)
 
-Accessor method for subgrid array view.
+Accessor method for subgrid vector view.
 """
 Base.getindex(aview::XSubgridVectorView,inode::Integer) = aview.sysarray[aview.node_in_parent[inode]]
 
@@ -140,7 +141,7 @@ Base.getindex(aview::XSubgridVectorView,inode::Integer) = aview.sysarray[aview.n
 """
 $(TYPEDSIGNATURES)
 
-Accessor method for subgrid array view.
+Accessor method for subgrid vector view.
 """
 @inline function Base.setindex!(aview::XSubgridVectorView,v,inode::Integer)
     aview.sysarray[aview.node_in_parent[inode]]=v
@@ -151,7 +152,7 @@ end
 """
 $(TYPEDSIGNATURES)
     
-Return size of solution array view.
+Return size of vector view.
 """
 Base.size(a::XSubgridVectorView)=(size(a.node_in_parent,1),)
 

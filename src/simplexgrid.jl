@@ -1,3 +1,8 @@
+"""
+$(SIGNATURES)
+
+Create simplex grid from five arrays.
+"""
 function simplexgrid(coord::Array{Tc,2},
                      cellnodes::Array{Ti,2},
                      cellregions::Array{Ti,1},
@@ -221,7 +226,6 @@ grid marking control volumes: marked by `|`.
  o-----o-----o-----o-----o-----o-----o-----o-----o
  |--|-----|-----|-----|-----|-----|-----|-----|--|
 ```
-
 """
 function simplexgrid(X::AbstractArray{Tc,1}) where {Tc}
     coord=reshape(X,1,length(X))
@@ -443,16 +447,7 @@ function simplexgrid(flags::String, input::Triangulate.TriangulateIO)
         segmentmarkerlist=Array{Int32,2}(segmentmarkerlist)
     end
 
-    grid=ExtendableGrid{Float64,Int32}()
-    grid[Coordinates]=pointlist
-    grid[CellRegions]=cellregions
-    grid[CellTypes]=VectorOfConstants(Triangle2D,length(cellregions))
-    grid[BFaceRegions]=segmentmarkerlist
-    grid[BFaceTypes]=VectorOfConstants(Edge1D,length(segmentmarkerlist))
-    grid[CellNodes]=trianglelist
-    grid[BFaceNodes]=segmentlist
-    grid[CoordinateSystem]=Cartesian2D
-    return grid
+    simplexgrid(pointlist,trianglelist,cellregions,segmentlist,segmentmarkerlist)
 end
 
 """
@@ -546,7 +541,7 @@ function simplexgrid(;flags::String="pAaqDQ",
     tio.segmentmarkerlist=bfaceregions
     tio.regionlist=regionlist
     tio.holelist=holelist
-    return simplexgrid(flags,tio)
+    simplexgrid(flags,tio)
 end
 
 

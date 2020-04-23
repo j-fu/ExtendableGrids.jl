@@ -8,7 +8,6 @@ function tridata(grid)
     coord[1,:], coord[2,:],transpose(cellnodes.-1)
 end
 
-
 """
 Plot color scale for grid colors.
 """
