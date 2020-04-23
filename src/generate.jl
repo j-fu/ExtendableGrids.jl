@@ -446,11 +446,12 @@ function simplexgrid(flags::String, input::Triangulate.TriangulateIO)
     grid=ExtendableGrid{Float64,Int32}()
     grid[Coordinates]=pointlist
     grid[CellRegions]=cellregions
-    grid[CellTypes]=VectorOfConstants(Simplex2D,length(cellregions))
+    grid[CellTypes]=VectorOfConstants(Triangle2D,length(cellregions))
     grid[BFaceRegions]=segmentmarkerlist
-    grid[BFaceTypes]=VectorOfConstants(Simplex1D,length(segmentmarkerlist))
+    grid[BFaceTypes]=VectorOfConstants(Edge1D,length(segmentmarkerlist))
     grid[CellNodes]=trianglelist
     grid[BFaceNodes]=segmentlist
+    grid[CoordinateSystem]=Cartesian2D
     return grid
 end
 
@@ -545,7 +546,7 @@ function simplexgrid(;flags::String="pAaqDQ",
     tio.segmentmarkerlist=bfaceregions
     tio.regionlist=regionlist
     tio.holelist=holelist
-    return generate(flags,tio)
+    return simplexgrid(flags,tio)
 end
 
 

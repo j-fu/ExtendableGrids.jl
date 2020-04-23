@@ -10,7 +10,7 @@ export Adjacency,VariableTargetAdjacency,FixedTargetAdjacency
 include("vectorofconstants.jl")
 export VectorOfConstants
 
-include("elementinfo.jl")
+include("elementgeometry.jl")
 export AbstractElementGeometry, ElementInfo
 
 export AbstractElementGeometry0D
@@ -45,13 +45,14 @@ export HyperCube4D
 
 
 
-
+include("coordinatesystem.jl")
 
 export Cartesian1D,Cartesian2D,Cartesian3D
 export Cylindrical2D,Cylindrical3D
 export Polar2D,Polar1D ,Spherical3D,Spherical1D  
 
 export dim_element
+
 
 include("extendablegrid.jl")
 export ExtendableGrid

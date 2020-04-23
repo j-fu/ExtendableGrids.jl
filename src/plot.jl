@@ -87,6 +87,20 @@ function plot(grid::ExtendableGrid, U::AbstractArray;
 
     cellnodes=grid[CellNodes]
     coord=grid[Coordinates]
+
+    if isvtkview(Plotter)
+        if dim_space(grid)==2
+            frame=Plotter.StaticFrame()
+            Plotter.clear!(frame)
+            dataset=Plotter.DataSet()
+            Plotter.simplexgrid!(dataset,grid[Coordinates],grid[CellNodes])
+            Plotter.pointscalar!(dataset,U,"V")
+            scalarview=Plotter.ScalarView()
+            Plotter.data!(scalarview,dataset,"V")
+            Plotter.addview!(frame,scalarview)
+            Plotter.display(frame)
+        end        
+    end
     
     if ispyplot(Plotter)
         if clear
