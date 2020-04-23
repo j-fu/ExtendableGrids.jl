@@ -14,6 +14,11 @@ abstract type AbstractGridFloatArray2D <: AbstractGridComponent end
 abstract type AbstractGridFloatArray1D <: AbstractGridComponent end
 
 """
+1D Array on grid components
+"""
+abstract type AbstractGridIntegerArray1D <: AbstractGridComponent end
+
+"""
 Integer number
 """
 abstract type AbstractGridIntegerConstant <: AbstractGridComponent end
@@ -178,6 +183,7 @@ $(TYPEDSIGNATURES)
 Space dimension of grid
 """
 dim_space(grid::ExtendableGrid)= size(grid[Coordinates],1)
+dim_grid(grid::ExtendableGrid)=  dim_element(grid[CellTypes][1])
 
 
 ##########################################################
@@ -234,6 +240,8 @@ num_bfaceregions(grid::ExtendableGrid)=grid[NumBFaceRegions]
 
 
 
+coord_type(grid::ExtendableGrid)=Base.eltype(grid[Coordinates])
+index_type(grid::ExtendableGrid)=Base.eltype(grid[CellNodes])
 
 ################################################
 """

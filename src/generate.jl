@@ -7,16 +7,16 @@ function simplexgrid(coord::Array{Tc,2},
     
     dim=size(coord,1)
     if dim==1
-        eltype=Simplex1D
-        btype=Simplex0D
+        eltype=Edge1D
+        btype=Vertex0D
         csys=Cartesian1D
     elseif dim==2
-        eltype=Simplex2D
-        btype=Simplex1D
+        eltype=Triangle2D
+        btype=Edge1D
         csys=Cartesian2D
     elseif dim==3
-        eltype=Simplex3D
-        btype=Simplex2D
+        eltype=Tetrahedron3D
+        btype=Triangle2D
         csys=Cartesian3D
     end
     

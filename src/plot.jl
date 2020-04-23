@@ -38,7 +38,6 @@ end
 
 
 function plot(grid::ExtendableGrid; Plotter=nothing)
-
     
     if isvtkview(Plotter)
         frame=Plotter.StaticFrame()
@@ -75,3 +74,70 @@ function plot(grid::ExtendableGrid; Plotter=nothing)
     end
 end
 
+function plot(grid::ExtendableGrid, U::AbstractArray;
+              Plotter=nothing,
+              color=(0,0,0),
+              cmap="hot",
+              label="",
+              levels=10,
+              aspect=1,
+              clear=true,
+              show=true,
+              p=nothing)
+
+    cellnodes=grid[CellNodes]
+    coord=grid[Coordinates]
+    
+    if ispyplot(Plotter)
+        if clear
+            Plotter.clf()
+        end
+        if dim_space(grid)==1
+            for icell=1:num_cells(grid)
+                i1=cellnodes[1,icell]
+                i2=cellnodes[2,icell]
+                x1=coord[1,i1]
+                x2=coord[1,i2]
+                if icell==1 && label !=""
+                    Plotter.plot([x1,x2],[U[i1],U[i2]],color=color,label=label)
+                else
+                    Plotter.plot([x1,x2],[U[i1],U[i2]],color=color)
+                end                
+            end
+        end
+        
+        if dim_space(grid)==2
+            ax=Plotter.matplotlib.pyplot.gca()
+            ax.set_aspect(aspect)
+            plotted=Plotter.tricontourf(tridata(grid)...,U;levels=levels,cmap=cmap)
+            Plotter.tricontour(tridata(grid)...,U,colors="k",levels=levels)
+            return plotted
+        end
+    end
+
+    if isplots(Plotter)
+        if p==nothing
+            p=Plotter.plot()
+        end
+        if dim_space(grid)==1
+            for icell=1:num_cells(grid)
+                i1=cellnodes[1,icell]
+                i2=cellnodes[2,icell]
+                x1=coord[1,i1]
+                x2=coord[1,i2]
+                if icell==1 && label !=""
+                    Plotter.plot!(p,[x1,x2],[U[i1],U[i2]],linecolor=Plotter.RGB(color...),label=label)
+                else
+                    Plotter.plot!(p,[x1,x2],[U[i1],U[i2]],linecolor=Plotter.RGB(color...),label="")
+                end                
+            end
+        end
+        if dim_space(grid)==2
+            println("Not available for Plots, see e.g. https://github.com/JuliaPlots/Plots.jl/issues/392")
+        end
+        if show
+            Plotter.gui(p)
+        end
+        return p
+    end
+end
