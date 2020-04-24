@@ -1,6 +1,7 @@
 module XGrid
 # -> ExtendableGrids
-
+# DictGrid
+# FlexGrid
 
 using Triangulate
 using DocStringExtensions
@@ -35,6 +36,7 @@ export dim_element
 
 include("coordinatesystem.jl")
 
+export AbstractCoordinateSystem
 export Cartesian1D,Cartesian2D,Cartesian3D
 export Cylindrical2D,Cylindrical3D
 export Polar2D,Polar1D ,Spherical3D,Spherical1D  

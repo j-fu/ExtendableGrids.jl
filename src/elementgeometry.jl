@@ -18,9 +18,9 @@ abstract type Pentagon2D <: Polygon2D end
 abstract type Hexagon2D <: Polygon2D end
 abstract type Parallelogram2D <: Quadrilateral2D end
 
-abstract type Circle2D <: AbstractElementGeometry3D end
+abstract type Circle2D <: AbstractElementGeometry2D end
 
-abstract type Polyhedron3D <: AbstractElementGeometry end
+abstract type Polyhedron3D <: AbstractElementGeometry3D end
 abstract type Tetrahedron3D <: Polyhedron3D end
 abstract type Hexahedron3D <: Polyhedron3D end
 abstract type Parallelepiped3D <: Hexahedron3D end
