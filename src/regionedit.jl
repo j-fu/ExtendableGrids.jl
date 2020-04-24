@@ -60,7 +60,7 @@ function bfacemask!(grid::ExtendableGrid,
 
 
     nbfaces=num_bfaces(grid)
-    bfacenodes=grid[CellNodes]
+    bfacenodes=grid[BFaceNodes]
     dim=dim_space(grid)
     bfaceregions=grid[BFaceRegions]
     coord=grid[Coordinates]
@@ -73,24 +73,23 @@ function bfacemask!(grid::ExtendableGrid,
             return 0
         end
     end
-    
     if dim_space(grid)==1
         Ti=eltype(bfacenodes)
         bfacenodes=ElasticArray{Ti,2}(bfacenodes)
         for inode=1:num_nodes(grid)
-            x=grid.coord[1,inode]
+            x=coord[1,inode]
             if x>xmaskmin[1] && x<xmaskmax[1]
                 ibface=isbface(inode)
                 if ibface>0
-                    grid.bfaceregions[ibface]=ireg
+                    bfaceregions[ibface]=ireg
                 else
-                    ibface=length(grid.bfaceregions)+1
-                    push!(grid.bfaceregions,ireg)
+                    ibface=length(bfaceregions)+1
+                    push!(bfaceregions,ireg)
                     append!(bfacenodes,[inode])
                 end
             end
         end
-        bfacenodes=Array{Ti,2}(bfacenodes)
+        grid[BFaceNodes]=Array{Ti,2}(bfacenodes)
     else
         for ibface=1:num_bfaces(grid)
             in_region=true
@@ -105,11 +104,11 @@ function bfacemask!(grid::ExtendableGrid,
                 end
             end
             if in_region
-                grid.bfaceregions[ibface]=ireg
+                bfaceregions[ibface]=ireg
             end
         end
     end
-        
+
     grid[NumBFaceRegions]=max(num_bfaceregions(grid),ireg)
     return grid
 end

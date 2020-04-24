@@ -5,6 +5,7 @@ module XGrid
 
 using Triangulate
 using DocStringExtensions
+using ElasticArrays
 
 include("adjacency.jl")
 export Adjacency,VariableTargetAdjacency,FixedTargetAdjacency
@@ -55,13 +56,13 @@ export AbstractGridIntegerArray1D,AbstractGridIntegerArray2D
 export index_type, coord_type
 export dim_space, dim_grid
 export num_nodes, num_cells, num_bfaces
+ 
 
-    
 include("subgrid.jl")
 export subgrid
 
 include("regionedit.jl")
-export cellmask!,facemask!
+export cellmask!,bfacemask!
 
 include("simplexgrid.jl")
 export simplexgrid, geomspace,glue
