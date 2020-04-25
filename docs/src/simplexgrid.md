@@ -4,7 +4,7 @@ Constructors for simplex grids
 
 ## API
 ```@autodocs
-Modules = [XGrid]
+Modules = [ExtendableGrids]
 Pages = ["simplexgrid.jl"]
 ```
 

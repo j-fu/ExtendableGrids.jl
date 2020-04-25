@@ -4,7 +4,7 @@ Tools for editing grid region numbers
 
 ## API
 ```@autodocs
-Modules = [XGrid]
+Modules = [ExtendableGrids]
 Pages = ["regionedit.jl"]
 ```
 

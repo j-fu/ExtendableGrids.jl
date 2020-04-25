@@ -2,20 +2,20 @@
 
 ## Types and Constructors
 ```@index
-Modules = [XGrid]
+Modules = [ExtendableGrids]
 Order=[:type]
 ```
 
 ## Constants
 
 ```@index
-Modules = [XGrid]
+Modules = [ExtendableGrids]
 Order=[:constant]
 ```
 
 ## Methods
 
 ```@index
-Modules = [XGrid]
+Modules = [ExtendableGrids]
 Order=[:function]
 ```

@@ -4,7 +4,7 @@ Subgrids of extendable grid
 
 ## API
 ```@autodocs
-Modules = [XGrid]
+Modules = [ExtendableGrids]
 Pages = ["subgrid.jl"]
 ```
 

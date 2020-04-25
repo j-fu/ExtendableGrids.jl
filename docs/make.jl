@@ -1,12 +1,12 @@
 push!(LOAD_PATH,"../src/")
-using Documenter, XGrid
+using Documenter, ExtendableGrids
 
-makedocs(sitename="XGrid.jl",
-         modules = [XGrid],
+makedocs(sitename="ExtendableGrids.jl",
+         modules = [ExtendableGrids],
          doctest = true,
          clean = true,
          authors = "J. Fuhrmann, Ch. Merdon",
-         repo="https://github.com/j-fu/XGrid.jl",
+         repo="https://github.com/j-fu/ExtendableGrids.jl",
          pages=[
              "Home"=>"index.md",
              "adjacency.md",
@@ -22,5 +22,5 @@ makedocs(sitename="XGrid.jl",
              "allindex.md"
          ])
 
-deploydocs(repo = "github.com/j-fu/XGrid.jl.git")
+deploydocs(repo = "github.com/j-fu/ExtendableGrids.jl.git")
 

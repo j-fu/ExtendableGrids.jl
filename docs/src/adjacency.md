@@ -42,6 +42,6 @@ Further API ideas:
 ## API
 
 ```@autodocs
-Modules = [XGrid]
+Modules = [ExtendableGrids]
 Pages = ["adjacency.jl"]
 ```

@@ -1,6 +1,6 @@
 module test_geomspace
 using Printf
-using XGrid
+using ExtendableGrids
 
 
 function test()

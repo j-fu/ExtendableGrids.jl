@@ -1,5 +1,5 @@
 module test_gridconstruct
-using XGrid
+using ExtendableGrids
 
 function test()
     grid=simplexgrid(points=[1 0 ; 0 1 ; -1 0 ; 0 -1],

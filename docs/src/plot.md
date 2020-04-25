@@ -7,6 +7,6 @@ to plot in the `Plotter` keyword parameter
 ## API
 
 ```@autodocs
-Modules = [XGrid]
+Modules = [ExtendableGrids]
 Pages = ["plot.jl"]
 ```

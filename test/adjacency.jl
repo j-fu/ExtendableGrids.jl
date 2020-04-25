@@ -1,5 +1,5 @@
 using Test
-using XGrid
+using ExtendableGrids
 
 ##########################################
 # Correctness test

@@ -4,6 +4,6 @@ Datatype to store vector with a constant value.
 ## API
 
 ```@autodocs
-Modules = [XGrid]
+Modules = [ExtendableGrids]
 Pages = ["vectorofconstants.jl"]
 ```

@@ -1,5 +1,5 @@
 module test_ctriangulate
-using XGrid
+using ExtendableGrids
 using Triangulate
 
 function test()

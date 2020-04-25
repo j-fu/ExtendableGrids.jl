@@ -54,7 +54,7 @@ See above ...
 ## Grid API
 
 ```@autodocs
-Modules = [XGrid]
+Modules = [ExtendableGrids]
 Pages = ["extendablegrid.jl"]
 ```
 

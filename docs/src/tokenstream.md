@@ -6,7 +6,7 @@ reading of tokenizable ASCII files
 ## API
 
 ```@autodocs
-Modules = [XGrid]
+Modules = [ExtendableGrids]
 Pages = ["tokenstream.jl"]
 ```
 

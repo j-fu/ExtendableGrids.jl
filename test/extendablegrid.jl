@@ -1,5 +1,5 @@
 using Test
-using XGrid
+using ExtendableGrids
 
 # This is the way how we can extend the grid type: define a new
 # type, and either add the corresponding value or allow for
@@ -9,7 +9,7 @@ using XGrid
 abstract type NodeCells <: AbstractGridAdjacency end
 
 # Write an instantiate method which constructs the component if it is not available
-XGrid.instantiate(grid, ::Type{NodeCells})=atranspose(grid[CellNodes])
+ExtendableGrids.instantiate(grid, ::Type{NodeCells})=atranspose(grid[CellNodes])
 
 function test_create_circle(;nref=5)
     nrad=10*2^nref
