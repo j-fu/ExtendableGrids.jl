@@ -1,7 +1,4 @@
-module XGrid
-# -> ExtendableGrids
-# DictGrid
-# FlexGrid
+module ExtendableGrids
 
 using Triangulate
 using DocStringExtensions

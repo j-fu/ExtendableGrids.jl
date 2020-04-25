@@ -1,9 +1,14 @@
-name = "XGrid"
-uuid = "1015158d-cf91-42d0-8ede-00fb4817e22a"
+name = "ExtendableGrids"
+uuid = "cfc395e8-590f-11e8-1f13-43a2532b2fa8""
 authors = ["Juergen Fuhrmann <juergen.fuhrmann@wias-berlin.de>"]
-version = "0.1.5"
+version = "0.1.0"
 
 [deps]
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 ElasticArrays = "fdbdab4c-e67f-52f5-8c3f-e7b388dad3d4"
 Triangulate = "f7e6ffb2-c36d-4f8f-a77e-16e897189344"
+
+[compat]
+DocStringExtensions = "^0.8.0"
+ElasticArrays = "1"
+Triangulate = "^0.4.0"
