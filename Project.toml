@@ -1,7 +1,7 @@
 name = "XGrid"
 uuid = "1015158d-cf91-42d0-8ede-00fb4817e22a"
 authors = ["Juergen Fuhrmann <juergen.fuhrmann@wias-berlin.de>"]
-version = "0.1.4"
+version = "0.1.5"
 
 [deps]
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
