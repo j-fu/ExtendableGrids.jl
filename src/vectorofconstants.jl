@@ -3,10 +3,13 @@ $(TYPEDEF)
 
 Vector with constant value
 """
-struct VectorOfConstants{T}
+struct VectorOfConstants{T} <: AbstractVector{T}
     val::T
     len::Int64
 end
+
+Base.IndexStyle(::Type{<:VectorOfConstants}) = IndexLinear()
+
 
 """
 $(TYPEDSIGNATURES)
@@ -27,12 +30,35 @@ $(TYPEDSIGNATURES)
 
 Access
 """
-Base.getindex(v::VectorOfConstants,i) = v.val
+function Base.getindex(v::VectorOfConstants,i)
+    if i>v.len
+        throw(BoundsError(v, i))
+    end
+    v.val
+end
 
 """
 $(TYPEDSIGNATURES)
 
-Return vector of unique values
+Iterator
 """
-Base.unique(v::VectorOfConstants)  = [v.val]
+Base.iterate(v::VectorOfConstants)  = (v.val,1)
+"""
+$(TYPEDSIGNATURES)
+
+Iterator
+"""
+Base.iterate(v::VectorOfConstants,state) =  state>=v.len ? nothing : (v.val, state+1)
+
+"""
+$(TYPEDSIGNATURES)
+
+Shortcut for unique
+"""
+Base.unique(v::VectorOfConstants)=[v.val]
+
+
+
+
+
 
