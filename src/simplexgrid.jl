@@ -419,6 +419,8 @@ end
 
 
 """
+$(TYPEDSIGNATURES)
+
 Create Grid from Triangle input data.
 """
 function simplexgrid(flags::String, input::Triangulate.TriangulateIO)
@@ -451,6 +453,8 @@ function simplexgrid(flags::String, input::Triangulate.TriangulateIO)
 end
 
 """
+$(TYPEDSIGNATURES)
+
 Create Grid from a number of input arrays.
 The 2D input arrays are transposed if necessary and converted to
 the proper data types for Triangulate.
@@ -548,9 +552,9 @@ end
 
 ######################################################
 """
-    $(TYPEDSIGNATURES)
-    
-    Read grid from file.
+$(TYPEDSIGNATURES)
+  
+Read grid from file.
 """
 function simplexgrid(::Type{<:IOStream};file::String="test.sg",format="")
     (fbase,fext)=splitext(file)

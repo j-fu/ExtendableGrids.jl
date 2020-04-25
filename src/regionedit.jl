@@ -1,8 +1,3 @@
-#=
-Definition of methods to edit grid region numbers
-=#
-
-######################################################
 """
 $(TYPEDSIGNATURES)
 
@@ -40,7 +35,6 @@ function cellmask!(grid::ExtendableGrid,
 end
 
 
-######################################################
 """
 $(TYPEDSIGNATURES)
 

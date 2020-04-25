@@ -36,7 +36,6 @@ export dim_element
 
 
 include("coordinatesystem.jl")
-
 export AbstractCoordinateSystem
 export Cartesian1D,Cartesian2D,Cartesian3D
 export Cylindrical2D,Cylindrical3D
@@ -66,6 +65,9 @@ export cellmask!,bfacemask!
 
 include("simplexgrid.jl")
 export simplexgrid, geomspace,glue
+
+include("tokenstream.jl")
+export TokenStream, gettoken, expecttoken,trytoken
 
 include("plot.jl")
 export plot

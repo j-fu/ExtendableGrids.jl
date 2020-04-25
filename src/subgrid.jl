@@ -1,7 +1,15 @@
+"""
+$(TYPEDEF)
+Key type for storing node in parent array
+"""
 abstract type NodeInParent <: AbstractGridIntegerArray1D end
+
+"""
+$(TYPEDEF)
+Key type for storing parent grid
+"""
 abstract type ParentGrid <: AbstractGridComponent end
 
-##################################################################
 # Default transform for subgrid creation
 function _copytransform!(a::AbstractArray,b::AbstractArray)
     for i=1:length(a)
@@ -9,11 +17,10 @@ function _copytransform!(a::AbstractArray,b::AbstractArray)
     end
 end
 
-##################################################################
 """
 $(TYPEDSIGNATURES)
 
-Create subgrid of list of regions.
+Create subgrid from list of regions.
 """
 function subgrid(parent,
                  subregions::AbstractArray;
@@ -108,15 +115,12 @@ end
 
 """
 $(TYPEDEF)
-
-Struct holding information for vector view on subgrid
+Vector view on subgrid
 
 $(TYPEDFIELDS)
 """
-struct XSubgridVectorView{Tv,Ti} <: AbstractVector{Tv}
-
+struct SubgridVectorView{Tv,Ti} <: AbstractVector{Tv}
     sysarray::AbstractVector{Tv}
-
     node_in_parent::Vector{Ti}
 end
 
@@ -126,7 +130,7 @@ $(TYPEDSIGNATURES)
 
 Create a view of the vector on a subgrid.
 """
-Base.view(a::AbstractVector,subgrid::ExtendableGrid)  = XSubgridVectorView(a,subgrid[NodeInParent])
+Base.view(a::AbstractVector,subgrid::ExtendableGrid)  = SubgridVectorView(a,subgrid[NodeInParent])
 
 
 ##############################################################################
@@ -135,7 +139,7 @@ $(TYPEDSIGNATURES)
 
 Accessor method for subgrid vector view.
 """
-Base.getindex(aview::XSubgridVectorView,inode::Integer) = aview.sysarray[aview.node_in_parent[inode]]
+Base.getindex(aview::SubgridVectorView,inode::Integer) = aview.sysarray[aview.node_in_parent[inode]]
 
 ##############################################################################
 """
@@ -143,7 +147,7 @@ $(TYPEDSIGNATURES)
 
 Accessor method for subgrid vector view.
 """
-@inline function Base.setindex!(aview::XSubgridVectorView,v,inode::Integer)
+@inline function Base.setindex!(aview::SubgridVectorView,v,inode::Integer)
     aview.sysarray[aview.node_in_parent[inode]]=v
     return aview
 end
@@ -154,7 +158,7 @@ $(TYPEDSIGNATURES)
     
 Return size of vector view.
 """
-Base.size(a::XSubgridVectorView)=(size(a.node_in_parent,1),)
+Base.size(a::SubgridVectorView)=(size(a.node_in_parent,1),)
 
 
 

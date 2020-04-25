@@ -1,14 +1,34 @@
+"""
+$(SIGNATURES)
+Check if Plotter is VTKView
+"""
 isvtkview(Plotter)= (typeof(Plotter)==Module)&&isdefined(Plotter,:StaticFrame)
+
+"""
+$(SIGNATURES)
+Check if Plotter is PyPlot
+"""
 ispyplot(Plotter)= (typeof(Plotter)==Module)&&isdefined(Plotter,:Gcf)
+
+"""
+$(SIGNATURES)
+Check if Plotter is Plots
+"""
 isplots(Plotter)= (typeof(Plotter)==Module) && isdefined(Plotter,:gr)
 
+"""
+$(SIGNATURES)
+Return tridata to be splatted to PyPlot calls
+"""
 function tridata(grid)
     coord=grid[Coordinates]
     cellnodes=grid[CellNodes]
     coord[1,:], coord[2,:],transpose(cellnodes.-1)
 end
 
+
 """
+$(TYPEDSIGNATURES)
 Plot color scale for grid colors.
 """
 function frgb(Plotter,i,max;pastel=false)
@@ -35,7 +55,11 @@ function frgb(Plotter,i,max;pastel=false)
     end
 end
 
+"""
+$(TYPEDSIGNATURES)
 
+Plot grid
+"""
 function plot(grid::ExtendableGrid; Plotter=nothing)
     
     if isvtkview(Plotter)
@@ -73,6 +97,11 @@ function plot(grid::ExtendableGrid; Plotter=nothing)
     end
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+Plot lowest order continuous finite element function on grid
+"""
 function plot(grid::ExtendableGrid, U::AbstractArray;
               Plotter=nothing,
               color=(0,0,0),

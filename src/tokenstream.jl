@@ -1,7 +1,3 @@
-#=
-Token stream module
-=#
-
 """
 $(TYPEDEF)
 
@@ -45,9 +41,9 @@ mutable struct TokenStream
 end
 
 """
-  $(TYPEDSIGNATURES) 
+$(TYPEDSIGNATURES) 
     
-    Tokenstream destructor should close input
+Tokenstream destructor should close input
 """
 destruct!(tks::TokenStream)=close(tks.input)
 
@@ -56,6 +52,7 @@ destruct!(tks::TokenStream)=close(tks.input)
 $(TYPEDEF)
 
 Error thrown when the token expected  in expect!  is not there.
+
 $(TYPEDFIELDS)
 """
 struct UnexpectedTokenError <: Exception
@@ -68,14 +65,14 @@ Base.showerror(io::IO, e::UnexpectedTokenError) = print(io,"Unexpected token in 
 
 
 """
-  $(TYPEDSIGNATURES) 
+$(TYPEDSIGNATURES) 
         
 Create Tokenstream with file name argument.
 """
 TokenStream(filename::String;comment='#', dlm=isspace)=TokenStream(open(filename),comment=comment,dlm=dlm)
 
 """
-  $(TYPEDSIGNATURES) 
+$(TYPEDSIGNATURES) 
 
 Create Tokenstream with IOStream argument.
 """
@@ -91,7 +88,7 @@ function TokenStream(input::IOStream; comment='#', dlm=isspace)
 end
 
 """
-  $(TYPEDSIGNATURES) 
+$(TYPEDSIGNATURES) 
 
 Check if all tokens have been consumed.
 """
@@ -121,7 +118,7 @@ end
 
 
 """
-  $(TYPEDSIGNATURES) 
+$(TYPEDSIGNATURES) 
 
 Get next token from tokenstream.
 """
@@ -135,13 +132,13 @@ function  gettoken(tks::TokenStream)
 end
 
 """
-  $(TYPEDSIGNATURES) 
+$(TYPEDSIGNATURES) 
 
-  Expect keyword token.
+Expect keyword token.
 
-  If token is missing, an UnexpectedTokenError is thrown
-  If the token  has been found, reading will continue  at the position
-  after the token found.
+If token is missing, an UnexpectedTokenError is thrown
+If the token  has been found, reading will continue  at the position
+after the token found.
 """
 function expecttoken(tks::TokenStream,expected::String)
     token=gettoken(tks)
@@ -152,15 +149,15 @@ function expecttoken(tks::TokenStream,expected::String)
 end
 
 """
-  $(TYPEDSIGNATURES) 
+$(TYPEDSIGNATURES) 
 
-  Try for keyword token.
+Try for keyword token.
 
 
-  It token is missing, the token read is put back into stream,
-  a value of false is returned and the next try/gettoken command continues at the same position,
+It token is missing, the token read is put back into stream,
+a value of false is returned and the next try/gettoken command continues at the same position,
 
-  Otherwise, true is returned, and reading continues after the token found.
+Otherwise, true is returned, and reading continues after the token found.
 """
 function trytoken(tks::TokenStream,expected::String)
     token=gettoken(tks)
