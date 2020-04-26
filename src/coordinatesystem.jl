@@ -2,7 +2,16 @@
 $(TYPEDEF)
 Apex type for coordinate systems
 """
-abstract type AbstractCoordinateSystem end
+abstract type AbstractCoordinateSystem <: AbstractExtendableGridApexType end
+
+
+"""
+$(TYPEDSIGNATURES)
+
+List possible coordinate systems. These describe the meaning of the grid coordinates.
+"""
+coordinatesystems()=AbstractTrees.print_tree(AbstractCoordinateSystem,5,indicate_truncation=false)
+
 
 """
 $(TYPEDEF)

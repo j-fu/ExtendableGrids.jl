@@ -39,7 +39,7 @@ end
 $(TYPEDSIGNATURES)
 
 Edit region numbers of grid  boundary facets  via rectangular mask.
-Currently, only for 1D grids, inner boundaries can be added.
+For 1D grids, inner boundaries can be added by this method.
 """
 function bfacemask!(grid::ExtendableGrid,
                     maskmin::AbstractArray,
@@ -47,8 +47,6 @@ function bfacemask!(grid::ExtendableGrid,
                     ireg::Int;
                     tol=1.0e-10)
 
-    
-    
     xmaskmin=maskmin.-tol
     xmaskmax=maskmax.+tol
 

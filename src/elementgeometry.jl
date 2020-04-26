@@ -1,7 +1,16 @@
 """
 $(TYPEDEF)
 """
-abstract type AbstractElementGeometry end
+abstract type AbstractElementGeometry <: AbstractExtendableGridApexType end
+
+"""
+$(TYPEDSIGNATURES)
+
+List supported element geometries.
+"""
+elementgeometries()=AbstractTrees.print_tree(AbstractElementGeometry,5,indicate_truncation=false)
+
+
 """
 $(TYPEDEF)
 """
@@ -121,7 +130,6 @@ dim_element(::Type{<:AbstractElementGeometry3D})=3
 $(TYPEDSIGNATURES)
 """
 dim_element(::Type{<:AbstractElementGeometry4D})=4
-
 
 
 

@@ -1,23 +1,23 @@
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 Check if Plotter is VTKView
 """
 isvtkview(Plotter)= (typeof(Plotter)==Module)&&isdefined(Plotter,:StaticFrame)
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 Check if Plotter is PyPlot
 """
 ispyplot(Plotter)= (typeof(Plotter)==Module)&&isdefined(Plotter,:Gcf)
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 Check if Plotter is Plots
 """
 isplots(Plotter)= (typeof(Plotter)==Module) && isdefined(Plotter,:gr)
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 Return tridata to be splatted to PyPlot calls
 """
 function tridata(grid)
@@ -29,7 +29,7 @@ end
 
 """
 $(TYPEDSIGNATURES)
-Plot color scale for grid colors.
+Color scale for grid colors.
 """
 function frgb(Plotter,i,max;pastel=false)
     x=Float64(i-1)/Float64(max)
@@ -58,7 +58,9 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Plot grid
+Plot grid. 
+
+Plotter defaults to `nothing` and can be `PyPLot`, `Plots`, `VTKView`.
 """
 function plot(grid::ExtendableGrid; Plotter=nothing)
     
@@ -101,8 +103,20 @@ end
 $(TYPEDSIGNATURES)
 
 Plot lowest order continuous finite element function on grid
+defined by values on the grid nodes.
+
+
+Keyword arguments:
+- Plotter: defaults to `nothing` and can be `PyPLot`, `Plots`, `VTKView`.
+- color:  color of plot on 1D grid
+- cmap:  color map for heatmap plot
+- label: label of plot
+- levels: number of isolevels
+- aspect: aspect ratio of plot
+- clear: if true (default) clear plot before plotting
+- show: if true (default) show plot
 """
-function plot(grid::ExtendableGrid, U::AbstractArray;
+function plot(grid::ExtendableGrid, U::AbstractVector;
               Plotter=nothing,
               color=(0,0,0),
               cmap="hot",

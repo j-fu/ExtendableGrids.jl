@@ -1,5 +1,12 @@
 """
-$(SIGNATURES)
+````
+function simplexgrid(coord::Array{Tc,2},
+                     cellnodes::Array{Ti,2},
+                     cellregions::Array{Ti,1},
+                     bfacenodes::Array{Ti,2},
+                     bfaceregions::Array{Ti,1}
+                     ) where {Tc,Ti}
+````
 
 Create simplex grid from five arrays.
 """
@@ -29,17 +36,17 @@ function simplexgrid(coord::Array{Tc,2},
     grid[Coordinates]=coord
     grid[CellNodes]=cellnodes
     grid[CellRegions]=cellregions
-    grid[CellTypes]=VectorOfConstants(eltype,length(cellregions))
+    grid[CellGeometries]=VectorOfConstants(eltype,length(cellregions))
     grid[BFaceNodes]=bfacenodes
     grid[BFaceRegions]=bfaceregions
-    grid[BFaceTypes]=VectorOfConstants(btype,length(bfaceregions))
+    grid[BFaceGeometries]=VectorOfConstants(btype,length(bfaceregions))
     grid[CoordinateSystem]=csys
     return grid
 end
 
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 (Try to) create a subdivision of interval (a,b) stored in the 
 returned array X such that 
@@ -53,7 +60,7 @@ Caveat: the algorithm behind this is  well tested but unproven.
 
 Returns an Array containing the points of the subdivision.
 """
-function geomspace(a::Tv, b::Tv, ha::Tv, hb::Tv; tol=1.0e-10) where Tv
+function geomspace(a, b, ha, hb; tol=1.0e-10)
     
     function _geomspace0(l,h0, hl, tol=1.0e-10)
         
@@ -176,8 +183,10 @@ function geomspace(a::Tv, b::Tv, ha::Tv, hb::Tv; tol=1.0e-10) where Tv
     return X
 end
 
+
+
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Glue together two vectors a and b resulting in a vector c. They last element 
 of a shall be equal (up to tol) to the first element of b.
@@ -211,7 +220,7 @@ end
 
 ##########################################################
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Constructor for 1D grid.
 
@@ -252,7 +261,7 @@ end
 
 ##########################################################
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Constructor for 2D grid
 from coordinate arrays. 
@@ -453,8 +462,16 @@ function simplexgrid(flags::String, input::Triangulate.TriangulateIO)
 end
 
 """
-$(TYPEDSIGNATURES)
-
+````
+function simplexgrid(;flags::String="pAaqDQ",
+                     points=Array{Cdouble,2}(undef,0,0),
+                     bfaces=Array{Cint,2}(undef,0,0),
+                     bfaceregions=Array{Cint,1}(undef,0),
+                     regionpoints=Array{Cdouble,2}(undef,0,0),
+                     regionnumbers=Array{Cint,1}(undef,0),
+                     regionvolumes=Array{Cdouble,1}(undef,0)
+                  )
+````
 Create Grid from a number of input arrays.
 The 2D input arrays are transposed if necessary and converted to
 the proper data types for Triangulate.
@@ -554,7 +571,7 @@ end
 """
 $(TYPEDSIGNATURES)
   
-Read grid from file.
+Read grid from file. Currently for pdelib sg format only
 """
 function simplexgrid(::Type{<:IOStream};file::String="test.sg",format="")
     (fbase,fext)=splitext(file)

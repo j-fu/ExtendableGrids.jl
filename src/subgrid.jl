@@ -1,16 +1,22 @@
 """
 $(TYPEDEF)
-Key type for storing node in parent array
+
+Grid component key type for storing node in parent array
 """
 abstract type NodeInParent <: AbstractGridIntegerArray1D end
 
 """
 $(TYPEDEF)
-Key type for storing parent grid
+
+Grid component key type for storing parent grid
 """
 abstract type ParentGrid <: AbstractGridComponent end
 
-# Default transform for subgrid creation
+"""
+$(TYPEDSIGNATURES)
+
+Default transform for subgrid creation
+"""
 function _copytransform!(a::AbstractArray,b::AbstractArray)
     for i=1:length(a)
         a[i]=b[i]
@@ -21,6 +27,17 @@ end
 $(TYPEDSIGNATURES)
 
 Create subgrid from list of regions.
+
+- `parent`: parent grid 
+- `subregions`:  Array of subregions
+- `transform` (kw parameter): transformation function between
+   grid and subgrid coordinates acting on one point.
+   Default: `copytransform`
+- `boundary`: if true, create codimension 1 subgrid from boundary region.
+
+A subgrid is of type `ExtendableGrid` and stores two additional components:
+[`ParentGrid`](@ref) and [`NodeInParent`](@ref)
+
 """
 function subgrid(parent,
                  subregions::AbstractArray;
@@ -44,12 +61,12 @@ function subgrid(parent,
         xregions=parent[BFaceRegions]
         xnodes=parent[BFaceNodes]
         sub_gdim=dim_grid(parent)-1
-        xct=parent[BFaceTypes]
+        xct=parent[BFaceGeometries]
         sub_gdim=dim_grid(parent)-1
     else
         xregions=parent[CellRegions]
         xnodes=parent[CellNodes]
-        xct=parent[CellTypes]
+        xct=parent[CellGeometries]
         sub_gdim=dim_grid(parent)
     end
     
@@ -103,7 +120,7 @@ function subgrid(parent,
     subgrid=ExtendableGrid{Tc,Ti}()
     subgrid[Coordinates]=sub_coord
     subgrid[CellRegions]=sub_cr
-    subgrid[CellTypes]=sub_ct
+    subgrid[CellGeometries]=sub_ct
     subgrid[CellNodes]=sub_xnodes
     subgrid[ParentGrid]=parent
     subgrid[NodeInParent]=sub_nip

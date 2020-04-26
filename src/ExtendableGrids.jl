@@ -3,16 +3,25 @@ module ExtendableGrids
 using Triangulate
 using DocStringExtensions
 using ElasticArrays
+using AbstractTrees
+using InteractiveUtils
 
 include("adjacency.jl")
 export Adjacency,VariableTargetAdjacency,FixedTargetAdjacency
 export atranspose,num_targets,num_sources,num_links,append!, max_num_targets_per_source
 
+
+
 include("vectorofconstants.jl")
 export VectorOfConstants
 
+include("typehierarchy.jl")
+export AbstractExtendableGridApexType
+export typehierarchy
+
 include("elementgeometry.jl")
 export AbstractElementGeometry, ElementInfo
+export elementgeometries
 
 export AbstractElementGeometry0D
 export Vertex0D
@@ -33,6 +42,7 @@ export dim_element
 
 
 include("coordinatesystem.jl")
+export coordinatesystems
 export AbstractCoordinateSystem
 export Cartesian1D,Cartesian2D,Cartesian3D
 export Cylindrical2D,Cylindrical3D
@@ -44,14 +54,15 @@ include("extendablegrid.jl")
 export ExtendableGrid
 export instantiate, veryform
 export AbstractGridComponent
-export AbstractGridAdjacency,AbstractElementTypes,AbstractElementRegions
-export Coordinates,CellNodes,BFaceNodes,CellTypes,BFaceTypes,CellRegions,BFaceRegions
+export AbstractGridAdjacency,AbstractElementGeometries,AbstractElementRegions
+export Coordinates,CellNodes,BFaceNodes,CellGeometries,BFaceGeometries,CellRegions,BFaceRegions
 export NumCellRegions,NumBFaceRegions,CoordinateSystem
 export AbstractGridFloatArray1D,AbstractGridFloatArray2D
 export AbstractGridIntegerArray1D,AbstractGridIntegerArray2D
 export index_type, coord_type
 export dim_space, dim_grid
 export num_nodes, num_cells, num_bfaces
+export gridcomponents
  
 
 include("subgrid.jl")

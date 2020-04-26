@@ -1,30 +1,34 @@
-"""
-$(TYPEDEF)
-Apex type for grid components
-"""
-abstract type AbstractGridComponent end
+##################################################################
+# Abstract types
 
 """
 $(TYPEDEF)
-2D Array on grid components (e.g. coordinates)
+Apex type for grid components.
 """
-abstract type AbstractGridFloatArray2D <: AbstractGridComponent end
+abstract type AbstractGridComponent <: AbstractExtendableGridApexType end
+
 
 """
 $(TYPEDEF)
-1D Array on grid components
+1D Array of floating point data
 """
 abstract type AbstractGridFloatArray1D <: AbstractGridComponent end
 
 """
 $(TYPEDEF)
-1D Array on grid components
+2D Array of floating point data
+"""
+abstract type AbstractGridFloatArray2D <: AbstractGridComponent end
+
+"""
+$(TYPEDEF)
+1D Array of interger data
 """
 abstract type AbstractGridIntegerArray1D <: AbstractGridComponent end
 
 """
 $(TYPEDEF)
-2D Array on grid components
+2D Array of integer data
 """
 abstract type AbstractGridIntegerArray2D <: AbstractGridComponent end
 
@@ -36,13 +40,14 @@ abstract type AbstractGridIntegerConstant <: AbstractGridComponent end
 
 """
 $(TYPEDEF)
-Floating point  number
+Floating point number
 """
 abstract type AbstractGridFloatConstant <: AbstractGridComponent end
 
 
 """
 $(TYPEDEF)
+
 Any kind of adjacency between grid components
 """
 abstract type AbstractGridAdjacency <: AbstractGridComponent end
@@ -50,67 +55,96 @@ abstract type AbstractGridAdjacency <: AbstractGridComponent end
 
 """
 $(TYPEDEF)
-ElementInfo{AbstractCellType} on arrays
+
+Array of element geometry information. 
 """
-abstract type AbstractElementTypes <: AbstractGridComponent end
+abstract type AbstractElementGeometries <: AbstractGridComponent end
+
 
 """
 $(TYPEDEF)
-ElementInfo{Ti} on arrays
+
+Array of element region number information. 
 """
 abstract type AbstractElementRegions <: AbstractGridComponent end
 
+
+##################################################################
+# Component key types
+
 """
 $(TYPEDEF)
-Basic Grid components with classification via intermediate types
+
+Node coordinates
 """
 abstract type Coordinates <: AbstractGridFloatArray2D end
 
 """
 $(TYPEDEF)
+
+Adjacency describing nodes per grid cell
 """
 abstract type CellNodes <: AbstractGridAdjacency end
+
 """
 $(TYPEDEF)
+
+Adjacency describing nodes per grid boundary face
 """
 abstract type BFaceNodes <: AbstractGridAdjacency end
 
-"""
-$(TYPEDEF)
-"""
-abstract type CellTypes <: AbstractElementTypes end
-"""
-$(TYPEDEF)
-"""
-abstract type BFaceTypes <: AbstractElementTypes end
 
 """
 $(TYPEDEF)
+
+Description of cell geometries
 """
-abstract type CellRegions <: AbstractElementRegions end
+abstract type CellGeometries <: AbstractElementGeometries end
+
+"""
+Description of boundary face geometries
+
+$(TYPEDEF)
+"""
+abstract type BFaceGeometries <: AbstractElementGeometries end
+
 """
 $(TYPEDEF)
+
+Cell region number per cell
+"""
+abstract type CellRegions <: AbstractElementRegions end
+
+"""
+$(TYPEDEF)
+
+Boundary region number per boundary face
 """
 abstract type BFaceRegions <: AbstractElementRegions end
 
 """
 $(TYPEDEF)
+
+Number of cell regions
 """
 abstract type NumCellRegions <: AbstractGridIntegerConstant end
+
 """
 $(TYPEDEF)
+
+Number of boundary face regions 
 """
 abstract type NumBFaceRegions <: AbstractGridIntegerConstant end
+
 """
 $(TYPEDEF)
+
+Coordinate system
 """
 abstract type CoordinateSystem <: AbstractGridComponent end
 
-
-"""
-$(TYPEDEF)
-"""
-const ElementInfo{T}=Union{Vector{T},VectorOfConstants{T}}
+############################################################
+# Grid type
 
 """
 $(TYPEDEF)
@@ -121,34 +155,47 @@ mutable struct ExtendableGrid{Tc,Ti}
     ExtendableGrid{Tc,Ti}() where{Tc,Ti} =new(Dict{Type{<:AbstractGridComponent},Any}())
 end
 
+
+#############################################################
+# 
 """
-$(SIGNATURES)
+````
+const ElementInfo{T}=Union{Vector{T},VectorOfConstants{T}}`
+````
+
+Union type for element information arrays. If all elements have
+the same information, it can be stored in an economical form
+as a [`VectorOfConstants`](@ref).
+"""
+const ElementInfo{T}=Union{Vector{T},VectorOfConstants{T}}
+
+
+############################################################
+# Generic component methods
+
+"""
+$(TYPEDSIGNATURES)
 Default veryform method.
 
 "veryform"  means "verify and/or transform"  and is called to check
-and possibly transform components to be added to the grid.
-
+and possibly transform components to be added to the grid via `setindex!`.
 
 The default method just passes data through.
 """
 veryform(grid::ExtendableGrid,v,::Type{<:AbstractGridComponent})=v
 
-"""
-$(SIGNATURES)
-Check proper type of adjacencies
-"""
-veryform(grid::ExtendableGrid{Tc,Ti},v,T::Type{<:AbstractGridAdjacency}) where{Tc,Ti}= typeof(v)<:Adjacency{Ti} ? v : throw("Type mismatch")
-
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
+
 Set new grid component
 """
 Base.setindex!(grid::ExtendableGrid,v,T::Type{<:AbstractGridComponent})= grid.components[T]=veryform(grid,v,T)
 
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
+
 To be called by getindex. This triggers lazy creation of 
 non-existing gridcomponents
 """
@@ -156,15 +203,18 @@ Base.get!(grid::ExtendableGrid,T::Type{<:AbstractGridComponent})= get!( ()->very
 
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
+
 "Hook" for methods instantiating lazy components. 
-See https://white.ucc.asn.au/2020/04/19/Julia-Antipatterns.html
 """
 function instantiate end
 
 
 """
-$(SIGNATURES)
+````
+Base.getindex(grid::ExtendableGrid,T::Type{<:AbstractGridComponent})
+````
+
 Generic method for obtaining grid component.
 
 This method is mutating in the sense that non-existing grid components
@@ -176,41 +226,73 @@ value triggers type instability.
 Base.getindex(grid::ExtendableGrid,T::Type{<:AbstractGridComponent})=get!(grid,T)
 
 
+############################################################
+# Verfication of inserted data
+
 """
-$(SIGNATURES)
-Type specific method to obtain adjacency component
+````
+veryform(grid::ExtendableGrid{Tc,Ti},v,T::Type{<:AbstractGridAdjacency}) where{Tc,Ti}
+````
+
+Check proper type of adjacencies upon insertion
+"""
+veryform(grid::ExtendableGrid{Tc,Ti},v,T::Type{<:AbstractGridAdjacency}) where{Tc,Ti}= typeof(v)<:Adjacency{Ti} ? v : throw("Type mismatch")
+
+
+############################################################
+# Type stable component access
+
+"""
+````
+Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridAdjacency})::Adjacency{Ti} where{Tc,Ti}
+````
+
+Type stable return of adjacency component
 """
 function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridAdjacency})::Adjacency{Ti} where{Tc,Ti}
     get!(grid,T)
 end
 
 """
-$(SIGNATURES)
-Type specific method to obtain 2D array from grid
+````
+Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridFloatArray2D})::Array{Tc,2} 
+````
+
+Type stable c method to obtain 2D array from grid
 """
 function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridFloatArray2D})::Array{Tc,2} where{Tc,Ti}
     get!(grid,T)
 end
 
 """
-$(SIGNATURES)
-Type specific method to obtain 1D array from grid
+````
+Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridFloatArray1D})::Array{Tc,1} where{Tc,Ti}
+````
+
+Type stable method to obtain 1D array from grid
 """
 function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridFloatArray1D})::Array{Tc,1} where{Tc,Ti}
     get!(grid,T)
 end
 
+
 """
-$(SIGNATURES)
-Type specific method to obtain  element type
+````
+Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractElementGeometries})::ElementInfo{DataType}
+````
+
+Type stable method to obtain  element type
 """
-function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractElementTypes})::ElementInfo{DataType} where{Tc,Ti}
+function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractElementGeometries})::ElementInfo{DataType} where{Tc,Ti}
     get!(grid,T)
 end
 
 """
-$(SIGNATURES)
-Type specific method to obtain element region number
+````
+Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractElementRegions})::ElementInfo{Ti} where{Tc,Ti}
+````
+
+Type stable method to obtain element region number
 """
 function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractElementRegions})::ElementInfo{Ti} where{Tc,Ti}
     get!(grid,T)
@@ -218,32 +300,73 @@ end
 
 
 """
-$(SIGNATURES)
-Type specific method to obtain  integer constant stored on elements
+````
+Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridIntegerConstant})::Ti where{Tc,Ti}
+````
+
+Type stable method to obtain  integer constant stored on elements
 """
 function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridIntegerConstant})::Ti where{Tc,Ti}
     get!(grid,T)
 end
 
 """
-$(SIGNATURES)
-Type specific method to obtain float constant stored on elements
+````
+Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridFloatConstant})::Tc where{Tc,Ti}
+````
+
+Type stable  method to obtain float constant stored on elements
 """
 function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridFloatConstant})::Tc where{Tc,Ti}
     get!(grid,T)
 end
 
 
+############################################################
+# Instantiation methods
+
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
+
 Instantiate number of cell regions
 """
 instantiate(grid, ::Type{NumCellRegions})=maximum(grid[CellRegions])
+
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
+
 Instantiate number of bface regions
 """
 instantiate(grid, ::Type{NumBFaceRegions})=maximum(grid[BFaceRegions])
+
+
+
+#############################################################
+# General methods
+"""
+$(TYPEDSIGNATURES)
+
+Print the hierarchy of grid component key types (subtypes of [`AbstractGridComponent`](@ref). 
+This includes additionally user defined subptypes.
+"""
+gridcomponents()=AbstractTrees.print_tree(AbstractGridComponent,5,indicate_truncation=false)
+
+
+
+"""
+$(TYPEDSIGNATURES)
+
+Keys in grid
+"""
+Base.keys(g::ExtendableGrid)=keys(g.components)
+
+
+"""
+$(TYPEDSIGNATURES)
+
+Check if key is in grid
+"""
+Base.haskey(g::ExtendableGrid,k) = haskey(g.components,k)
 
 
 """
@@ -253,15 +376,15 @@ Space dimension of grid
 """
 dim_space(grid::ExtendableGrid)= size(grid[Coordinates],1)
 
+
 """
 $(SIGNATURES)
 
 Grid dimension dimension of grid (larges element dimension)
 """
-dim_grid(grid::ExtendableGrid)=  dim_element(grid[CellTypes][1])
+dim_grid(grid::ExtendableGrid)=  dim_element(grid[CellGeometries][1])
 
 
-##########################################################
 """
 $(SIGNATURES)
 
@@ -270,34 +393,31 @@ Number of nodes in grid
 num_nodes(grid::ExtendableGrid)= size(grid[Coordinates],2)
 
 
-##########################################################
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Number of cells in grid
 """
 num_cells(grid::ExtendableGrid)= num_sources(grid[CellNodes])
 
-##########################################################
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Number of edges in grid
 """
 num_edges(grid::ExtendableGrid)= num_sources(grid[EdgeNodes])
 
 
-################################################
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Number of boundary faces in grid.
 """
 num_bfaces(grid::ExtendableGrid)= num_sources(grid[BFaceNodes])
 
-################################################
+
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Maximum  cell  region number
 """
@@ -305,26 +425,27 @@ num_cellregions(grid::ExtendableGrid)=grid[NumCellRegions]
 
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
-Maximum  boundary face region number
+Maximum  boundary face region numbers
 """
 num_bfaceregions(grid::ExtendableGrid)=grid[NumBFaceRegions]
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 Type of coordinates in grid
 """
 coord_type(grid::ExtendableGrid{Tc, Ti}) where {Tc,Ti}=Tc
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
+
 Type of indices
 """
 index_type(grid::ExtendableGrid{Tc, Ti}) where {Tc,Ti}=Ti
 
 """
-$(SIGNATURES)
+$(TYPEDSIGNATURES)
 
 Map a function onto node coordinates of grid
 """
