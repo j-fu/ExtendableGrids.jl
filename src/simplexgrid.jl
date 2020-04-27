@@ -60,7 +60,7 @@ Caveat: the algorithm behind this is  well tested but unproven.
 
 Returns an Array containing the points of the subdivision.
 """
-function geomspace(a, b, ha, hb; tol=1.0e-10)
+function geomspace(a::Tv, b::Tv, ha::Tv, hb::Tv ; tol=1.0e-10) where{Tv}
     
     function _geomspace0(l,h0, hl, tol=1.0e-10)
         

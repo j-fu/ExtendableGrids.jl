@@ -6,7 +6,7 @@ Define children for types.
 AbstractTrees.children(T::Type)=InteractiveUtils.subtypes(T)
 
 """
-$(TYPE)
+$(TYPEDEF)
 
 Apex type of all abstract types in this hierarchy.
 """

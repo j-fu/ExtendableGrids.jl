@@ -79,5 +79,6 @@ export TokenStream, gettoken, expecttoken,trytoken
 
 include("plot.jl")
 export plot
+export isplots,isvtkview,ispyplot
 
 end # module
