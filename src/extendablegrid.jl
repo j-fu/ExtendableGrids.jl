@@ -358,7 +358,7 @@ $(TYPEDSIGNATURES)
 
 Keys in grid
 """
-Base.keys(g::ExtendableGrid)=keys(g.components)
+keys(g::ExtendableGrid)=keys(g.components)
 
 
 """
@@ -461,5 +461,15 @@ function map(f::Function, grid::ExtendableGrid)
     end
 end
 
+
+function Base.show(io::IO,grid::ExtendableGrid)
+    # if num_edges(grid)>0
+    #     str=@sprintf("%s(dim_space=%d, num_nodes=%d, num_cells=%d, num_bfaces=%d, num_edges=%d)",
+    #                  typeof(grid),dim_space(grid),num_nodes(grid), num_cells(grid), num_bfaces(grid), num_edges(grid))
+    # else
+    str=@sprintf("%s(dim_space=%d, num_nodes=%d, num_cells=%d, num_bfaces=%d)",
+                 typeof(grid),dim_space(grid),num_nodes(grid), num_cells(grid), num_bfaces(grid))
+    println(io,str)
+end
 
 

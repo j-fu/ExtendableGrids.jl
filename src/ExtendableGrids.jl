@@ -5,6 +5,7 @@ using DocStringExtensions
 using ElasticArrays
 using AbstractTrees
 using InteractiveUtils
+using Printf
 
 include("adjacency.jl")
 export Adjacency,VariableTargetAdjacency,FixedTargetAdjacency
