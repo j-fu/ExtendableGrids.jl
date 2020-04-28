@@ -358,7 +358,7 @@ $(TYPEDSIGNATURES)
 
 Keys in grid
 """
-keys(g::ExtendableGrid)=keys(g.components)
+Base.keys(g::ExtendableGrid)=Base.keys(g.components)
 
 
 """
@@ -366,7 +366,7 @@ $(TYPEDSIGNATURES)
 
 Check if key is in grid
 """
-Base.haskey(g::ExtendableGrid,k) = haskey(g.components,k)
+Base.haskey(g::ExtendableGrid,k) = Base.haskey(g.components,k)
 
 
 """
