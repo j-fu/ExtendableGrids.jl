@@ -12,6 +12,7 @@ function mkdocs()
                  "Home"=>"index.md",
                  "adjacency.md",
                  "vectorofconstants.md",
+                 "typehierarchy.md",
                  "elementgeometry.md",
                  "coordinatesystem.md",
                  "extendablegrid.md",

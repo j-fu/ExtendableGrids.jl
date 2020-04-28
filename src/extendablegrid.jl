@@ -432,13 +432,13 @@ Maximum  boundary face region numbers
 num_bfaceregions(grid::ExtendableGrid)=grid[NumBFaceRegions]
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 Type of coordinates in grid
 """
 coord_type(grid::ExtendableGrid{Tc, Ti}) where {Tc,Ti}=Tc
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 
 Type of indices
 """
