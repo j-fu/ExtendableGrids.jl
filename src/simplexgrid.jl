@@ -126,7 +126,7 @@ function geomspace(a::Tv, b::Tv, ha::Tv, hb::Tv ; tol=1.0e-10) where{Tv}
             xl=q
             xr=q/0.99
             @assert ns<nsmax
-            
++            
             # bisection to define q with zero lmismatch
             ns=0
             xm=0.5*(xl+xr)
@@ -219,6 +219,11 @@ end
 
 
 ##########################################################
+abstract type XCoordinates <: AbstractGridFloatArray1D end
+abstract type YCoordinates <: AbstractGridFloatArray1D end
+abstract type ZCoordinates <: AbstractGridFloatArray1D end
+
+
 """
 $(TYPEDSIGNATURES)
 
@@ -251,11 +256,13 @@ function simplexgrid(X::AbstractArray{Tc,1}) where {Tc}
     bfacenodes[1,2]=length(X)
     bfaceregions[1]=1
     bfaceregions[2]=2
-    return simplexgrid(coord,
-                cellnodes,
-                cellregions,
-                bfacenodes,
-                bfaceregions)
+    grid=simplexgrid(coord,
+                     cellnodes,
+                     cellregions,
+                     bfacenodes,
+                     bfaceregions)
+    grid[XCoordinates]=X
+    grid
 end
 
 
@@ -417,11 +424,15 @@ function  simplexgrid(X::AbstractArray{Tc,1},Y::AbstractArray{Tc,1}) where {Tc}
     @assert(ibface==num_bfacenodes)
 
 
-    return simplexgrid(coord,
-                cellnodes,
-                cellregions,
-                bfacenodes,
-                bfaceregions)
+    grid=simplexgrid(coord,
+                     cellnodes,
+                     cellregions,
+                     bfacenodes,
+                     bfaceregions)
+
+    grid[XCoordinates]=X
+    grid[YCoordinates]=Y
+    grid
 end
 
 
