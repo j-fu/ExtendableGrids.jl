@@ -467,7 +467,7 @@ function Base.show(io::IO,grid::ExtendableGrid)
     #     str=@sprintf("%s(dim_space=%d, num_nodes=%d, num_cells=%d, num_bfaces=%d, num_edges=%d)",
     #                  typeof(grid),dim_space(grid),num_nodes(grid), num_cells(grid), num_bfaces(grid), num_edges(grid))
     # else
-    str=@sprintf("%s(dim_space=%d, num_nodes=%d, num_cells=%d, num_bfaces=%d)",
+    str=@sprintf("%s;\ndim: %d nodes: %d cells: %d bfaces: %d\n",
                  typeof(grid),dim_space(grid),num_nodes(grid), num_cells(grid), num_bfaces(grid))
     println(io,str)
 end

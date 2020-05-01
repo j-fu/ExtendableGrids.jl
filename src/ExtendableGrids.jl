@@ -74,6 +74,7 @@ export cellmask!,bfacemask!
 
 include("simplexgrid.jl")
 export simplexgrid, geomspace,glue
+export XCoordinates, YCoordinates
 
 include("tokenstream.jl")
 export TokenStream, gettoken, expecttoken,trytoken
@@ -81,5 +82,6 @@ export TokenStream, gettoken, expecttoken,trytoken
 include("plot.jl")
 export plot
 export isplots,isvtkview,ispyplot
+export tridata,rectdata
 
 end # module

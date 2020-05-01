@@ -26,6 +26,24 @@ function tridata(grid)
     coord[1,:], coord[2,:],transpose(cellnodes.-1)
 end
 
+"""
+$(TYPEDSIGNATURES)
+Return rectangular grid data + function to be splatted into Plots calls
+"""
+function rectdata(grid,U)
+    @show keys(grid)
+    if dim_grid(grid)==1 && haskey(grid,XCoordinates) 
+        return grid[XCoordinates],U
+    end
+    if dim_grid(grid)==2 && haskey(grid,XCoordinates) && haskey(grid,YCoordinates)
+        X=grid[XCoordinates]
+        Y=grid[YCoordinates]
+        return X,Y,transpose(reshape(U,length(X),length(Y)))
+    end
+    error("no rectdata on grid")
+    nothing
+end
+
 
 """
 $(TYPEDSIGNATURES)
@@ -62,7 +80,13 @@ Plot grid.
 
 Plotter defaults to `nothing` and can be `PyPLot`, `Plots`, `VTKView`.
 """
-function plot(grid::ExtendableGrid; Plotter=nothing)
+function plot(grid::ExtendableGrid;
+              Plotter=nothing,
+              aspect=1,
+              clear=true,
+              show=true,
+              p=nothing)
+
     
     if isvtkview(Plotter)
         frame=Plotter.StaticFrame()
@@ -97,6 +121,76 @@ function plot(grid::ExtendableGrid; Plotter=nothing)
         rgb=[frgb(Plotter,bfaceregions[i],nbfaceregions) for i=1:length(bfaceregions)]
         ax.add_collection(Plotter.matplotlib.collections.LineCollection(collect(zip(xc,yc)),colors=rgb,linewidth=3))
     end
+
+    if isplots(Plotter)
+        if p==nothing
+            p=Plotter.plot()
+        end
+
+        cellregions=grid[CellRegions]
+        cellnodes=grid[CellNodes]
+        coord=grid[Coordinates]
+        ncellregions=grid[NumCellRegions]
+        bfacenodes=grid[BFaceNodes]
+        bfaceregions=grid[BFaceRegions]
+        nbfaceregions=grid[NumBFaceRegions]
+
+        if dim_space(grid)==1
+            xmin=minimum(coord)
+            xmax=maximum(coord)
+            h=(xmax-xmin)/20.0
+            
+            for icell=1:num_cells(grid)
+                rgb=frgb(Plotter,cellregions[icell],ncellregions)
+                x1=coord1[1,cellnodes[1,icell]]
+                x2=coord2[1,cellnodes[2,icell]]
+                Plotter.plot!(p,[x1,x1],[-h,h],linewidth=0.5,color=:black,label="")
+                Plotter.plot!(p,[x2,x2],[-h,h],linewidth=0.5,color=:black,label="")
+                Plotter.plot!(p,[x1,x2],[0,0],linewidth=3.0,color=rgb,label="")
+            end
+            
+            for ibface=1:num_bfaces(grid)
+                if bfaceregions[ibface]>0
+                rgb=frgb(Plotter,bfaceregions[ibface],nbfaceregions)
+                    x1=coord1[1,bfacenodes[1,ibface]]
+                    Plotter.plot!(p,[x1,x1],[-2*h,2*h],linewidth=3.0,color=rgb,label="")
+                end
+            end
+        end
+        
+        if dim_space(grid)==2
+            for icell=1:num_cells(grid)
+                rgb=frgb(Plotter,cellregions[icell],ncellregions,pastel=true)
+                inode1=cellnodes[1,icell]
+                inode2=cellnodes[2,icell]
+                inode3=cellnodes[3,icell]
+                # https://github.com/JuliaPlotter/Plotter.jl/issues/605
+                
+                tri=Plotter.Shape([coord[1,inode1],coord[1,inode2], coord[1,inode3]],[coord[2,inode1],coord[2,inode2],coord[2,inode3]])
+                Plotter.plot!(p,tri,color=rgb,label="")
+            end
+            for icell=1:num_cells(grid)
+                inode1=cellnodes[1,icell]
+                inode2=cellnodes[2,icell]
+                inode3=cellnodes[3,icell]
+                Plotter.plot!(p, [coord[1,inode1],coord[1,inode2]],[coord[2,inode1],coord[2,inode2]]  ,linewidth=0.5,color=:black,label="")
+                Plotter.plot!(p, [coord[1,inode1],coord[1,inode3]],[coord[2,inode1],coord[2,inode3]]  ,linewidth=0.5,color=:black,label="")
+                Plotter.plot!(p, [coord[1,inode2],coord[1,inode3]],[coord[2,inode2],coord[2,inode3]]  ,linewidth=0.5,color=:black,label="")
+            end
+            for ibface=1:num_bfaces(grid)
+                rgb=frgb(Plotter,bfaceregions[ibface],nbfaceregions)
+                inode1=bfacenodes[1,ibface]
+                inode2=bfacenodes[2,ibface]
+                Plotter.plot!(p,[coord[1,inode1],coord[1,inode2]],[coord[2,inode1],coord[2,inode2]]  ,linewidth=5,color=rgb,label="")
+            end
+        end
+        if show
+            Plotter.gui(p)
+        end
+        return p
+    end
+
+
 end
 
 """
@@ -121,10 +215,12 @@ function plot(grid::ExtendableGrid, U::AbstractVector;
               color=(0,0,0),
               cmap="hot",
               label="",
-              levels=10,
+              colorlevels=51,
+              isolines=11,
               aspect=1,
               clear=true,
               show=true,
+              cbar=true,
               p=nothing)
 
     cellnodes=grid[CellNodes]
@@ -145,8 +241,9 @@ function plot(grid::ExtendableGrid, U::AbstractVector;
     end
     
     if ispyplot(Plotter)
+        PyPlot=Plotter
         if clear
-            Plotter.clf()
+            PyPlot.clf()
         end
         if dim_space(grid)==1
             for icell=1:num_cells(grid)
@@ -155,19 +252,33 @@ function plot(grid::ExtendableGrid, U::AbstractVector;
                 x1=coord[1,i1]
                 x2=coord[1,i2]
                 if icell==1 && label !=""
-                    Plotter.plot([x1,x2],[U[i1],U[i2]],color=color,label=label)
+                    PyPlot.plot([x1,x2],[U[i1],U[i2]],color=color,label=label)
                 else
-                    Plotter.plot([x1,x2],[U[i1],U[i2]],color=color)
+                    PyPlot.plot([x1,x2],[U[i1],U[i2]],color=color)
                 end                
             end
         end
         
         if dim_space(grid)==2
-            ax=Plotter.matplotlib.pyplot.gca()
+            ax=PyPlot.matplotlib.pyplot.gca()
             ax.set_aspect(aspect)
-            plotted=Plotter.tricontourf(tridata(grid)...,U;levels=levels,cmap=cmap)
-            Plotter.tricontour(tridata(grid)...,U,colors="k",levels=levels)
-            return plotted
+            umin=minimum(U)
+            umax=maximum(U)
+            if typeof(colorlevels)<:Number
+                colorlevels=collect(umin:(umax-umin)/(colorlevels-1):umax)
+            end
+            if typeof(isolines)<:Number
+                isolines=collect(umin:(umax-umin)/(isolines-1):umax)
+            end
+            PyPlot.tricontourf(tridata(grid)...,U;levels=colorlevels,cmap=PyPlot.ColorMap(cmap))
+            if cbar
+                PyPlot.colorbar(ticks=isolines,boundaries=colorlevels)
+            end
+            PyPlot.tricontour(tridata(grid)...,U,colors="k",levels=isolines)
+            if show
+                PyPlot.pause(1.0e-10)
+                PyPlot.show()
+            end
         end
     end
 
