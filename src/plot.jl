@@ -142,8 +142,8 @@ function plot(grid::ExtendableGrid;
             
             for icell=1:num_cells(grid)
                 rgb=frgb(Plotter,cellregions[icell],ncellregions)
-                x1=coord1[1,cellnodes[1,icell]]
-                x2=coord2[1,cellnodes[2,icell]]
+                x1=coord[1,cellnodes[1,icell]]
+                x2=coord[1,cellnodes[2,icell]]
                 Plotter.plot!(p,[x1,x1],[-h,h],linewidth=0.5,color=:black,label="")
                 Plotter.plot!(p,[x2,x2],[-h,h],linewidth=0.5,color=:black,label="")
                 Plotter.plot!(p,[x1,x2],[0,0],linewidth=3.0,color=rgb,label="")
@@ -152,7 +152,7 @@ function plot(grid::ExtendableGrid;
             for ibface=1:num_bfaces(grid)
                 if bfaceregions[ibface]>0
                 rgb=frgb(Plotter,bfaceregions[ibface],nbfaceregions)
-                    x1=coord1[1,bfacenodes[1,ibface]]
+                    x1=coord[1,bfacenodes[1,ibface]]
                     Plotter.plot!(p,[x1,x1],[-2*h,2*h],linewidth=3.0,color=rgb,label="")
                 end
             end
