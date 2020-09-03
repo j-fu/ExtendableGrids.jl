@@ -76,6 +76,13 @@ include("simplexgrid.jl")
 export simplexgrid, geomspace,glue
 export XCoordinates, YCoordinates
 
+include("gridfactory.jl")
+export GridFactory
+export point!
+export facet!
+export cellregion!
+export flags!
+
 include("tokenstream.jl")
 export TokenStream, gettoken, expecttoken,trytoken
 

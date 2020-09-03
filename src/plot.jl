@@ -31,7 +31,6 @@ $(TYPEDSIGNATURES)
 Return rectangular grid data + function to be splatted into Plots calls
 """
 function rectdata(grid,U)
-    @show keys(grid)
     if dim_grid(grid)==1 && haskey(grid,XCoordinates) 
         return grid[XCoordinates],U
     end
