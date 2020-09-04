@@ -1,10 +1,17 @@
-module Example201_GridFactorySquare
+#= 
+
+# 251: Square using GridFactory
+([source code](SOURCE_URL))
+
+=#
+
+module Example251_GridFactorySquare
 using ExtendableGrids
 
 function main(;plotter=nothing)
-
+    
     factory=GridFactory(dim_space=2)
-
+    
     p1=point!(factory,0,0)
     p2=point!(factory,1,0)
     p3=point!(factory,1,1)
@@ -19,5 +26,10 @@ function main(;plotter=nothing)
     @show grid
     
     ExtendableGrids.plot(grid,Plotter=plotter)
+    (num_nodes(grid),num_cells(grid),num_bfaces(grid))
+end
+
+function test()
+    main()==(89,144,32)
 end
 end
