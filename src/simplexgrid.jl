@@ -443,8 +443,12 @@ $(TYPEDSIGNATURES)
 
 Create Grid from Triangle input data.
 """
-function simplexgrid(flags::String, input::Triangulate.TriangulateIO)
+function simplexgrid(flags::String, input::Triangulate.TriangulateIO;unsuitable=nothing)
 
+    if typeof(unsuitable)!=Nothing
+        triunsuitable(unsuitable)
+    end
+        
     triout,vorout=Triangulate.triangulate(flags,input)
 
     pointlist=triout.pointlist
@@ -480,7 +484,8 @@ function simplexgrid(;flags::String="pAaqDQ",
                      bfaceregions=Array{Cint,1}(undef,0),
                      regionpoints=Array{Cdouble,2}(undef,0,0),
                      regionnumbers=Array{Cint,1}(undef,0),
-                     regionvolumes=Array{Cdouble,1}(undef,0)
+                     regionvolumes=Array{Cdouble,1}(undef,0),
+                     unsuitable=nothing
                   )
 ````
 Create Grid from a number of input arrays.
@@ -497,8 +502,9 @@ function simplexgrid(;flags::String="pAaqDQ",
                      bfaceregions=Array{Cint,1}(undef,0),
                      regionpoints=Array{Cdouble,2}(undef,0,0),
                      regionnumbers=Array{Cint,1}(undef,0),
-                     regionvolumes=Array{Cdouble,1}(undef,0)
-                  )
+                     regionvolumes=Array{Cdouble,1}(undef,0),
+                     unsuitable=nothing
+                     )
     @assert ndims(points)==2
     if size(points,2)==2
         points=transpose(points)
@@ -524,7 +530,7 @@ function simplexgrid(;flags::String="pAaqDQ",
     end
     
     @assert ndims(regionpoints)==2
-    if size(regionpoints,2)==2
+    if size(regionpoints,1)!=2
         regionpoints=transpose(regionpoints)
     end
     if typeof(regionpoints)!=Array{Cdouble,2}
@@ -556,8 +562,8 @@ function simplexgrid(;flags::String="pAaqDQ",
     iregion=1
     for i=1:length(regionnumbers)
         if regionnumbers[i]==0
-            holelist[1,iregion]=regionpoints[1,i]
-            holeist[2,iregion]=regionpoints[2,i]
+            holelist[1,ihole]=regionpoints[1,i]
+            holelist[2,ihole]=regionpoints[2,i]
             ihole+=1
         else
             regionlist[1,iregion]=regionpoints[1,i]
@@ -573,7 +579,7 @@ function simplexgrid(;flags::String="pAaqDQ",
     tio.segmentmarkerlist=bfaceregions
     tio.regionlist=regionlist
     tio.holelist=holelist
-    simplexgrid(flags,tio)
+    simplexgrid(flags,tio,unsuitable=unsuitable)
 end
 
 

@@ -8,7 +8,7 @@
 module Example201_Rectangle
 using ExtendableGrids
 
-function main(;plotter=Nothing)
+function main(;plotter=nothing)
 
     X=collect(0:0.05:1)
     Y=collect(0:0.05:1)

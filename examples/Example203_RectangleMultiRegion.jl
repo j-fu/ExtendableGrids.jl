@@ -5,10 +5,11 @@
 
 =#
 
-module Example203_IntervalMultiRegion
-using ExtendableGrids
+module Example203_RectangleMultiRegion
 
-function main(;plotter=Nothing)
+using ExtendableGrids
+  
+function main(;plotter=nothing)
 
     X=collect(0:0.05:1)
     Y=collect(0:0.05:1)

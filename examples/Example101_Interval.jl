@@ -8,7 +8,7 @@
 module Example101_Interval
 using ExtendableGrids
 
-function main(;plotter=Nothing)
+function main(;plotter=nothing)
 
     X=collect(0:0.05:1)
     grid=simplexgrid(X)

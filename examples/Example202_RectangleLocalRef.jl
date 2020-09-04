@@ -8,7 +8,7 @@
 module Example202_RectangleLocalRef
 using ExtendableGrids
 
-function main(;plotter=Nothing)
+function main(;plotter=nothing)
 
     XLeft=geomspace(0.0,0.5,0.1, 0.01)
     XRight=geomspace(0.5,1.0,0.01,0.1)

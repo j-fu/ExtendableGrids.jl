@@ -1,7 +1,5 @@
 mutable struct GridFactory
     current_facetregion::Cint
-    current_cellregion::Cint
-    current_regionvolume::Cdouble
     flags::String
     point_identity_tolerance::Cdouble
     facetregions::Vector{Cint}
@@ -18,7 +16,6 @@ function GridFactory(;dim_space=2,tol=1.0e-12,flags::String="pAaqDQ")
     this=GridFactory(nothing)
     this.flags=flags
     this.current_facetregion=1
-    this.current_cellregion=1
     this.point_identity_tolerance=tol
     this.facets=[]
     this.facetregions=[]
@@ -40,7 +37,11 @@ end
 """
 dim_space(this::GridFactory)=size(this.points,1)
 
+flags!(this::GridFactory)=this.flags
 flags!(this::GridFactory,flags::String)=this.flags=flags
+appendflags!(this::GridFactory,flags::String)=this.flags*=flags
+
+unsuitable!(this::GridFactory,func::Function)= this.unsuitable=func
 
 function findpoint(this::GridFactory,x)
     if this.point_identity_tolerance<0.0
@@ -146,6 +147,12 @@ end
 
 cellregion!(this::GridFactory,p::Union{Vector,Tuple};region=1,volume=1.0)=regionpoint!(this,p...,region=region,volume=volume)
 
+hole!(this::GridFactory, p::Union{Vector,Tuple})=cellregion!(this,p,region=0,volume=1)
+hole!(this::GridFactory, x)=cellregion!(this,x,region=0,volume=1)
+hole!(this::GridFactory, x,y)=cellregion!(this,x,y,region=0,volume=1)
+hole!(this::GridFactory, x,y,z)=cellregion!(this,x,y,z,region=0,volume=1)
+
+
 function facet!(this::GridFactory,i;region=1)
     dim_space(this)==1||throw(DimensionMismatchError())
     push!(this.facets,[i])
@@ -191,7 +198,6 @@ end
 
 function simplexgrid(this::GridFactory)
     dim_space(this)==2 || throw(error("dimension !=2 not implemented"))
-    @show length(this.facets)
     facets=Array{Cint,2}(undef,2,length(this.facets))
     for i=1:length(this.facets)
         facets[1,i]=this.facets[i][1]
@@ -204,5 +210,6 @@ function simplexgrid(this::GridFactory)
                 bfaceregions=this.facetregions,
                 regionpoints=this.regionpoints,
                 regionnumbers=this.regionnumbers,
-                regionvolumes=this.regionvolumes)
+                regionvolumes=this.regionvolumes,
+                unsuitable=this.unsuitable)
 end

@@ -80,8 +80,10 @@ include("gridfactory.jl")
 export GridFactory
 export point!
 export facet!
-export cellregion!
+export cellregion!, hole!
 export flags!
+export unsuitable!
+export appendflags!
 
 include("tokenstream.jl")
 export TokenStream, gettoken, expecttoken,trytoken

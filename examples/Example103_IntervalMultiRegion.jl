@@ -8,7 +8,7 @@
 module Example103_IntervalMultiRegion
 using ExtendableGrids
 
-function main(;plotter=Nothing)
+function main(;plotter=nothing)
 
     X=collect(0:0.05:1)
     grid=simplexgrid(X)
@@ -18,6 +18,6 @@ function main(;plotter=Nothing)
     (num_nodes(grid),num_cells(grid),num_bfaces(grid))
 end
 function test()
-    main()==(21,20,2)
+    main()==(21,20,3)
 end
 end

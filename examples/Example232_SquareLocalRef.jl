@@ -8,7 +8,7 @@
 module Example232_SquareLocalRef
 using ExtendableGrids
 
-function main(;plotter=Nothing)
+function main(;plotter=nothing)
 
     function unsuitable(x1,y1,x2,y2,x3,y3, area)
         bary_x=x1+x2+x3

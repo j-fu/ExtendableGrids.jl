@@ -8,7 +8,7 @@
 module Example231_Square
 using ExtendableGrids
 
-function main(;plotter=Nothing)
+function main(;plotter=nothing)
 
     grid=simplexgrid(points=[0 0 ; 0 1 ; 1 1 ; 1 0]',
                      bfaces=[1 2 ; 2 3 ; 3 4 ; 4 1 ]',

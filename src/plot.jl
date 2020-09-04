@@ -84,6 +84,7 @@ function plot(grid::ExtendableGrid;
               aspect=1,
               clear=true,
               show=true,
+              legend=(1.2,0.5),
               p=nothing)
 
     
@@ -104,21 +105,71 @@ function plot(grid::ExtendableGrid;
     if ispyplot(Plotter)
         Plotter.clf()
         ax=Plotter.matplotlib.pyplot.gca()
-        ax.set_aspect(1)
-        tridat=tridata(grid)
+
         cellregions=grid[CellRegions]
+        cellnodes=grid[CellNodes]
         coord=grid[Coordinates]
+        ncellregions=grid[NumCellRegions]
         bfacenodes=grid[BFaceNodes]
         bfaceregions=grid[BFaceRegions]
         nbfaceregions=grid[NumBFaceRegions]
-        Plotter.tripcolor(tridat...,facecolors=grid[CellRegions],cmap="Pastel2")
-        Plotter.triplot(tridat...,color="k",linewidth=0.5)
+        ncellregions=grid[NumCellRegions]
+
+        crflag=ones(Bool,ncellregions)
+        brflag=ones(Bool,nbfaceregions)
         
-        # see https://gist.github.com/gizmaa/7214002
-        xc=[coord[:,bfacenodes[1,i]] for i=1:size(bfacenodes,2)]
-        yc=[coord[:,bfacenodes[2,i]] for i=1:size(bfacenodes,2)]
-        rgb=[frgb(Plotter,bfaceregions[i],nbfaceregions) for i=1:length(bfaceregions)]
-        ax.add_collection(Plotter.matplotlib.collections.LineCollection(collect(zip(xc,yc)),colors=rgb,linewidth=3))
+        if dim_space(grid)==1
+            xmin=minimum(coord)
+            xmax=maximum(coord)
+            h=(xmax-xmin)/40.0
+            ax.set_aspect(1)
+            ax.get_yaxis().set_ticks([])
+            ax.set_ylim(-5*h,xmax-xmin)
+            for icell=1:num_cells(grid)
+                ireg=cellregions[icell]
+                label = crflag[ireg] ? "cellregion $(ireg)" : ""
+                crflag[ireg]=false
+                
+                rgb=frgb(Plotter,ireg,ncellregions)
+                x1=coord[1,cellnodes[1,icell]]
+                x2=coord[1,cellnodes[2,icell]]
+                Plotter.plot([x1,x1],[-h,h],linewidth=0.5,color="k",label="")
+                Plotter.plot([x2,x2],[-h,h],linewidth=0.5,color="k",label="")
+                Plotter.plot([x1,x2],[0,0],linewidth=3.0,color=rgb,label=label)
+            end
+            
+            for ibface=1:num_bfaces(grid)
+                ireg=bfaceregions[ibface]
+                if ireg >0
+                    label = brflag[ireg] ? "boundary $(ireg)" : ""
+                    brflag[ireg]=false
+                    rgb=frgb(Plotter,bfaceregions[ibface],nbfaceregions)
+                    x1=coord[1,bfacenodes[1,ibface]]
+                    Plotter.plot([x1,x1],[-2*h,2*h],linewidth=3.0,color=rgb,label=label)
+                end
+            end
+            Plotter.legend()
+        end
+
+
+
+        if dim_space(grid)==2
+            ax.set_aspect(1)
+            tridat=tridata(grid)
+            Plotter.tripcolor(tridat...,facecolors=grid[CellRegions],cmap="Pastel2")
+            cbar=Plotter.colorbar(ticks=collect(1:ncellregions))
+            Plotter.triplot(tridat...,color="k",linewidth=0.5)
+            # see https://gist.github.com/gizmaa/7214002
+            xc=[coord[:,bfacenodes[1,i]] for i=1:size(bfacenodes,2)]
+            yc=[coord[:,bfacenodes[2,i]] for i=1:size(bfacenodes,2)]
+            rgb=[frgb(Plotter,bfaceregions[i],nbfaceregions) for i=1:length(bfaceregions)]
+            ax.add_collection(Plotter.matplotlib.collections.LineCollection(collect(zip(xc,yc)),colors=rgb,linewidth=3))
+
+            for i=1:nbfaceregions
+                Plotter.plot(coord[:,1], coord[:,1],label="boundary $(i)", color=frgb(Plotter,i,nbfaceregions))
+            end
+            Plotter.legend(loc=legend)
+        end
     end
 
     if isplots(Plotter)
