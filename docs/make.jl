@@ -56,7 +56,7 @@ function mkdocs()
     for example_source in readdir(example_jl_dir)
         base,ext=splitext(example_source)
         if ext==".jl"
-            source_url="https://github.com/j-fu/VoronoiFVM.jl/raw/master/examples/"*example_source
+            source_url="https://github.com/j-fu/ExtendableGrids.jl/raw/master/examples/"*example_source
             preprocess(buffer)=replace_source_url(buffer,source_url)|>hashify_block_comments
             Literate.markdown(joinpath(@__DIR__,"..","examples",example_source),
                               example_md_dir,
