@@ -8,14 +8,16 @@
 module Example202_RectangleLocalRef
 using ExtendableGrids
 
-function main(;plotter=nothing)
+function main(;hmin=0.01, hmax=0.1, plotter=nothing, scene=nothing)
 
-    XLeft=geomspace(0.0,0.5,0.1, 0.01)
-    XRight=geomspace(0.5,1.0,0.01,0.1)
+    XLeft=geomspace(0.0,0.5,hmax,hmin)
+    XRight=geomspace(0.5,1.0,hmin,hmax)
     X=glue(XLeft, XRight)
     grid=simplexgrid(X,X)
-    ExtendableGrids.plot(grid,Plotter=plotter)
-    (num_nodes(grid),num_cells(grid),num_bfaces(grid))
+    if plotter==nothing
+        return (num_nodes(grid),num_cells(grid),num_bfaces(grid))
+    end
+    ExtendableGrids.plot(grid,Plotter=plotter, p=scene)
     
 end
 function test()

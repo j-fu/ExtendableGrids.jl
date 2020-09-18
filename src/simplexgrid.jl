@@ -505,6 +505,25 @@ function simplexgrid(;flags::String="pAaqDQ",
                      regionvolumes=Array{Cdouble,1}(undef,0),
                      unsuitable=nothing
                      )
+    tio=triangulateio(flags=flags,
+                      points=points,
+                      bfaces=bfaces,
+                      bfaceregions=bfaceregions,
+                      regionpoints=regionpoints,
+                      regionnumbers=regionnumbers,
+                      regionvolumes=regionvolumes)
+    
+    simplexgrid(flags,tio,unsuitable=unsuitable)
+end
+
+function triangulateio(;flags::String="pAaqDQ",
+                       points=Array{Cdouble,2}(undef,0,0),
+                       bfaces=Array{Cint,2}(undef,0,0),
+                       bfaceregions=Array{Cint,1}(undef,0),
+                       regionpoints=Array{Cdouble,2}(undef,0,0),
+                       regionnumbers=Array{Cint,1}(undef,0),
+                       regionvolumes=Array{Cdouble,1}(undef,0)
+                       )
     @assert ndims(points)==2
     if size(points,2)==2
         points=transpose(points)
@@ -521,7 +540,7 @@ function simplexgrid(;flags::String="pAaqDQ",
     if typeof(bfaces)!=Array{Cint,2}
         bfaces=Array{Cint,2}(bfaces)
     end
-    @assert(size(bfaces,2)>0)
+    # @assert(size(bfaces,2)>0)
     
     @assert ndims(bfaceregions)==1
     @assert size(bfaceregions,1)==size(bfaces,2)
@@ -536,7 +555,7 @@ function simplexgrid(;flags::String="pAaqDQ",
     if typeof(regionpoints)!=Array{Cdouble,2}
         regionpoints=Array{Cdouble,2}(regionpoints)
     end
-    @assert(size(regionpoints,2)>0)
+    # @assert(size(regionpoints,2)>0)
     
     @assert ndims(regionnumbers)==1
     @assert ndims(regionvolumes)==1
@@ -575,11 +594,19 @@ function simplexgrid(;flags::String="pAaqDQ",
     end
     tio=Triangulate.TriangulateIO()
     tio.pointlist=points
-    tio.segmentlist=bfaces
-    tio.segmentmarkerlist=bfaceregions
-    tio.regionlist=regionlist
-    tio.holelist=holelist
-    simplexgrid(flags,tio,unsuitable=unsuitable)
+    if size(bfaces,2)>0
+        tio.segmentlist=bfaces
+    end
+    if size(bfaceregions,1)>0
+        tio.segmentmarkerlist=bfaceregions
+    end
+    if size(regionlist,2)>0
+        tio.regionlist=regionlist
+    end
+    if size(holelist,2)>0
+        tio.holelist=holelist
+    end
+    tio
 end
 
 

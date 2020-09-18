@@ -1,4 +1,5 @@
 module ExtendableGrids
+using GeometryBasics
 
 using Triangulate
 using DocStringExtensions
@@ -84,13 +85,14 @@ export cellregion!, hole!
 export flags!
 export unsuitable!
 export appendflags!
+export triangleflags
 
 include("tokenstream.jl")
 export TokenStream, gettoken, expecttoken,trytoken
 
+include("GridRosetta.jl")
 include("plot.jl")
 export plot
 export isplots,isvtkview,ispyplot
 export tridata,rectdata
-
 end # module

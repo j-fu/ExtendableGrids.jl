@@ -12,7 +12,16 @@ mutable struct GridFactory
     GridFactory(x::Nothing) = new()
 end
 
-function GridFactory(;dim_space=2,tol=1.0e-12,flags::String="pAaqDQ")
+
+const _triangleflags=Dict(
+    :domain => "pAaqDQ",
+    :pointset => "Q",
+    :convex_hull => "cQ")
+
+triangleflags(s::Symbol)=_triangleflags[s]
+triangleflags()=_triangleflags
+
+function GridFactory(;dim_space=2,tol=1.0e-12,flags::String=triangleflags(:domain))
     this=GridFactory(nothing)
     this.flags=flags
     this.current_facetregion=1
@@ -145,7 +154,7 @@ function cellregion!(this::GridFactory,x,y,z;region=1,volume=1.0)
     region
 end
 
-cellregion!(this::GridFactory,p::Union{Vector,Tuple};region=1,volume=1.0)=regionpoint!(this,p...,region=region,volume=volume)
+cellregion!(this::GridFactory,p::Union{Vector,Tuple};region=1,volume=1.0)=cellregion!(this,p...,region=region,volume=volume)
 
 hole!(this::GridFactory, p::Union{Vector,Tuple})=cellregion!(this,p,region=0,volume=1)
 hole!(this::GridFactory, x)=cellregion!(this,x,region=0,volume=1)
@@ -212,4 +221,22 @@ function simplexgrid(this::GridFactory)
                 regionnumbers=this.regionnumbers,
                 regionvolumes=this.regionvolumes,
                 unsuitable=this.unsuitable)
+end
+
+function triangulateio(this::GridFactory)
+    dim_space(this)==2 || throw(error("dimension !=2 not implemented"))
+    facets=Array{Cint,2}(undef,2,length(this.facets))
+    for i=1:length(this.facets)
+        facets[1,i]=this.facets[i][1]
+        facets[2,i]=this.facets[i][2]
+    end
+    
+    triangulateio(flags=this.flags,
+                  points=this.points,
+                  bfaces=facets,
+                  bfaceregions=this.facetregions,
+                  regionpoints=this.regionpoints,
+                  regionnumbers=this.regionnumbers,
+                  regionvolumes=this.regionvolumes)
+    
 end

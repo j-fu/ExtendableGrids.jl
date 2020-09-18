@@ -1,3 +1,5 @@
+using .GridRosetta
+
 """
 $(TYPEDSIGNATURES)
 Check if Plotter is VTKView
@@ -15,6 +17,14 @@ $(TYPEDSIGNATURES)
 Check if Plotter is Plots
 """
 isplots(Plotter)= (typeof(Plotter)==Module) && isdefined(Plotter,:gr)
+
+
+"""
+$(TYPEDSIGNATURES)
+Check if Plotter is Makie
+"""
+ismakie(Plotter)= (typeof(Plotter)==Module)&&isdefined(Plotter,:AbstractPlotting)
+
 
 """
 $(TYPEDSIGNATURES)
@@ -87,6 +97,22 @@ function plot(grid::ExtendableGrid;
               legend=(1.2,0.5),
               p=nothing)
 
+    
+    if ismakie(Plotter)
+        mesh=Mesh(grid)
+        if p==nothing
+            scene=Plotter.Scene()
+        elseif typeof(p)==Plotter.Scene
+            scene=p
+        elseif typeof(p)<:Tuple
+            node=p[2]
+            node[]=mesh
+            return p
+        end
+        node=Plotter.Node(mesh)
+        Plotter.wireframe!(p,Plotter.lift(a->a,node))
+        return (scene,node)
+    end
     
     if isvtkview(Plotter)
         frame=Plotter.StaticFrame()
@@ -358,3 +384,32 @@ function plot(grid::ExtendableGrid, U::AbstractVector;
         return p
     end
 end
+
+function plot(gf::GridFactory; Plotter=nothing,title="")
+    
+    if ispyplot(Plotter)
+        triin=nothing
+        try
+            triin=triangulateio(gf)
+        catch err
+            @error "Incomplete geometry description"
+            rethrow(err)
+        end
+        if typeof(gf.unsuitable)!=Nothing
+            triunsuitable(gf.unsuitable)
+        end
+        triout,vorout=Triangulate.triangulate(gf.flags,triin)
+        PyPlot=Plotter
+        PyPlot.clf()
+        PyPlot.suptitle(title)
+        PyPlot.subplot(121)
+        PyPlot.title("In")
+        Triangulate.plot(PyPlot,triin)
+        PyPlot.subplot(122)
+        PyPlot.title("Out")
+        Triangulate.plot(PyPlot,triout)
+        PyPlot.tight_layout()
+    end
+end
+
+
