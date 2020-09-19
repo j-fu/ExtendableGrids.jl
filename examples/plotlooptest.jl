@@ -14,8 +14,9 @@ func2d=map((x,y)->sin(5*x)*sin(5*y),grid2d)
 function gridloop(Plotter;kwargs...)
     ctx=PlotterContext(Plotter,kwargs...)
     @time for i=1:20
-        X=collect(0.0:0.05:1+0.1*i)
-        grid=simplexgrid(X,X)
+        X=collect(0.0:0.05:1)
+        Y=collect(0.0:0.05:1+0.1*i)
+        grid=simplexgrid(X,Y)
         plot!(ctx,grid)
     end
 end

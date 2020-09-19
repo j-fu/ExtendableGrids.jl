@@ -125,6 +125,7 @@ function PlotterContext(Plotter,kwargs...)
                                      :legend_location => "upper right",
                                      :colormap => "hot",
                                      :label => "f",
+                                     :layout => (1,1),
                                      :color => (0,0,0),
                                      :elevation => false,
                                      :elevation_factor => 1.0,
