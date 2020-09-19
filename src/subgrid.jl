@@ -42,7 +42,8 @@ A subgrid is of type `ExtendableGrid` and stores two additional components:
 function subgrid(parent,
                  subregions::AbstractArray;
                  transform::Function=_copytransform!,
-                 boundary=false)
+                 boundary=false,
+                 project=true)
 
     Tc=coord_type(parent)
     Ti=index_type(parent)
@@ -111,12 +112,15 @@ function subgrid(parent,
         end
     end
 
-    sub_coord=zeros(Tc,sub_gdim,nsubnodes)
+    if project
+        sub_coord=zeros(Tc,sub_gdim,nsubnodes)
+    else
+        sub_coord=zeros(Tc,dim_space(parent),nsubnodes)
+    end
     coord=parent[Coordinates]
     @views for inode=1:nsubnodes
         transform(sub_coord[:,inode],coord[:,sub_nip[inode]])
     end
-    
     subgrid=ExtendableGrid{Tc,Ti}()
     subgrid[Coordinates]=sub_coord
     subgrid[CellRegions]=sub_cr
@@ -124,6 +128,7 @@ function subgrid(parent,
     subgrid[CellNodes]=sub_xnodes
     subgrid[ParentGrid]=parent
     subgrid[NodeInParent]=sub_nip
+    subgrid[NumBFaceRegions]=0
     subgrid
 end
 

@@ -13,19 +13,19 @@ modname(fname)=splitext(basename(fname))[1]
 #
 function run_tests_from_directory(testdir,prefix)
     println("Directory $(testdir):")
-    @time begin
+    begin
         examples=modname.(readdir(testdir))
         for example in examples
-            println("  $(example):")
             if length(example)>=length(prefix) &&example[1:length(prefix)]==prefix
+                @info "$(example):"
                 path=joinpath(testdir,"$(example).jl")
                 @eval begin
                     include($path)
                     # Compile + run test
-                    print("   compile:")
+                    @info "compile:"
                     @time @test eval(Meta.parse("$($example).test()"))
                     # Second run: pure execution time.
-                    print("       run:")
+                    @info "run:"
                     @time eval(Meta.parse("$($example).test()"))
                 end
             end
@@ -38,6 +38,7 @@ function run_all_tests()
     @time begin
         run_tests_from_directory(@__DIR__,"test_")
         run_tests_from_directory(joinpath(@__DIR__,"..","examples"),"Example")
+        @info "Tests finished"
     end
 end
 

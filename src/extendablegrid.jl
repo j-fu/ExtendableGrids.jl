@@ -413,7 +413,7 @@ $(TYPEDSIGNATURES)
 
 Number of boundary faces in grid.
 """
-num_bfaces(grid::ExtendableGrid)= num_sources(grid[BFaceNodes])
+num_bfaces(grid::ExtendableGrid)= haskey(grid,BFaceNodes) ? num_sources(grid[BFaceNodes]) : 0
 
 
 """
@@ -449,15 +449,15 @@ $(TYPEDSIGNATURES)
 
 Map a function onto node coordinates of grid
 """
-function map(f::Function, grid::ExtendableGrid)
+function Base.map(f::Function, grid::ExtendableGrid)
     coord=grid[Coordinates]
     dim=dim_space(grid)
     if dim==1
-        @views map(f,coord[1,:])
+        Base.map(f,coord[1,:])
     elseif dim==2
-        @views map(f,coord[1,:], coord[2,:])
+        Base.map(f,coord[1,:], coord[2,:])
     else
-        @views map(f,coord[1,:], coord[2,:], coord[3,:])
+        Base.map(f,coord[1,:], coord[2,:], coord[3,:])
     end
 end
 
@@ -472,4 +472,47 @@ function Base.show(io::IO,grid::ExtendableGrid)
     println(io,str)
 end
 
+
+"""
+$(SIGNATURES)
+
+Recursively check seeming equality of two grids. Seemingly means 
+that long arrays are only compared via random samples
+"""
+function seemingly_equal(grid1::ExtendableGrid, grid2::ExtendableGrid)
+    for key in keys(grid1)
+        if !haskey(grid2,key)
+            return false
+        end
+        if !seemingly_equal(grid1[key],grid2[key])
+            return false
+        end
+    end
+    return true
+end
+
+"""
+$(SIGNATURES)
+
+Check for seeming equality of two arrays by random sample.
+"""
+function seemingly_equal(array1::AbstractArray, array2::AbstractArray)
+    if size(array1)!=size(array2)
+        return false
+    end
+    l=length(array1)
+    ntests=Float64(min(l,50))
+    p=min(0.5,ntests/l)
+    for i in randsubseq( 1:l,p)
+        if !seemingly_equal(array1[i],array2[i])
+            return false
+        end
+    end
+    true
+end
+
+seemingly_equal(a1::VariableTargetAdjacency, a2::VariableTargetAdjacency)=seemingly_equal(a1.colentries,a2.colentries)&& seemingly_equal(a1.colstaert, a2.colstart)
+seemingly_equal(x1::Type, x2::Type)=(x1==x2)
+seemingly_equal(x1::Number, x2::Number)=(x1≈x2)
+seemingly_equal(x1::Any, x2::Any)=(x1==x2)
 

@@ -1,12 +1,14 @@
 module ExtendableGrids
-using GeometryBasics
-
 using Triangulate
 using DocStringExtensions
 using ElasticArrays
 using AbstractTrees
 using InteractiveUtils
+using Colors
+using GeometryBasics
+
 using Printf
+using Random
 
 include("adjacency.jl")
 export Adjacency,VariableTargetAdjacency,FixedTargetAdjacency
@@ -65,7 +67,7 @@ export index_type, coord_type
 export dim_space, dim_grid
 export num_nodes, num_cells, num_bfaces
 export gridcomponents
- 
+export seemingly_equal 
 
 include("subgrid.jl")
 export subgrid
@@ -90,9 +92,15 @@ export triangleflags
 include("tokenstream.jl")
 export TokenStream, gettoken, expecttoken,trytoken
 
-include("GridRosetta.jl")
 include("plot.jl")
-export plot
-export isplots,isvtkview,ispyplot
+include("plotters/pyplot.jl")
+include("plotters/makie.jl")
+include("plotters/vtkview.jl")
+include("plotters/plots.jl")
+
+export plot,plot!
+export isplots,isvtkview,ispyplot,ismakie
 export tridata,rectdata
+export PlotterContext
+
 end # module

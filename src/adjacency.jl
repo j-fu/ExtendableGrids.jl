@@ -104,7 +104,18 @@ Maximum number of targets per source
 """
 max_num_targets_per_source(adj::VariableTargetAdjacency)=maximum(adj.colstart[2:end].-adj.colstart[1:end-1])
 
+Base.size(adj::VariableTargetAdjacency)=(max_num_targets_per_source(adj),num_sources(adj))
 
+
+function Matrix(adj::VariableTargetAdjacency{T}) where T
+    m=zeros(T,size(adj)...)
+    for isrc=1:num_sources(adj)
+        for itgt=1:num_targets(adj,isrc)
+            m[itgt,isrc]=adj[itgt,isrc]
+        end
+    end
+    m
+end
 """
 $(TYPEDSIGNATURES)
 
