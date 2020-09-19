@@ -1,5 +1,17 @@
-function initialize_context(ctx::PlotterContext,::Type{PyPlotType})
+function initialize_context!(ctx::PlotterContext,::Type{PyPlotType})
     PyPlot=ctx[:Plotter]
+    ctx
+end
+
+function prepare_figure!(ctx::PlotterContext)
+    PyPlot=ctx[:Plotter]
+    if !haskey(ctx,:figure)
+        res=ctx[:resolution]
+        ctx[:figure]=PyPlot.figure(ctx[:fignumber],figsize=(res[1]/100,res[2]/100),dpi=100)
+    end
+    if ctx[:clear]
+        PyPlot.clf()
+    end
     ctx
 end
 
@@ -17,11 +29,9 @@ end
 
 function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}}, grid)
     PyPlot=ctx[:Plotter]
-    
-    if !haskey(ctx,:figure)
-        ctx[:figure]=PyPlot.figure()
-    end
-    PyPlot.clf()
+
+    prepare_figure!(ctx)
+
     ax=PyPlot.matplotlib.pyplot.gca()
     cellregions=grid[CellRegions]
     cellnodes=grid[CellNodes]
@@ -72,13 +82,10 @@ end
 
 function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid)
     PyPlot=ctx[:Plotter]
-    if !haskey(ctx,:figure)
-        ctx[:figure]=PyPlot.gcf()
-    end
 
-    PyPlot.clf()
+    prepare_figure!(ctx)
+
     ax=PyPlot.matplotlib.pyplot.gca()
-    
     cellregions=grid[CellRegions]
     cellnodes=grid[CellNodes]
     coord=grid[Coordinates]
@@ -120,11 +127,9 @@ end
 
 function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}},grid, func)
     PyPlot=ctx[:Plotter]
-    
-    if !haskey(ctx,:figure)
-        ctx[:figure]=PyPlot.gcf()
-    end
-    PyPlot.clf()
+
+    prepare_figure!(ctx)
+
     cellnodes=grid[CellNodes]
     coord=grid[Coordinates]
     for icell=1:num_cells(grid)
@@ -150,10 +155,8 @@ end
 function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid, func)
     PyPlot=ctx[:Plotter]
 
-    if !haskey(ctx,:figure)
-        ctx[:figure]=PyPlot.gcf()
-    end
-    PyPlot.clf()
+    prepare_figure!(ctx)
+
     ax=PyPlot.matplotlib.pyplot.gca()
     ax.set_aspect(ctx[:aspect])
     umin=minimum(func)
@@ -177,11 +180,8 @@ end
 
 function plot!(ctx, ::Type{PyPlotType}, gf::GridFactory)
     PyPlot=ctx[:Plotter]
-    
-    if !haskey(ctx,:figure)
-        ctx[:figure]=PyPlot.gcf()
-    end
-    PyPlot.clf()
+
+    prepare_figure!(ctx)
 
     triin=nothing
     try

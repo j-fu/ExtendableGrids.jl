@@ -1,11 +1,20 @@
-function initialize_context(ctx::PlotterContext,::Type{VTKViewType})
+function initialize_context!(ctx::PlotterContext,::Type{VTKViewType})
     ctx
 end
 
+function prepare_frame!(ctx)
+    VTKView=ctx[:Plotter]
+    if !haskey(ctx,:frame)
+        ctx[:frame]=VTKView.StaticFrame()
+    end
+    VTKView.size!(ctx[:frame],ctx[:resolution]...)
+    ctx
+end
 
 function plot!(ctx, ::Type{VTKViewType},grid)
     VTKView=ctx[:Plotter]
-    frame=VTKView.StaticFrame()
+    prepare_frame!(ctx)
+    frame=ctx[:frame]
     VTKView.clear!(frame)
     dataset=VTKView.DataSet()
     VTKView.simplexgrid!(dataset,grid[Coordinates],grid[CellNodes])
@@ -25,7 +34,8 @@ plot!(ctx, T::Type{VTKViewType}, ::Type{Val{3}},grid)=plot!(ctx, T,grid)
 
 function plot!(ctx, ::Type{VTKViewType},grid,func)
     VTKView=ctx[:Plotter]
-    frame=VTKView.StaticFrame()
+    prepare_frame!(ctx)
+    frame=ctx[:frame]
     if !haskey(ctx,:dataset) || !seemingly_equal(grid,ctx[:grid])
         VTKView.clear!(frame)
         ctx[:grid]=grid
@@ -47,8 +57,9 @@ plot!(ctx, T::Type{VTKViewType}, ::Type{Val{3}},grid, func)=plot!(ctx, T,grid,fu
 
 function plot!(ctx, T::Type{VTKViewType}, ::Type{Val{1}},grid, func)
     VTKView=ctx[:Plotter]
-    frame=VTKView.StaticFrame()
-    if !haskey(ctx,:plot) || ctx[:clear]
+    prepare_frame!(ctx)
+    frame=ctx[:frame]
+    if !haskey(ctx,:plot)
         VTKView.clear!(frame)
         ctx[:plot]=VTKView.XYPlot()
         VTKView.addview!(frame,ctx[:plot])

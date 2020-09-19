@@ -1,4 +1,12 @@
-function initialize_context(ctx::PlotterContext,::Type{MakieType})
+function initialize_context!(ctx::PlotterContext,::Type{MakieType})
+    ctx
+end
+
+function make_scene!(ctx::PlotterContext)
+    Makie=ctx[:Plotter]
+    if !haskey(ctx,:scene)
+       ctx[:scene]=Makie.Scene(scale_plot=false, resolution=ctx[:resolution])
+    end
     ctx
 end
 
@@ -50,7 +58,7 @@ function region_bfacesegments(grid::ExtendableGrid,ibreg)
     end
     points
 end
-
+ 
 function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid)
     Makie=ctx[:Plotter]
     nregions=num_cellregions(grid)
@@ -59,13 +67,13 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid)
     else
         meshes=[make_mesh(subgrid(grid,[iregion])) for iregion=1:nregions]
     end
-    
+
+    make_scene!(ctx)
     nbregions=num_bfaceregions(grid)
     bsegments=[region_bfacesegments(grid,iregion) for iregion=1:nbregions]
     
-    if !haskey(ctx,:scene)|| ctx[:num_cellregions]!=nregions
+    if !haskey(ctx,:meshes)|| ctx[:num_cellregions]!=nregions
         ctx[:num_cellregions]=nregions
-        ctx[:scene]=Makie.Scene(scale_plot=false, resolution=ctx[:resolution])
         if ctx[:aspect]>1.0
             Makie.scale!(ctx[:scene],ctx[:aspect],1.0)
         else
@@ -95,26 +103,25 @@ end
 
 function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid, func)
     Makie=ctx[:Plotter]
-    
+    make_scene!(ctx)
     if ctx[:elevation]
         mesh=make_mesh(grid,func,elevation_factor=ctx[:elevation_factor])
     else
         mesh=make_mesh(grid)
     end        
-    if !haskey(ctx,:scene)
-        ctx[:scene]=Makie.Scene(scale_plot=false, resolution=ctx[:resolution])
+    if !haskey(ctx,:meshnode)
         if ctx[:aspect]>1.0
             Makie.scale!(ctx[:scene],ctx[:aspect],1.0)
         else
             Makie.scale!(ctx[:scene],1.0,1.0/ctx[:aspect])
         end
-        ctx[:mesh]=Makie.Node(mesh)
-        ctx[:color]=Makie.Node(func)
-        Makie.poly!(ctx[:scene],Makie.lift(a->a, ctx[:mesh]) , color=Makie.lift(a->a, ctx[:color]))
+        ctx[:meshnode]=Makie.Node(mesh)
+        ctx[:colornode]=Makie.Node(func)
+        Makie.poly!(ctx[:scene],Makie.lift(a->a, ctx[:meshnode]) , color=Makie.lift(a->a, ctx[:colornode]), colormap=ctx[:colormap])
         Makie.display(ctx[:scene])
     else
-        ctx[:mesh][]=mesh
-        ctx[:color][]=func
+        ctx[:meshnode][]=mesh
+        ctx[:colornode][]=func
         Makie.update!(ctx[:scene])
         Makie.sleep(1.0e-10)
     end
