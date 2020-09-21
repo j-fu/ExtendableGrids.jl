@@ -127,7 +127,7 @@ Base.length(ctx::PlotterContext)=length(ctx.dict)
 #
 # Default context information with help info.
 #
-default_dict()=Dict{Any,Pair{Any,String}}(
+default_plot_kwargs()=Dict{Any,Pair{Any,String}}(
     :colorlevels => Pair(51,"Number of color levels for contour plot"),
     :isolines => Pair(11,"Number of isolines in contour plot"),
     :colorbar => Pair(true,"Show colorbar in plots"),
@@ -169,13 +169,13 @@ Plotter: defaults to `nothing` and can be `PyPlot`, `Plots`, `VTKView`, `Makie`.
 
 Keyword arguments:
 
-$(myprint(default_dict()))
+$(myprint(default_plot_kwargs()))
 """
 function PlotterContext(Plotter::Module; kwargs...)
     ctx=PlotterContext(Dict{Any,Any}(:backend => plottertype(Plotter),
                                      :Plotter => Plotter,
                                      ))
-    update_context!(ctx,Dict{Any,Any}( k => v[1] for (k,v) in default_dict()))
+    update_context!(ctx,Dict{Any,Any}( k => v[1] for (k,v) in default_plot_kwargs()))
     initialize_context!(ctx,ctx[:backend])
     update_context!(ctx,kwargs)
 end
@@ -199,7 +199,7 @@ Plot grid.
 
 Keyword arguments:
 
-$(myprint(default_dict()))
+$(myprint(default_plot_kwargs()))
 """
 plot!(ctx::PlotterContext,grid::ExtendableGrid;kwargs...)=plot!(update_context!(ctx,kwargs),ctx[:backend],Val{dim_space(grid)},grid)
 
@@ -210,20 +210,10 @@ Plot vector on grid as P1 FEM function.
 
 Keyword arguments:
 
-$(myprint(default_dict()))
+$(myprint(default_plot_kwargs()))
 """
 plot!(ctx::PlotterContext,grid::ExtendableGrid,func;kwargs...)=plot!(update_context!(ctx,kwargs),ctx[:backend],Val{dim_space(grid)},grid,func)
 
-"""
-$(SIGNATURES)
-
-Two panel plot of gridfactory.
-
-Keyword arguments:
-
-$(myprint(default_dict()))
-"""
-plot!(ctx::PlotterContext,gf::GridFactory;kwargs...)=plot!(update_context!(ctx,kwargs),ctx[:backend],gf)
 
 """
 $(SIGNATURES)
@@ -232,7 +222,7 @@ Plot grid without predefined context.
 
 Keyword arguments:
 
-$(myprint(default_dict()))
+$(myprint(default_plot_kwargs()))
 """
 plot(grid::ExtendableGrid;Plotter=nothing, kwargs...)=plot!(update_context!(PlotterContext(Plotter),kwargs),grid)
 
@@ -244,20 +234,11 @@ Plot vector on grid without predefined context as P1 FEM function.
 
 Keyword arguments:
 
-$(myprint(default_dict()))
+$(myprint(default_plot_kwargs()))
 """
 plot(grid::ExtendableGrid,func ;Plotter=nothing,kwargs...)=plot!(update_context!(PlotterContext(Plotter),kwargs),grid,func)
 
-"""
-$(SIGNATURES)
 
-Two panel plot of gridfactory with input and resulting grid
-
-Keyword arguments:
-
-$(myprint(default_dict()))
-"""
-plot(gf::GridFactory;Plotter=nothing,kwargs...)=plot!(update_context!(PlotterContext(Plotter),kwargs),gf)
 
 
 
@@ -270,7 +251,6 @@ update_context!(::Nothing,kwargs)=nothing
 
 plot!(ctx::Nothing,grid::ExtendableGrid;kwargs...)=nothing
 plot!(ctx::Nothing,grid::ExtendableGrid,func;kwargs...)=nothing
-plot!(ctx::Nothing,gf::GridFactory;kwargs...)=nothing
 
 plot!(ctx, ::Type{Nothing}, ::Type{Val{1}},grid)=nothing
 plot!(ctx, ::Type{Nothing}, ::Type{Val{2}},grid)=nothing
@@ -279,5 +259,4 @@ plot!(ctx, ::Type{Nothing}, ::Type{Val{3}},grid)=nothing
 plot!(ctx, ::Type{Nothing}, ::Type{Val{1}},grid,func)=nothing
 plot!(ctx, ::Type{Nothing}, ::Type{Val{2}},grid,func)=nothing
 plot!(ctx, ::Type{Nothing}, ::Type{Val{3}},grid,func)=nothing
-
 

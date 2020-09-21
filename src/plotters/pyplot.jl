@@ -182,31 +182,3 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid, func)
     PyPlot.pause(0.0001)
     ctx[:figure]
 end
-
-
-function plot!(ctx, ::Type{PyPlotType}, gf::GridFactory)
-    PyPlot=ctx[:Plotter]
-
-    prepare_figure!(ctx)
-
-    triin=nothing
-    try
-        triin=triangulateio(gf)
-    catch err
-        @error "Incomplete geometry description"
-        rethrow(err)
-    end
-    if typeof(gf.unsuitable)!=Nothing
-        triunsuitable(gf.unsuitable)
-    end
-    triout,vorout=Triangulate.triangulate(gf.flags,triin)
-    PyPlot.subplot(121)
-    PyPlot.title("In")
-    Triangulate.plot(PyPlot,triin)
-    PyPlot.subplot(122)
-    PyPlot.title("Out")
-    Triangulate.plot(PyPlot,triout)
-    PyPlot.tight_layout()
-    ctx[:figure]
-end
-

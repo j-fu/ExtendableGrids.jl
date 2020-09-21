@@ -1,5 +1,4 @@
 module ExtendableGrids
-using Triangulate
 using DocStringExtensions
 using ElasticArrays
 using AbstractTrees
@@ -79,16 +78,6 @@ include("simplexgrid.jl")
 export simplexgrid, geomspace,glue
 export XCoordinates, YCoordinates
 
-include("gridfactory.jl")
-export GridFactory
-export point!
-export facet!
-export cellregion!, hole!
-export flags!
-export unsuitable!
-export appendflags!
-export triangleflags
-
 include("tokenstream.jl")
 export TokenStream, gettoken, expecttoken,trytoken
 
@@ -104,5 +93,6 @@ export tridata,rectdata
 export PlotterContext
 export plottertype
 export PyPlotType,MakieType,PlotsType,VTKViewType 
+export make_mesh
 
 end # module
