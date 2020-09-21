@@ -1,6 +1,6 @@
 # Extendable grid data container for numerical simulations
 
-[![Build Status](https://img.shields.io/travis/j-fu/ExtendableGrids.jl/master.svg?label=Linux+MacOSX+Windows)](https://travis-ci.org/j-fu/ExtendableGrids.jl)
+[![Build Status](https://img.shields.io/travis/j-fu/ExtendableGrids.jl/master.svg?label=Linux+MacOSX+Windows)](https://travis-ci.com/j-fu/ExtendableGrids.jl)
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://j-fu.github.io/ExtendableGrids.jl/stable)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://j-fu.github.io/ExtendableGrids.jl/dev)
 
