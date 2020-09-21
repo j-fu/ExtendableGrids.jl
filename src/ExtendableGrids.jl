@@ -102,5 +102,7 @@ export plot,plot!
 export isplots,isvtkview,ispyplot,ismakie
 export tridata,rectdata
 export PlotterContext
+export plottertype
+export PyPlotType,MakieType,PlotsType,VTKViewType 
 
 end # module

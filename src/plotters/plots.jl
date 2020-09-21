@@ -146,7 +146,7 @@ function plot!(ctx, ::Type{PlotsType}, ::Type{Val{2}},grid, func)
         @error "2D tricontour not available for Plots, see e.g. https://github.com/JuliaPlots/Plots.jl/issues/392"
         return p
     end
-    Plots.contourf!(p,rdata...)
+    Plots.contourf!(p,rdata...,aspect_ratio=:equal)
     if ctx[:show]
         Plots.gui(p)
     end

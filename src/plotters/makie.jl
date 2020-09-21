@@ -74,11 +74,11 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid)
     
     if !haskey(ctx,:meshes)|| ctx[:num_cellregions]!=nregions
         ctx[:num_cellregions]=nregions
-        if ctx[:aspect]>1.0
-            Makie.scale!(ctx[:scene],ctx[:aspect],1.0)
-        else
-            Makie.scale!(ctx[:scene],1.0,1.0/ctx[:aspect])
-        end
+        # if ctx[:aspect]>1.0
+        #     Makie.scale!(ctx[:scene],ctx[:aspect],1.0)
+        # else
+        #     Makie.scale!(ctx[:scene],1.0,1.0/ctx[:aspect])
+        # end
         ctx[:meshes]=[Makie.Node(meshes[i]) for i=1:nregions]
         ctx[:bsegments]=[Makie.Node(bsegments[i]) for i=1:nbregions]
         for i=1:nregions
@@ -95,7 +95,9 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid)
         for i=1:nbregions
             ctx[:bsegments][i][]=bsegments[i]
         end
-        Makie.update!(ctx[:scene])
+        if ctx[:show]
+            Makie.update!(ctx[:scene])
+        end
         Makie.sleep(1.0e-10)
     end
     ctx[:scene]
@@ -110,11 +112,11 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid, func)
         mesh=make_mesh(grid)
     end        
     if !haskey(ctx,:meshnode)
-        if ctx[:aspect]>1.0
-            Makie.scale!(ctx[:scene],ctx[:aspect],1.0)
-        else
-            Makie.scale!(ctx[:scene],1.0,1.0/ctx[:aspect])
-        end
+        # if ctx[:aspect]>1.0
+        #     Makie.scale!(ctx[:scene],ctx[:aspect],1.0)
+        # else
+        #     Makie.scale!(ctx[:scene],1.0,1.0/ctx[:aspect])
+        # end
         ctx[:meshnode]=Makie.Node(mesh)
         ctx[:colornode]=Makie.Node(func)
         Makie.poly!(ctx[:scene],Makie.lift(a->a, ctx[:meshnode]) , color=Makie.lift(a->a, ctx[:colornode]), colormap=ctx[:colormap])
@@ -122,8 +124,10 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid, func)
     else
         ctx[:meshnode][]=mesh
         ctx[:colornode][]=func
-        Makie.update!(ctx[:scene])
-        Makie.sleep(1.0e-10)
+        if ctx[:show]
+            Makie.update!(ctx[:scene])
+        end
+        Makie.sleep(1.0e-2)
     end
     ctx[:scene]
 end

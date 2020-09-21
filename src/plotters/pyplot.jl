@@ -12,6 +12,7 @@ function prepare_figure!(ctx::PlotterContext)
     if ctx[:clear]
         PyPlot.clf()
     end
+    PyPlot.subplot(ctx[:subplot])
     ctx
 end
 
@@ -74,7 +75,9 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}}, grid)
             PyPlot.plot([x1,x1],[-2*h,2*h],linewidth=3.0,color=rgb,label=label)
         end
     end
-    PyPlot.legend()
+    if ctx[:legend]
+        PyPlot.legend()
+    end
     ctx[:figure]
 end
 
@@ -118,7 +121,10 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid)
             PyPlot.plot(coord[:,1], coord[:,1],label="boundary $(i)", color=frgb(PyPlot,i,nbfaceregions))
         end
     end
-    PyPlot.legend(loc=ctx[:legend_location])
+    if ctx[:legend]
+        PyPlot.legend()
+        PyPlot.legend(loc=ctx[:legend_location])
+    end
     PyPlot.show()
     PyPlot.pause(0.0001)
     ctx[:figure]
@@ -156,7 +162,7 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid, func)
     PyPlot=ctx[:Plotter]
 
     prepare_figure!(ctx)
-
+    
     ax=PyPlot.matplotlib.pyplot.gca()
     ax.set_aspect(ctx[:aspect])
     umin=minimum(func)
