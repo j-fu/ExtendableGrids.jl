@@ -1,9 +1,8 @@
-#= 
+# 
+# # 103: Interval with multiple regions
+# ([source code](SOURCE_URL))
+# 
 
-# 103: Interval with multiple regions
-([source code](SOURCE_URL))
-
-=#
 
 module Example103_IntervalMultiRegion
 using ExtendableGrids

@@ -1,9 +1,8 @@
-#= 
+# 
+# # 201: Rectangle
+# ([source code](SOURCE_URL))
+# 
 
-# 201: Rectangle
-([source code](SOURCE_URL))
-
-=#
 
 module Example201_Rectangle
 using ExtendableGrids

@@ -1,9 +1,8 @@
-#= 
+# 
+# # 203: Rectangle with multiple regions
+# ([source code](SOURCE_URL))
+# 
 
-# 203: Rectangle with multiple regions
-([source code](SOURCE_URL))
-
-=#
 
 module Example203_RectangleMultiRegion
 

@@ -1,9 +1,8 @@
-#= 
+# 
+# # 202: Rectangle with local refinement
+# ([source code](SOURCE_URL))
+# 
 
-# 202: Rectangle with local refinement
-([source code](SOURCE_URL))
-
-=#
 
 module Example202_RectangleLocalRef
 using ExtendableGrids

@@ -24,7 +24,7 @@ function mkdocs()
 
     for example_source in readdir(example_jl_dir)
         base,ext=splitext(example_source)
-        if ext==".jl"
+        if ext==".jl" && occursin("Example",base)
             source_url="https://github.com/j-fu/ExtendableGrids.jl/raw/master/examples/"*example_source
             preprocess(buffer)=replace_source_url(buffer,source_url)
             Literate.markdown(joinpath(@__DIR__,"..","examples",example_source),

@@ -1,9 +1,8 @@
-#= 
+# 
+# # 102: Interval with local refinement
+# ([source code](SOURCE_URL))
+# 
 
-# 102: Interval with local refinement
-([source code](SOURCE_URL))
-
-=#
 
 module Example102_IntervalLocalRef
 using ExtendableGrids

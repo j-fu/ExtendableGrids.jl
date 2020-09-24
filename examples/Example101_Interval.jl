@@ -1,9 +1,8 @@
-#= 
+#
+# # 101: Interval
+# ([source code](SOURCE_URL))
+#
 
-# 101: Interval
-([source code](SOURCE_URL))
-
-=#
 
 module Example101_Interval
 using ExtendableGrids
