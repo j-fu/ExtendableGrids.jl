@@ -1,11 +1,15 @@
 module ExtendableGrids
 using DocStringExtensions
 using ElasticArrays
+using ExtendableSparse
 using AbstractTrees
 using InteractiveUtils
+
+# for plotting
 using Colors
 using GeometryBasics
 
+using SparseArrays
 using Printf
 using Random
 
@@ -70,6 +74,10 @@ export seemingly_equal
 
 include("subgrid.jl")
 export subgrid
+
+include("more.jl")
+export EdgeNodes, CellEdges,EdgeCells
+export local_celledgenodes,num_edges
 
 include("regionedit.jl")
 export cellmask!,bfacemask!
