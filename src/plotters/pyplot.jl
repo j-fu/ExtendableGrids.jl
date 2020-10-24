@@ -104,16 +104,18 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid)
     brflag=ones(Bool,nbfaceregions)
     ax.set_aspect(1)
     tridat=tridata(grid)
-    PyPlot.tripcolor(tridat...,facecolors=grid[CellRegions],cmap="Pastel2")
+        PyPlot.tripcolor(tridat...,facecolors=grid[CellRegions],cmap="Pastel2")
     cbar=PyPlot.colorbar(ticks=collect(1:ncellregions))
-    PyPlot.triplot(tridat...,color="k",linewidth=0.5)
+    if ctx[:edges]
+        PyPlot.triplot(tridat...,color="k",linewidth=0.5)
+    end
 
 
 
     if nbfaceregions>0
         # see https://gist.github.com/gizmaa/7214002
-        xc=[coord[:,bfacenodes[1,i]] for i=1:size(bfacenodes,2)]
-        yc=[coord[:,bfacenodes[2,i]] for i=1:size(bfacenodes,2)]
+        xc=[coord[:,bfacenodes[1,i]] for i=1:num_sources(bfacenodes)]
+        yc=[coord[:,bfacenodes[2,i]] for i=1:num_sources(bfacenodes)]
         rgb=[frgb(PyPlot,bfaceregions[i],nbfaceregions) for i=1:length(bfaceregions)]
         ax.add_collection(PyPlot.matplotlib.collections.LineCollection(collect(zip(xc,yc)),colors=rgb,linewidth=3))
     
@@ -125,8 +127,6 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid)
         PyPlot.legend()
         PyPlot.legend(loc=ctx[:legend_location])
     end
-    PyPlot.show()
-    PyPlot.pause(0.0001)
     ctx[:figure]
 end
 
@@ -178,7 +178,5 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid, func)
         PyPlot.colorbar(ticks=isolines,boundaries=colorlevels)
     end
     PyPlot.tricontour(ctx[:tridata]...,func,colors="k",levels=isolines)
-    PyPlot.show()
-    PyPlot.pause(0.0001)
     ctx[:figure]
 end
