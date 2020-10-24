@@ -55,8 +55,9 @@ Show adjacency (in trasposed form; preliminary)
 function Base.show(io::IO,adj::VariableTargetAdjacency)
     for isource=1:num_sources(adj)
         for itarget=1:num_targets(adj,isource)
-            show(io,adj[:,isource])
+            print(io,adj[itarget,isource], " ")
         end
+        println(io, " ");
     end
 end
 

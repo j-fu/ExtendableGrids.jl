@@ -400,13 +400,6 @@ Number of cells in grid
 """
 num_cells(grid::ExtendableGrid)= num_sources(grid[CellNodes])
 
-"""
-$(TYPEDSIGNATURES)
-
-Number of edges in grid
-"""
-num_edges(grid::ExtendableGrid)= num_sources(grid[EdgeNodes])
-
 
 """
 $(TYPEDSIGNATURES)
@@ -463,15 +456,15 @@ end
 
 
 function Base.show(io::IO,grid::ExtendableGrid)
-    # if num_edges(grid)>0
-    #     str=@sprintf("%s(dim_space=%d, num_nodes=%d, num_cells=%d, num_bfaces=%d, num_edges=%d)",
-    #                  typeof(grid),dim_space(grid),num_nodes(grid), num_cells(grid), num_bfaces(grid), num_edges(grid))
-    # else
-    str=@sprintf("%s;\ndim: %d nodes: %d cells: %d bfaces: %d\n",
-                 typeof(grid),dim_space(grid),num_nodes(grid), num_cells(grid), num_bfaces(grid))
+    if num_edges(grid)>0
+        str=@sprintf("%s;\ndim: %d nodes: %d cells: %d bfaces: %d, edges: %d\n",
+                     typeof(grid),dim_space(grid),num_nodes(grid), num_cells(grid), num_bfaces(grid), num_edges(grid))
+    else
+        str=@sprintf("%s;\ndim: %d nodes: %d cells: %d bfaces: %d\n",
+                     typeof(grid),dim_space(grid),num_nodes(grid), num_cells(grid), num_bfaces(grid))
+    end
     println(io,str)
 end
-
 
 """
 $(SIGNATURES)
