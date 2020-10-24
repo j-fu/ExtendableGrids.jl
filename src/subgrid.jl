@@ -128,7 +128,44 @@ function subgrid(parent,
     subgrid[CellNodes]=sub_xnodes
     subgrid[ParentGrid]=parent
     subgrid[NodeInParent]=sub_nip
-    subgrid[NumBFaceRegions]=0
+
+    if boundary
+        subgrid[NumBFaceRegions]=0
+    else
+        bfacenodes=parent[BFaceNodes]
+        bfaceregions=parent[BFaceRegions]
+        bfacetypes=parent[BFaceGeometries]
+        
+        sub_bfacenodes=VariableTargetAdjacency(Ti)
+        sub_bfaceregions=Vector{Ti}(undef,0)
+        sub_bfacetypes=Vector{DataType}(undef,0)
+        
+        for ibface in eachindex(bfaceregions)
+            nbn=num_targets(bfacenodes,ibface)
+            insubgrid=true
+            for inode=1:nbn
+                if nodemark[bfacenodes[inode,ibface]]==0
+                    insubgrid=false
+                    continue
+                end
+            end
+            if insubgrid
+                col=zeros(Ti,0)
+                for inode=1:nbn
+                    push!(col,nodemark[bfacenodes[inode,ibface]])
+                end
+                append!(sub_bfacenodes,col)
+                push!(sub_bfacetypes,bfacetypes[ibface])
+                push!(sub_bfaceregions,bfaceregions[ibface])
+            end
+        end
+    
+        subgrid[BFaceRegions]=sub_bfaceregions
+        subgrid[BFaceGeometries]=sub_bfacetypes
+        subgrid[BFaceNodes]=sub_bfacenodes
+        subgrid[NumBFaceRegions]=maximum(sub_bfaceregions)
+    end
+    
     subgrid
 end
 
