@@ -55,6 +55,7 @@ function mkdocs()
                  "subgrid.md",
                  "regionedit.md",
                  "simplexgrid.md",
+                 "more.md",
                  "plot.md",
                  "tokenstream.md",
                  "allindex.md",
