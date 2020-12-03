@@ -49,7 +49,7 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}}, grid)
     xmin=minimum(coord)
     xmax=maximum(coord)
     h=(xmax-xmin)/40.0
-    ax.set_aspect(1)
+    ax.set_aspect(ctx[:aspect])
     ax.get_yaxis().set_ticks([])
     ax.set_ylim(-5*h,xmax-xmin)
     for icell=1:num_cells(grid)
@@ -102,9 +102,9 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid)
     
     crflag=ones(Bool,ncellregions)
     brflag=ones(Bool,nbfaceregions)
-    ax.set_aspect(1)
+    ax.set_aspect(ctx[:aspect])
     tridat=tridata(grid)
-        PyPlot.tripcolor(tridat...,facecolors=grid[CellRegions],cmap="Pastel2")
+    PyPlot.tripcolor(tridat...,facecolors=grid[CellRegions],cmap="Pastel2")
     cbar=PyPlot.colorbar(ticks=collect(1:ncellregions))
     if ctx[:edges]
         PyPlot.triplot(tridat...,color="k",linewidth=0.5)
@@ -120,7 +120,7 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid)
         ax.add_collection(PyPlot.matplotlib.collections.LineCollection(collect(zip(xc,yc)),colors=rgb,linewidth=3))
     
         for i=1:nbfaceregions
-            PyPlot.plot(coord[:,1], coord[:,1],label="boundary $(i)", color=frgb(PyPlot,i,nbfaceregions))
+            PyPlot.plot(coord[:,1], coord[:,1],label="b_$(i)", color=frgb(PyPlot,i,nbfaceregions))
         end
     end
     if ctx[:legend]
@@ -173,7 +173,10 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid, func)
         ctx[:grid]=grid
         ctx[:tridata]=tridata(grid)
     end
-    PyPlot.tricontourf(ctx[:tridata]...,func;levels=colorlevels,cmap=PyPlot.ColorMap(ctx[:colormap]))
+    cnt=PyPlot.tricontourf(ctx[:tridata]...,func;levels=colorlevels,cmap=PyPlot.ColorMap(ctx[:colormap]))
+    for c in cnt.collections
+        c.set_edgecolor("face")
+    end
     if ctx[:colorbar]
         PyPlot.colorbar(ticks=isolines,boundaries=colorlevels)
     end
