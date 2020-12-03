@@ -60,10 +60,9 @@ Caveat: the algorithm behind this is  well tested but unproven.
 
 Returns an Array containing the points of the subdivision.
 """
-function geomspace(a::Tv, b::Tv, ha::Tv, hb::Tv ; tol=1.0e-10) where{Tv}
+function geomspace(a, b, ha, hb ; tol=1.0e-10)
     
     function _geomspace0(l,h0, hl, tol=1.0e-10)
-        
         @assert (l>0.0)
         @assert (h0>0.0)
         @assert (hl>=h0)
@@ -91,8 +90,9 @@ function geomspace(a::Tv, b::Tv, ha::Tv, hb::Tv ; tol=1.0e-10) where{Tv}
 
         # define initial number of intervals from
         # average of minmal and maximal h
-        n=Int32(ceil((2.0*l/(h0+hl))))
+        n=Int(ceil((2.0*l/(h0+hl))))
         
+
         if n==1
             n=2
         end
@@ -106,6 +106,7 @@ function geomspace(a::Tv, b::Tv, ha::Tv, hb::Tv ; tol=1.0e-10) where{Tv}
         if abs(q-1.0)<tol
             hmiss=1.0
         end
+
         while  hmiss>1.0
             # increase number of intervals until
             # lmismatch becomes less than zero
@@ -116,9 +117,9 @@ function geomspace(a::Tv, b::Tv, ha::Tv, hb::Tv ; tol=1.0e-10) where{Tv}
             # find initial interval for q containing
             # value with zero lmismatch 
             ns=0
-            nsmax=1000
+            nsmax=100
             
-            while lmismatch(q,n)<0.0 &&  ns<nsmax
+            while lmismatch(q,n)<0 &&  ns<nsmax
                 q*=0.99
                 ns+=1
             end
@@ -126,16 +127,16 @@ function geomspace(a::Tv, b::Tv, ha::Tv, hb::Tv ; tol=1.0e-10) where{Tv}
             xl=q
             xr=q/0.99
             @assert ns<nsmax
-+            
+            
             # bisection to define q with zero lmismatch
             ns=0
             xm=0.5*(xl+xr)
-            while (xr-xl)>tol && ns<nsmax
+            while !(xr≈xl) && ns<nsmax
                 ns+=1
                 mmm=lmismatch(xm,n)
-                if mmm==0.0
+                if mmm≈0.0
                     break
-                elseif   lmismatch(xl,n)*mmm<0.0
+                elseif   lmismatch(xl,n)*mmm<0
                     xr=xm
                 else
                     xl=xm
@@ -145,13 +146,13 @@ function geomspace(a::Tv, b::Tv, ha::Tv, hb::Tv ; tol=1.0e-10) where{Tv}
             q=xm
             @assert ns<nsmax
             hmiss=hmismatch(q,n)
-            if hmiss>1.0 
+            if hmiss>1.0+tol 
                 n=n+1
             end
         end
         #  printf("%d %g %g %g\n",n,q,lmismatch(q,n),hmismatch(q,n))
         
-        X = Array{Tv,1}(undef,n+1)
+        X = Array{Float64,1}(undef,n+1)
         X[1]=0
         h=h0
         for i=1:n
