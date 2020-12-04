@@ -131,6 +131,49 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid)
 end
 
 
+function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{3}},grid)
+    # See https://jakevdp.github.io/PythonDataScienceHandbook/04.12-three-dimensional-plotting.html
+    
+    PyPlot=ctx[:Plotter]
+
+    prepare_figure!(ctx)
+    
+#    ax=PyPlot.gca(projection="3d")
+    cellregions=grid[CellRegions]
+    cellnodes=grid[CellNodes]
+    coord=grid[Coordinates]
+
+    ncellregions=grid[NumCellRegions]
+    nbfaceregions=grid[NumBFaceRegions]
+    ncellregions=grid[NumCellRegions]
+
+    if nbfaceregions>0
+        bfacenodes=grid[BFaceNodes]
+        bfaceregions=grid[BFaceRegions]
+    end
+    # Thius is a first raw attempt...
+    ncells=size(cellnodes,2)
+    cen=local_celledgenodes(Tetrahedron3D)
+    for icell=1:ncells
+        for iedge=1:6
+            in1=cellnodes[cen[1,iedge],icell]
+            in2=cellnodes[cen[2,iedge],icell]
+            X=[ coord[1,in1],coord[1,in2] ]
+            Y=[ coord[2,in1],coord[2,in2] ]
+            Z=[ coord[3,in1],coord[3,in2] ]
+            PyPlot.plot3D(X,Y,Z,color=:black)
+        end
+    end
+    if ctx[:legend]
+        PyPlot.legend()
+        PyPlot.legend(loc=ctx[:legend_location])
+    end
+    ctx[:figure]
+end
+
+
+
+
 function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}},grid, func)
     PyPlot=ctx[:Plotter]
 

@@ -79,8 +79,8 @@ function prepare_edges!(grid::ExtendableGrid)
     
     # Calculate edge nodes and celledges
     edgenodes=zeros(Ti,2,nedges)
-    celledges=zeros(Ti,3,num_cells(grid))
-    cen=local_celledgenodes(Triangle2D)
+    celledges=zeros(Ti,num_edges(geom),num_cells(grid))
+    cen=local_celledgenodes(geom)
     
     for icell=1:num_cells(grid)
         for iedge=1:num_edges(geom)
@@ -123,7 +123,7 @@ function prepare_edges!(grid::ExtendableGrid)
     edgecell_adj=SparseMatrixCSC(transpose(celledge_adj))
 
     # Get the adjaency array from the matrix
-    edgecells=zeros(Ti,2,nedges)
+    edgecells=zeros(Ti,2,nedges) ## for 3D we need more here!
     for icol=1:length(edgecell_adj.colptr)-1
         ii=1
         for irow=edgecell_adj.colptr[icol]:edgecell_adj.colptr[icol+1]-1
@@ -189,12 +189,24 @@ Number of edges of 1D edge
 num_edges(::Type{Edge1D})=1
 
 const cen_Triangle2D=[ 2 3 1; 3 1 2]
+
 """
 $(SIGNATURES)
 
 Cell-edege node numbering for 2D triangle
 """
 local_celledgenodes(::Type{Triangle2D})=cen_Triangle2D
+
+
+const cen_Tetrahedron3D=[ 3 4 2  1 1 1; 4 2 3  4 3 2]
+
+"""
+$(SIGNATURES)
+
+Cell-edege node numbering for 2D triangle
+"""
+local_celledgenodes(::Type{Tetrahedron3D})=cen_Tetrahedron3D
+
 
 """
 $(SIGNATURES)
@@ -206,7 +218,21 @@ num_nodes(::Type{Triangle2D})=3
 """
 $(SIGNATURES)
 
+Number of nodes in 3D tetrahedron
+"""
+num_nodes(::Type{Tetrahedron3D})=4
+
+"""
+$(SIGNATURES)
+
 Number of edges in 2D triangle
 """
 num_edges(::Type{Triangle2D})=3
+
+"""
+$(SIGNATURES)
+
+Number of edges in 3D tetrahedron
+"""
+num_edges(::Type{Tetrahedron3D})=6
 
