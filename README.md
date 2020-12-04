@@ -7,7 +7,8 @@
 
 Container structure `ExtendableGrid` with type stable content access and lazy content creation holding data for discretization
 grids for finite element and finite volume methods. 
-Used by [VoronoiFVM](https://github.com/j-fu/VoronoiFVM.jl) and some simulation codes under development.
+Used by [VoronoiFVM](https://github.com/j-fu/VoronoiFVM.jl) and  [GradientRobustMultiPhysics](https://github.com/chmerdon/GradientRobustMultiPhysics.jl),
+a package for novel, gradient robust finite element methods.
 
 Contains:
 - Tools to create tensor product grids
@@ -15,6 +16,7 @@ Contains:
 - Visualization methods for various backends
 - The differently licensed companion package [SimplexGridFactory](https://github.com/j-fu/SimplexGridFactory.jl) contains an interface which allows to
   create `ExtendableGrid` objects with  [Triangulate.jl](https://github.com/JuliaGeometry/Triangulate.jl) which wraps the Triangle mesh generator
-  by J. Shewchuk.
+  by J. Shewchuk and [TetGen.jl](https://github.com/JuliaGeometry/TetGen.jl) which wraps the  TetGen mesh generator by H. Si.
+  
 
 
