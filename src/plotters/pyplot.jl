@@ -151,7 +151,8 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{3}},grid)
         bfacenodes=grid[BFaceNodes]
         bfaceregions=grid[BFaceRegions]
     end
-    # Thius is a first raw attempt...
+
+    # This is a first raw attempt...
     ncells=size(cellnodes,2)
     cen=local_celledgenodes(Tetrahedron3D)
     for icell=1:ncells

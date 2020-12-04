@@ -15,7 +15,7 @@ function make_mesh(grid::ExtendableGrid)
     cellnodes=grid[CellNodes]
     npoints=num_nodes(grid)
     nfaces=num_cells(grid)
-
+    
     points=Vector{Point2f0}(undef,npoints)
     for i=1:npoints
         points[i]=Point2f0(coord[1,i],coord[2,i])
@@ -23,6 +23,32 @@ function make_mesh(grid::ExtendableGrid)
     faces=Vector{GLTriangleFace}(undef,nfaces)
     for i=1:nfaces
         faces[i]=TriangleFace(cellnodes[1,i],cellnodes[2,i],cellnodes[3,i])
+    end
+    Mesh(points,faces)
+end
+
+
+
+function make_mesh3(grid::ExtendableGrid,zcut0)
+    coord=grid[Coordinates]
+    zmin=minimum(coord[3,:])
+    zmax=maximum(coord[3,:])
+    zcut=zmin+zcut0*(zmax-zmin)
+
+    
+    cellnodes=grid[CellNodes]
+    points=[ Point3f0(coord[:,i]...) for i=1:size(coord,2)]
+    faces=Array{NgonFace{3,Int32},1}(undef,0)
+    for itet=1:size(cellnodes,2)
+        tet=view(cellnodes,:, itet)
+        zcoord=[coord[3,tet[i]]-zcut for i=1:4]
+        if mapreduce(z->z<=0,*,zcoord)||mapreduce(z->z>=0,*,zcoord)
+            continue
+        end
+        push!(faces,TriangleFace(tet[1],tet[2],tet[3]))
+        push!(faces,TriangleFace(tet[1],tet[2],tet[4]))
+        push!(faces,TriangleFace(tet[2],tet[3],tet[4]))
+        push!(faces,TriangleFace(tet[3],tet[1],tet[4]))
     end
     Mesh(points,faces)
 end
@@ -58,7 +84,32 @@ function region_bfacesegments(grid::ExtendableGrid,ibreg)
     end
     points
 end
- 
+
+function region_bfacesegments(grid::ExtendableGrid,ibreg,zcut0)
+    coord=grid[Coordinates]
+    zmin=minimum(coord[3,:])
+    zmax=maximum(coord[3,:])
+    zcut=zmin+zcut0*(zmax-zmin)
+    nbfaces=num_bfaces(grid)
+    bfacenodes=grid[BFaceNodes]
+    bfaceregions=grid[BFaceRegions]
+    points=[Point3f0(coord[:,i]...) for i=1:size(coord,2)]
+    faces=Array{GeometryBasics.NgonFace{3,Int32},1}(undef, 0)
+    for i=1:nbfaces
+        if bfaceregions[i]==ibreg
+            tri=view(bfacenodes,:, i)
+            zcoord=[coord[3,tri[i]]-zcut for i=1:3]
+            if !(mapreduce(z->z>=0,*,zcoord))
+                push!(faces,TriangleFace(bfacenodes[:,i]...))
+            end
+        end
+    end
+    mesh=GeometryBasics.Mesh(points,faces)
+end
+
+
+
+
 function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid)
     Makie=ctx[:Plotter]
     nregions=num_cellregions(grid)
@@ -102,6 +153,62 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid)
     end
     ctx[:scene]
 end
+
+
+function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid)
+    Makie=ctx[:Plotter]
+
+    nregions=num_cellregions(grid)
+    nregions=1
+
+    make_scene!(ctx)
+
+    # ctx[:zslider] = Makie.slider(LinRange(-0.01,1.01,100), raw = true, camera = Makie.campixel!, start = ctx[:zplane])
+    # zplane=ctx[:zslider][end][:value]
+
+    meshes=[make_mesh3(grid,ctx[:zplane])]
+    nbregions=num_bfaceregions(grid)
+    bsegments=[region_bfacesegments(grid,iregion,ctx[:zplane]) for iregion=1:nbregions]
+    
+    if !haskey(ctx,:meshes)|| ctx[:num_cellregions]!=nregions
+        ctx[:num_cellregions]=nregions
+        # if ctx[:aspect]>1.0
+        #     Makie.scale!(ctx[:scene],ctx[:aspect],1.0)
+        # else
+        #     Makie.scale!(ctx[:scene],1.0,1.0/ctx[:aspect])
+        # end
+        ctx[:meshes]=[Makie.Node(meshes[i]) for i=1:nregions]
+        ctx[:bsegments]=[Makie.Node(bsegments[i]) for i=1:nbregions]
+        trans=ctx[:alpha]<1
+        for i=1:nregions
+            Makie.mesh!(ctx[:scene],Makie.lift(a->a, ctx[:meshes][1]), color=(frgb(Makie,i,nregions,pastel=true),ctx[:alpha]),transparency=trans)
+            if (!trans)
+                Makie.wireframe!(ctx[:scene],Makie.lift(a->a, ctx[:meshes][1]),strokecolor=:black)
+            end
+        end
+        for i=1:nbregions
+             Makie.mesh!(ctx[:scene],Makie.lift(a->a, ctx[:bsegments][i]) , color=(frgb(Makie,i,nbregions),ctx[:alpha]),transparency=trans)
+            if (!trans)
+                Makie.wireframe!(ctx[:scene],Makie.lift(a->a, ctx[:bsegments][i]) , strokecolor=:black)
+            end
+        end
+        Makie.display(ctx[:scene])
+    else
+        for i=1:nregions
+            ctx[:meshes][i][]=meshes[i]
+        end
+        for i=1:nbregions
+             ctx[:bsegments][i][]=bsegments[i]
+        end
+        if ctx[:show]
+            Makie.update!(ctx[:scene])
+        end
+        Makie.sleep(1.0e-10)
+    end
+    ctx[:scene]
+end
+
+
 
 function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid, func)
     Makie=ctx[:Plotter]

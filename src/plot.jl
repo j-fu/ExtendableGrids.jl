@@ -144,8 +144,10 @@ default_plot_kwargs()=Dict{Any,Pair{Any,String}}(
     :color => Pair((0,0,0),"Color of lines on plot"),
     :elevation => Pair(false,"Show elevation plot (2D function graph)"),
     :edges => Pair(true,"Plot grid edges when plotting grid"),
+    :alpha => Pair(1.0,"Surface alpha value"),
+    :zplane => Pair(0.5,"zplane for 3D visualization"),
     :elevation_factor => Pair(1.0,"Height factor for elevation"),
-    :resolution => Pair((300,300),"Plot resolution for pairs"),
+    :resolution => Pair((500,500),"Plot xy resolution"),
     :framepos => Pair(1,"Subplot position in frame (VTKView)"),
     :fignumber => Pair(1,"Figure number (PyPlot)")
 )
