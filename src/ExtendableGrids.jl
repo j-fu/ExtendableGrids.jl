@@ -8,6 +8,7 @@ using InteractiveUtils
 # for plotting
 using Colors
 using GeometryBasics
+using Observables
 
 using SparseArrays
 using Printf
