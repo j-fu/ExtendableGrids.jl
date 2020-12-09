@@ -133,38 +133,57 @@ end
 
 function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{3}},grid)
     # See https://jakevdp.github.io/PythonDataScienceHandbook/04.12-three-dimensional-plotting.html
-    
+
     PyPlot=ctx[:Plotter]
 
     prepare_figure!(ctx)
-    
-#    ax=PyPlot.gca(projection="3d")
-    cellregions=grid[CellRegions]
-    cellnodes=grid[CellNodes]
+    nregions=num_cellregions(grid)
+    nbregions=num_bfaceregions(grid)
+
+    xyzmin=zeros(3)
+    xyzmax=ones(3)
     coord=grid[Coordinates]
-
-    ncellregions=grid[NumCellRegions]
-    nbfaceregions=grid[NumBFaceRegions]
-    ncellregions=grid[NumCellRegions]
-
-    if nbfaceregions>0
-        bfacenodes=grid[BFaceNodes]
-        bfaceregions=grid[BFaceRegions]
+    @views for idim=1:3
+        xyzmin[idim]=minimum(coord[idim,:])
+        xyzmax[idim]=maximum(coord[idim,:])
     end
+    xyzcut=[ctx[:xplane],ctx[:yplane],ctx[:zplane]]
+    regpoints,regfacets=extract_visible_cells3D(grid,xyzcut)
+    bregpoints,bregfacets=extract_visible_bfaces3D(grid,xyzcut)
 
-    # This is a first raw attempt...
-    ncells=size(cellnodes,2)
-    cen=local_celledgenodes(Tetrahedron3D)
-    for icell=1:ncells
-        for iedge=1:6
-            in1=cellnodes[cen[1,iedge],icell]
-            in2=cellnodes[cen[2,iedge],icell]
-            X=[ coord[1,in1],coord[1,in2] ]
-            Y=[ coord[2,in1],coord[2,in2] ]
-            Z=[ coord[3,in1],coord[3,in2] ]
-            PyPlot.plot3D(X,Y,Z,color=:black)
+
+    PyPlot.xlim(xyzmin[1],xyzmax[1])
+    PyPlot.ylim(xyzmin[2],xyzmax[2])
+    PyPlot.zlim(xyzmin[3],xyzmax[3])
+    
+    for ireg=1:nregions
+        rgb=frgb(PyPlot,ireg,nregions+nbregions)
+        if size(regfacets[ireg],2)>0
+            PyPlot.plot_trisurf(regpoints[ireg][1,:],regpoints[ireg][2,:],transpose(regfacets[ireg].-1),regpoints[ireg][3,:],color=rgb)
         end
     end
+
+    for ireg=1:nbregions
+        rgb=frgb(PyPlot,nregions+ireg,nregions+nbregions)
+        if size(bregfacets[ireg],2)>0
+            PyPlot.plot_trisurf(bregpoints[ireg][1,:],bregpoints[ireg][2,:],transpose(bregfacets[ireg].-1),bregpoints[ireg][3,:],color=rgb)
+        end
+    end
+
+    
+    # # This is a first raw attempt...
+    # ncells=size(cellnodes,2)
+    # cen=local_celledgenodes(Tetrahedron3D)
+    # for icell=1:ncells
+    #     for iedge=1:6
+    #         in1=cellnodes[cen[1,iedge],icell]
+    #         in2=cellnodes[cen[2,iedge],icell]
+    #         X=[ coord[1,in1],coord[1,in2] ]
+    #         Y=[ coord[2,in1],coord[2,in2] ]
+    #         Z=[ coord[3,in1],coord[3,in2] ]
+    #         PyPlot.plot3D(X,Y,Z,color=:black)
+    #     end
+    # end
     if ctx[:legend]
         PyPlot.legend()
         PyPlot.legend(loc=ctx[:legend_location])
