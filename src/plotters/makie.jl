@@ -112,143 +112,90 @@ end
 
 
 
-function cutvalues(coord,xyz)
-    xyzcut=[0.0,0.0,0.0]
-    @views for idim=1:3
-        min=minimum(coord[idim,:])
-        max=maximum(coord[idim,:])
-        xyzcut[idim]=min+xyz[idim]*(max-min)
-    end
-    xyzcut
-end
 
-function take(coord,simplex,xyzcut)
-    nnodes=length(simplex)
-    
-    # for idim=1:3
-    #     cutcoord=[coord[idim,simplex[inode]]-xyzcut[idim] for inode=1:nnodes]
-    #     result[idim]=!(mapreduce(a->a<=0,*,cutcoord)|| mapreduce(a->a>=0,*,cutcoord))
-    # end
-    cutcoord=[]
-    for idim=1:3
-        for inode=1:nnodes
-            push!(cutcoord,coord[idim,simplex[inode]]-xyzcut[idim])
-        end
-    end
-    mapreduce(a->a<=0,*,cutcoord)|| mapreduce(a->a>=0,*,cutcoord)
-end
-
-function btake(coord,simplex,xyzcut)
-    nnodes=length(simplex)
-    for idim=1:3
-        cutcoord=[coord[idim,simplex[inode]]-xyzcut[idim] for inode=1:nnodes]
-        if !mapreduce(a->a<=0,*,cutcoord)
-            return false
-        end
-    end
-    return true
-end
-
-
-function region_bfacesegments(grid::ExtendableGrid,ibreg,xyz)
-    coord=grid[Coordinates]
-    xyzcut=cutvalues(coord,xyz)
-    nbfaces=num_bfaces(grid)
-    bfacenodes=grid[BFaceNodes]
-    bfaceregions=grid[BFaceRegions]
-    points=[Point3f0(coord[:,i]...) for i=1:size(coord,2)]
-    faces=Array{GeometryBasics.NgonFace{3,Int32},1}(undef, 0)
-    for i=1:nbfaces
-        if bfaceregions[i]==ibreg
-            tri=view(bfacenodes,:, i)
-            if btake(coord,tri,xyzcut)
-                push!(faces,TriangleFace(bfacenodes[:,i]...))
-            end
-        end
-    end
-    mesh=GeometryBasics.Mesh(points,faces)
-end
-
-
-function make_mesh3(grid::ExtendableGrid,iregion,xyz)
-    coord=grid[Coordinates]
-    xyzcut=cutvalues(coord,xyz)
-    
-    cellnodes=grid[CellNodes]
-    cellregions=grid[CellRegions]
-    points=[ Point3f0(coord[:,i]...) for i=1:size(coord,2)]
-    faces=Array{NgonFace{3,Int32},1}(undef,0)
-    for itet=1:size(cellnodes,2)
-        if cellregions[itet]==iregion
-            tet=view(cellnodes,:, itet)
-            if take(coord,tet,xyzcut)
-                push!(faces,TriangleFace(tet[1],tet[2],tet[3]))
-                push!(faces,TriangleFace(tet[1],tet[2],tet[4]))
-                push!(faces,TriangleFace(tet[2],tet[3],tet[4]))
-                push!(faces,TriangleFace(tet[3],tet[1],tet[4]))
-            end
-        end
-    end
-    
-    Mesh(points,faces)
-end
 
 function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid)
     Makie=ctx[:Plotter]
+    xyzmin=zeros(3)
+    xyzmax=ones(3)
+    coord=grid[Coordinates]
+    @views for idim=1:3
+        xyzmin[idim]=minimum(coord[idim,:])
+        xyzmax[idim]=maximum(coord[idim,:])
+    end
+
+    
+    rescale(x,idim)=xyzmin[idim]+x*(xyzmax[idim]-xyzmin[idim])
     if !haskey(ctx,:fullscene)
         ctx[:xslider] = Makie.slider(LinRange(-0.02,1.02,105),start = ctx[:xplane],
                                      camera=Makie.campixel!,
                                      buttoncolor=:gray,
-                                     valueprinter= x->@sprintf("x=%.0f%%",100*x),
+                                     valueprinter= x->@sprintf("x=%.2g",rescale(x,1)),
                                      raw=false)
         ctx[:yslider] = Makie.slider(LinRange(-0.02,1.02,105),start = ctx[:yplane],
                                      camera=Makie.campixel!,
                                      buttoncolor=:gray,
-                                     valueprinter= x->@sprintf("y=%.0f%%",100*x),
+                                     valueprinter= y->@sprintf("y=%.2g",rescale(y,2)),
                                      raw=false)
         ctx[:zslider] = Makie.slider(LinRange(-0.02,1.02,105),start = ctx[:zplane],
                                      camera=Makie.campixel!,
                                      buttoncolor=:gray,
-                                     valueprinter= x->@sprintf("z=%.0f%%",100*x),
+                                     valueprinter= z->@sprintf("z=%.2g",rescale(z,3)),
                                      raw=false)
     end
 
     
 
-    function makeplot(x,y,z;renew=false)
+    function makeplot(x,y,z)
         alpha=ctx[:alpha]
         trans=alpha<1
         nregions=num_cellregions(grid)
         nbregions=num_bfaceregions(grid)
+        coord=grid[Coordinates]
+        xyz=[x,y,z]
+        xyzcut=[ xyzmin[idim] + xyz[idim]*(xyzmax[idim]-xyzmin[idim]) for idim=1:3]
         
+        function makemesh(pts,fcs)
+            pts=vec(collect(reinterpret(Point3f0,pts)))
+            push!(pts,Point3f0(xyzmin...))
+            push!(pts,Point3f0(xyzmax...))
+            fcs=vec(collect(reinterpret(NgonFace{3,Int32},fcs)))
+            Mesh(pts,fcs)
+        end
+
         if (!haskey(ctx,:scene)||
             ctx[:num_cellregions]!=nregions ||
             ctx[:num_bfaceregions]!=nbregions)
 
             ctx[:scene] = Makie.Scene(scale_plot=false)
 
+            # TODO: allow aspect scaling
             # if ctx[:aspect]>1.0
             #     Makie.scale!(ctx[:scene],ctx[:aspect],1.0)
             # else
             #     Makie.scale!(ctx[:scene],1.0,1.0/ctx[:aspect])
             # end
 
+            
+            regpoints,regfacets=extract_visible_cells3D(grid,xyzcut)
+            bregpoints,bregfacets=extract_visible_bfaces3D(grid,xyzcut)
             ctx[:num_cellregions]=nregions
             ctx[:num_bfaceregions]=nbregions
-            ctx[:meshes]=[Makie.Node(make_mesh3(grid,i,[x,y,z])) for i=1:nregions]
-            ctx[:bsegments]=[Makie.Node(region_bfacesegments(grid,i,[x,y,z])) for i=1:nbregions]
-
+            ctx[:meshes]=   [Makie.Node(makemesh(regpoints[iregion],regfacets[iregion])) for iregion=1:nregions]
+            ctx[:bsegments]=[Makie.Node(makemesh(bregpoints[ibregion],bregfacets[ibregion])) for ibregion=1:nbregions]
+            
+            # TODO: use distinguishable colors
+            # http://juliagraphics.github.io/Colors.jl/stable/colormapsandcolorscales/#Generating-distinguishable-colors-1
             if ctx[:interior]
                 for i=1:nregions
-                    Makie.mesh!(ctx[:scene],Makie.lift(a->a, ctx[:meshes][i]), color=(frgb(Makie,i,nregions,pastel=true),alpha),transparency=trans)
+                    Makie.mesh!(ctx[:scene],Makie.lift(a->a, ctx[:meshes][i]), color=(frgb(Makie,i,nregions+nbregions,pastel=true),alpha),transparency=trans)
                     if (!trans)
                         Makie.wireframe!(ctx[:scene],Makie.lift(a->a, ctx[:meshes][i]),strokecolor=:black)
                     end
                 end
             end
-            
             for i=1:nbregions
-                Makie.mesh!(ctx[:scene],Makie.lift(a->a, ctx[:bsegments][i]) , color=(frgb(Makie,i,nbregions),alpha),transparency=trans)
+                Makie.mesh!(ctx[:scene],Makie.lift(a->a, ctx[:bsegments][i]) , color=(frgb(Makie,nregions+i,nregions+nbregions),alpha),transparency=trans)
                 if (!trans)
                     Makie.wireframe!(ctx[:scene],Makie.lift(a->a, ctx[:bsegments][i]) , strokecolor=:black)
                 end
@@ -257,12 +204,14 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid)
             Makie.display(ctx[:fullscene])
         else
             if ctx[:interior]
+                regpoints,regfacets=extract_visible_cells3D(grid,xyzcut)
                 for i=1:nregions
-                    ctx[:meshes][i][]=make_mesh3(grid,i,[x,y,z])
+                    ctx[:meshes][i][]=makemesh(regpoints[i],regfacets[i])
                 end
             end
+            bregpoints,bregfacets=extract_visible_bfaces3D(grid,xyzcut)
             for i=1:nbregions
-                ctx[:bsegments][i][]=region_bfacesegments(grid,i,[x,y,z])
+                 ctx[:bsegments][i][]=makemesh(bregpoints[i],bregfacets[i])
             end
         end
     end

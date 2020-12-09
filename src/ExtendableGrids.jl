@@ -91,6 +91,7 @@ include("tokenstream.jl")
 export TokenStream, gettoken, expecttoken,trytoken
 
 include("plot.jl")
+include("plotters/common.jl")
 include("plotters/pyplot.jl")
 include("plotters/makie.jl")
 include("plotters/vtkview.jl")

@@ -72,39 +72,6 @@ function plottertype(Plotter)
 end
 
 
-"""
-$(SIGNATURES)
-
-Color scale for grid colors.
-"""
-function frgb(Plotter,i,max;pastel=false)
-    x=Float64(i-1)/Float64(max)
-    if (x<0.5)
-        r=1.0-2.0*x
-        g=2.0*x
-        b=0.0
-    else
-        r=0.0
-        g=2.0-2.0*x
-        b=2.0*x-1.0
-    end
-    if pastel
-        r=0.5+0.5*r
-        g=0.5+0.5*g
-        b=0.5+0.5*b
-    end
-    if ispyplot(Plotter)
-        return (r,g,b)
-    end
-    if ismakie(Plotter)
-        return RGB(r,g,b)
-    end
-    if isplots(Plotter)
-        return Plotter.RGB(r,g,b)
-    end
-end
-
-
 
 """
 $(TYPEDEF)
@@ -243,7 +210,6 @@ Keyword arguments:
 $(myprint(default_plot_kwargs()))
 """
 plot(grid::ExtendableGrid,func ;Plotter=nothing,kwargs...)=plot!(update_context!(PlotterContext(Plotter),kwargs),grid,func)
-
 
 
 
