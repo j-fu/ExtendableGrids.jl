@@ -200,8 +200,16 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid)
                     Makie.wireframe!(ctx[:scene],Makie.lift(a->a, ctx[:bsegments][i]) , strokecolor=:black)
                 end
             end
+
+            # rect = ctx[:scene]
+            # azim=ctx[:azim]
+            # elev=ctx[:elev]
+            # arr = normalize([cosd(azim/2), 0, sind(azim/2), -sind(azim/2)])
+            # Makie.rotate!(rect, Makie.Quaternionf0(arr...))
+            
             ctx[:fullscene]=Makie.vbox(ctx[:scene],Makie.hbox(ctx[:zslider],ctx[:yslider],ctx[:xslider]))
             Makie.display(ctx[:fullscene])
+
         else
             if ctx[:interior]
                 regpoints,regfacets=extract_visible_cells3D(grid,xyzcut)

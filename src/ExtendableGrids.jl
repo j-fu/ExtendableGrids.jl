@@ -5,14 +5,19 @@ using ExtendableSparse
 using AbstractTrees
 using InteractiveUtils
 
+using SparseArrays
+using Printf
+using Random
+
+
+
 # for plotting
 using Colors
 using GeometryBasics
 using Observables
+using LinearAlgebra
 
-using SparseArrays
-using Printf
-using Random
+
 
 include("adjacency.jl")
 export Adjacency,VariableTargetAdjacency,FixedTargetAdjacency
