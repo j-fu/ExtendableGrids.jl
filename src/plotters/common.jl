@@ -147,3 +147,52 @@ function extract_visible_bfaces3D(grid::ExtendableGrid,xyzcut)
     end
     points,faces
 end
+
+
+function extract_visible_bfaces3D(grid::ExtendableGrid,func,xyzcut)
+    cutcoord=zeros(3)
+    
+    function take(coord,simplex,xyzcut)
+        for idim=1:3
+            for inode=1:3
+                cutcoord[inode]=coord[idim,simplex[inode]]-xyzcut[idim]
+            end
+            if !mapreduce(a->a<=0,*,cutcoord)
+                return false
+            end
+        end
+        return true
+    end
+    
+    coord=grid[Coordinates]
+    nbfaces=num_bfaces(grid)
+    bfacenodes=grid[BFaceNodes]
+    
+    pmark=zeros(Int32,size(coord,2))
+    faces=ElasticArray{Int32}(undef,3,0)
+    npoints=0
+    
+    for i=1:nbfaces
+        tri=view(bfacenodes,:, i)
+        if take(coord,tri,xyzcut)
+            for inode=1:3
+                if pmark[tri[inode]]==0
+                    npoints+=1
+                    pmark[tri[inode]]=npoints
+                end
+            end
+            tri=map(i->pmark[i],tri)
+            append!(faces,tri)
+        end
+    end
+    
+    points=Array{Float32,2}(undef,3,npoints)
+    values=Vector{Float32}(undef,npoints)
+    for i=1:size(coord,2)
+        if pmark[i]>0
+            @views points[:,pmark[i]].=(coord[1,i],coord[2,i],coord[3,i])
+            values[pmark[i]]=func[i]
+        end
+    end
+    points,faces,values
+end
