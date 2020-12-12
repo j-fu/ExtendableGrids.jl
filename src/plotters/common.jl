@@ -226,7 +226,7 @@ end
   This method can be used both for the evaluation of plane sections and for
   the evaluation of function isosurfaces.
 """
-function tet_x_plane!(ixcoord,ixvalues,pointlist,node_indices,planeq_values,function_values; tol=1.0e-10)
+function tet_x_plane!(ixcoord,ixvalues,pointlist,node_indices,planeq_values,function_values; tol=0.0)
 
     # If all nodes lie on one side of the plane, no intersection
     if (mapreduce(a->a< -tol,*,planeq_values) || mapreduce(a->a>tol,*,planeq_values))
@@ -264,6 +264,19 @@ end
  perhaps we can also collect isolines.
  Just an optional collector parameter, defaulting to somethig makie independent.
 
+    Better yet:
+
+ struct MeshCollector
+  ...
+ end
+ mcoll=MeshCollector(planes,levels)
+
+ foreach tet
+   collect!(mcoll, tet_node_coord, node_function_values)
+ end
+ mcoll.colors=AbstractPlotting.interpolated_getindex.((cmap,), mcoll.vals, (fminmax,))
+ mesh!(collect(mcoll),backlight=1f0) 
+ 
 """
 function marching_tetrahedra(grid::ExtendableGrid,func,planes,flevels)
     nplanes=length(planes)

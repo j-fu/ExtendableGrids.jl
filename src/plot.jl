@@ -116,6 +116,7 @@ default_plot_kwargs()=Dict{Any,Pair{Any,String}}(
     :xplane => Pair(1.0,"xplane for 3D visualization"),
     :yplane => Pair(1.0,"yplane for 3D visualization"),
     :zplane => Pair(1.0,"zplane for 3D visualization"),
+    :flevel => Pair(1.0,"isolevel for 3D visualization"),
     :azim => Pair(-60,"azimuth angle for 3D visualization (in degrees)"),
     :elev => Pair(30,"elevation angle for 3D visualization (in degrees)"),
     :elevation_factor => Pair(1.0,"Height factor for elevation"),

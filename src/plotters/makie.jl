@@ -18,7 +18,7 @@ function make_mesh(grid::ExtendableGrid)
     
     points=Vector{Point2f0}(undef,npoints)
     for i=1:npoints
-        points[i]=Point2f0(coord[1,i],coobrd[2,i])
+        points[i]=Point2f0(coord[1,i],coord[2,i])
     end
     faces=Vector{GLTriangleFace}(undef,nfaces)
     for i=1:nfaces
