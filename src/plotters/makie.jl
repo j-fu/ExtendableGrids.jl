@@ -313,7 +313,10 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid , func)
 
         coord=grid[Coordinates]
         xyzcut=[x,y,z]
-
+        xyzplanes=[ [1,0,0,-x],
+                    [0,1,0,-y],
+                    [0,0,1,-z]]
+        
         function makemesh(pts,fcs)
             pts=vec(collect(reinterpret(Point3f0,pts)))
             push!(pts,Point3f0(xyzmin...))
@@ -351,9 +354,9 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid , func)
             ctx[:bsegments]=[Makie.Node(makemesh(bregpoints[ibregion],bregfacets[ibregion])) for ibregion=1:nbregions]
             
             
-            ppoints,pfacets,pvalues=marching_tetrahedra(grid,func,xyzcut,flevel)
+            ppoints,pfacets,pvalues=marching_tetrahedra(grid,func,xyzplanes,[flevel])
             ctx[:pmesh]=Makie.Node(makemesh(ppoints,pfacets,pvalues))
-            Makie.mesh!(ctx[:scene], Makie.lift(a->a, ctx[:pmesh]),ambient=Vec3f0(1,1,1))
+            Makie.mesh!(ctx[:scene], Makie.lift(a->a, ctx[:pmesh]),backlight=1f0)
 
             for i=1:ctx[:num_bfaceregions]
                 Makie.mesh!(ctx[:scene],Makie.lift(a->a, ctx[:bsegments][i]),
@@ -375,7 +378,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid , func)
             Makie.display(ctx[:fullscene])
 
         else
-            ppoints,pfacets,pvalues=marching_tetrahedra(ctx[:grid],ctx[:func],xyzcut,flevel)
+            ppoints,pfacets,pvalues=marching_tetrahedra(grid,func,xyzplanes,[flevel])
             ctx[:pmesh][]= makemesh(ppoints,pfacets,pvalues)
         end
     end

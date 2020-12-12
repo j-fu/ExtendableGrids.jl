@@ -201,43 +201,74 @@ end
 
 """
   $(SIGNATURES)
-  Calculate intersections between tetrahedron edges and plane.
+  Calculate intersections between tetrahedron with given linear
+  fucntion data and plane 
 
   Adapted from https://github.com/j-fu/gltools/blob/master/glm-3d.c#L341
-"""
+ 
+  A non-empty intersection is either a triangle or a planar quadrilateral,
+  define by either 3 or 4 intersection points between tetrahedron edges
+  and the plane.
 
-function ixect!(ixcoord,ixvalues,coord,nodes,planeq,values)
-    # if all nodes lie on one side of the plane, no intersection
-    if (mapreduce(a->a<0.0,*,planeq) || mapreduce(a->a>0.0,*,planeq))
+  Input: 
+  -       pointlist: 3xN array of grid point coordinates
+  -    node_indices: 4 element array of node indices (pointing into pointlist and function_values)
+  -   planeq_values: 4 element array of plane equation evaluated at the node coordinates
+  - function_values: N element array of function values
+
+  Mutates:
+  -  ixcoord: 3x4 array of plane - tetedge intersection coordinates
+  - ixvalues: 4 element array of fuction values at plane - tetdedge intersections
+
+  Returns:
+  - nxs,ixcoord,ixvalues
+  
+  This method can be used both for the evaluation of plane sections and for
+  the evaluation of function isosurfaces.
+"""
+function tet_x_plane!(ixcoord,ixvalues,pointlist,node_indices,planeq_values,function_values; tol=1.0e-10)
+
+    # If all nodes lie on one side of the plane, no intersection
+    if (mapreduce(a->a< -tol,*,planeq_values) || mapreduce(a->a>tol,*,planeq_values))
         return 0
     end
 
-    # interpolate coordinates and values according to
+    # Interpolate coordinates and function_values according to
     # evaluation of the plane equation
-    is=0
+    nxs=0
     for n1=1:3
         for n2=n1+1:4
-            if planeq[n1]*planeq[n2]<1.0e-10
-                is+=1
-                t= planeq[n1]/(planeq[n1]-planeq[n2])
+            if planeq_values[n1]*planeq_values[n2]<tol
+                nxs+=1
+                t= planeq_values[n1]/(planeq_values[n1]-planeq_values[n2])
                 for i=1:3
-                    ixcoord[i,is]=coord[i,nodes[n1]]+t*(coord[i,nodes[n2]]-coord[i,nodes[n1]])
+                    ixcoord[i,nxs]=pointlist[i,node_indices[n1]]+t*(pointlist[i,node_indices[n2]]-pointlist[i,node_indices[n1]])
                 end
-                ixvalues[is]=values[nodes[n1]]+t*(values[nodes[n2]]-values[nodes[n1]])
+                ixvalues[nxs]=function_values[node_indices[n1]]+t*(function_values[node_indices[n2]]-function_values[node_indices[n1]])
             end
         end
     end
-    return is;
+    return nxs
 end
 
-# We should be able to parametrize this
-# with a pushdata function which will remove one copy
-# step for mesh creation - perhaps a meshcollector struct whe
-# can dispatch on.
-# flevel could be flevels
-# xyzcut could be a vector of plane data
-# perhaps we can also collect isolines.
-function marching_tetrahedra(grid::ExtendableGrid,func,xyzcut,flevel)
+
+"""
+   $(SIGNATURES)
+
+ We should be able to parametrize this
+ with a pushdata function which will remove one copy
+ step for GeometryBasics.mesh creation - perhaps a meshcollector struct we
+ can dispatch on.
+ flevel could be flevels
+ xyzcut could be a vector of plane data
+ perhaps we can also collect isolines.
+ Just an optional collector parameter, defaulting to somethig makie independent.
+
+"""
+function marching_tetrahedra(grid::ExtendableGrid,func,planes,flevels)
+    nplanes=length(planes)
+    nlevels=length(flevels)
+    
     coord=grid[Coordinates]
     cellnodes=grid[CellNodes]
     cellregions=grid[CellRegions]
@@ -247,19 +278,13 @@ function marching_tetrahedra(grid::ExtendableGrid,func,xyzcut,flevel)
     all_ixcoord=ElasticArray{Float32}(undef,3,0)
     all_ixvalues=zeros(0)
 
-    plane=zeros(4)
-    function setdir!(plane,idir)
-        for i=1:3
-            plane[i]=0
-        end
-        plane[idir]=1
-        plane[4]=-xyzcut[idir]
-    end
     planeq=zeros(4)
     ixcoord=zeros(3,6)
     ixvalues=zeros(6)
     cn=zeros(Int64,4)
+
     plane_equation(plane,coord)=coord[1]*plane[1]+coord[2]*plane[2]+coord[3]*plane[3]+plane[4]
+
     function pushtris(ns,ixcoord,ixvalues)
         # number of intersection points can be 3 or 4
         if ns>=3
@@ -270,22 +295,25 @@ function marching_tetrahedra(grid::ExtendableGrid,func,xyzcut,flevel)
             end
             append!(all_ixfaces,(last_i+1,last_i+2,last_i+3))
             if ns==4
-                append!(all_ixfaces,(last_i+2,last_i+4,last_i+3))
+                append!(all_ixfaces,(last_i+3,last_i+2,last_i+4))
             end
         end
     end
     for itet=1:size(cellnodes,2)
-        # Handle directional planes
-        for idir=1:3
-            setdir!(plane,idir)
-            @views map!(inode->plane_equation(plane,coord[:,inode]),planeq,cellnodes[:,itet])
-            ns=ixect!(ixcoord,ixvalues,coord,view(cellnodes,:,itet),planeq,func)
-            pushtris(ns,ixcoord,ixvalues)
+        node_indices=view(cellnodes,:,itet)
+
+        for iplane=1:nplanes
+            @views map!(inode->plane_equation(planes[iplane],coord[:,inode]),planeq,node_indices)
+            nxs=tet_x_plane!(ixcoord,ixvalues,coord,node_indices,planeq,func)
+            pushtris(nxs,ixcoord,ixvalues)
         end
-        # hanle isolevel
-        map!(inode->(func[inode]-flevel),planeq,cellnodes[:,itet])
-        ns=ixect!(ixcoord,ixvalues,coord,view(cellnodes,:,itet),planeq,func)
-        pushtris(ns,ixcoord,ixvalues)
+        
+        for ilevel=1:nlevels
+            map!(inode->(func[inode]-flevels[ilevel]),planeq,node_indices)
+            nxs=tet_x_plane!(ixcoord,ixvalues,coord,node_indices,planeq,func)
+            pushtris(nxs,ixcoord,ixvalues)
+        end
+
     end
     all_ixcoord,all_ixfaces, all_ixvalues
 end
