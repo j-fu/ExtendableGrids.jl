@@ -154,8 +154,9 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid)
     if !haskey(ctx,:fullscene)
         make_sliders(ctx,xyzmin,xyzmax)
     end
-
-
+    
+    
+    
     function makeplot(x,y,z)
         alpha=ctx[:alpha]
         trans=alpha<1
@@ -163,28 +164,27 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid)
         nbregions=num_bfaceregions(grid)
         coord=grid[Coordinates]
         xyzcut=[x,y,z]
-        
         function makemesh(pts,fcs)
             pts=vec(collect(reinterpret(Point3f0,pts)))
             push!(pts,Point3f0(xyzmin...))
             push!(pts,Point3f0(xyzmax...))
             fcs=vec(collect(reinterpret(NgonFace{3,Int32},fcs)))
-            Mesh(pts,fcs)
+            Mesh(meta(pts,normals=normals(pts, fcs)),fcs)
         end
-
+        
         if (!haskey(ctx,:scene)||
             ctx[:num_cellregions]!=nregions ||
             ctx[:num_bfaceregions]!=nbregions)
-
+            
             ctx[:scene] = Makie.Scene(scale_plot=false)
-
+            
             # TODO: allow aspect scaling
             # if ctx[:aspect]>1.0
             #     Makie.scale!(ctx[:scene],ctx[:aspect],1.0)
             # else
             #     Makie.scale!(ctx[:scene],1.0,1.0/ctx[:aspect])
             # end
-
+            
             
             regpoints,regfacets=extract_visible_cells3D(grid,xyzcut)
             bregpoints,bregfacets=extract_visible_bfaces3D(grid,xyzcut)
@@ -197,20 +197,23 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid)
             # http://juliagraphics.github.io/Colors.jl/stable/colormapsandcolorscales/#Generating-distinguishable-colors-1
             if ctx[:interior]
                 for i=1:nregions
-                    Makie.mesh!(ctx[:scene],Makie.lift(a->a, ctx[:meshes][i]), color=(frgb(Makie,i,nregions+nbregions,pastel=true),alpha),transparency=trans)
+                    Makie.mesh!(ctx[:scene],Makie.lift(a->a, ctx[:meshes][i]),
+                                color=(frgb(Makie,i,nregions+nbregions,pastel=true),alpha),
+                                transparency=trans
+                                )
                     if (!trans)
                         Makie.wireframe!(ctx[:scene],Makie.lift(a->a, ctx[:meshes][i]),strokecolor=:black)
                     end
                 end
             end
             for i=1:nbregions
-                Makie.mesh!(ctx[:scene],Makie.lift(a->a, ctx[:bsegments][i]) , color=(frgb(Makie,nregions+i,nregions+nbregions),alpha),transparency=trans)
+                Makie.mesh!(ctx[:scene],Makie.lift(a->a, ctx[:bsegments][i]),
+                            color=(frgb(Makie,nregions+i,nregions+nbregions),alpha),
+                            transparency=trans)
                 if (!trans)
                     Makie.wireframe!(ctx[:scene],Makie.lift(a->a, ctx[:bsegments][i]) , strokecolor=:black)
                 end
             end
-
-
             # TODO: a priori angles aka pyplot3D
             # rect = ctx[:scene]
             # azim=ctx[:azim]
@@ -234,6 +237,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid)
             end
         end
     end
+
     
     xplane=ctx[:xslider][end][:value]
     yplane=ctx[:yslider][end][:value]
@@ -299,21 +303,17 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid , func)
     xyzmin,xyzmax=xyzminmax(grid)
     fminmax = extrema(func)
     cmap = Makie.to_colormap(ctx[:colormap])
- 
-
-    if !haskey(ctx,:fullscene)
-        make_sliders(ctx,xyzmin,xyzmax)
-    end
-    
+     
     ctx[:grid]=grid
     ctx[:func]=func
-    
-    function makeplot(x,y,z)
+    function makeplot(x,y,z,flevel)
         alpha=ctx[:alpha]
-        trans=alpha<1
+        nbregions=num_bfaceregions(grid)
         nregions=num_cellregions(grid)
+
         coord=grid[Coordinates]
         xyzcut=[x,y,z]
+
         function makemesh(pts,fcs)
             pts=vec(collect(reinterpret(Point3f0,pts)))
             push!(pts,Point3f0(xyzmin...))
@@ -321,7 +321,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid , func)
             fcs=vec(collect(reinterpret(NgonFace{3,Int32},fcs)))
             Mesh(pts,fcs)
         end
-
+        
         function makemesh(pts,fcs,vals)
             pts=vec(collect(reinterpret(Point3f0,pts)))
             push!(pts,Point3f0(xyzmin...))
@@ -330,42 +330,36 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid , func)
             push!(vals,0)
             push!(vals,0)
             colors = Makie.AbstractPlotting.interpolated_getindex.((cmap,), vals, (fminmax,))
-            GeometryBasics.Mesh(meta(pts, color=colors), fcs)
+            GeometryBasics.Mesh(meta(pts, color=colors,normals=normals(pts, fcs)), fcs)
         end
-
-        if (!haskey(ctx,:scene)||
-            ctx[:num_cellregions]!=nregions)
-
+        
+        if (!haskey(ctx,:scene)||ctx[:num_bfaceregions]!=nbregions )
+            
             ctx[:scene] = Makie.Scene(scale_plot=false)
-
+            ctx[:num_cellregions]=nregions
+            ctx[:num_bfaceregions]=nbregions
+            
             # TODO: allow aspect scaling
             # if ctx[:aspect]>1.0
             #     Makie.scale!(ctx[:scene],ctx[:aspect],1.0)
             # else
             #     Makie.scale!(ctx[:scene],1.0,1.0/ctx[:aspect])
             # end
+            
+            
+            bregpoints,bregfacets=extract_visible_bfaces3D(grid,xyzmax)
+            ctx[:bsegments]=[Makie.Node(makemesh(bregpoints[ibregion],bregfacets[ibregion])) for ibregion=1:nbregions]
+            
+            
+            ppoints,pfacets,pvalues=marching_tetrahedra(grid,func,xyzcut,flevel)
+            ctx[:pmesh]=Makie.Node(makemesh(ppoints,pfacets,pvalues))
+            Makie.mesh!(ctx[:scene], Makie.lift(a->a, ctx[:pmesh]),ambient=Vec3f0(1,1,1))
 
-            
-            regpoints,regfacets=extract_visible_cells3D(grid,xyzcut)
-            bpoints,bfacets,bvalues=extract_visible_bfaces3D(grid,func,xyzcut)
-            ctx[:num_cellregions]=nregions
-            ctx[:meshes]=  [Makie.Node(makemesh(regpoints[iregion],regfacets[iregion])) for iregion=1:nregions]
-            ctx[:bmesh]= Makie.Node(makemesh(bpoints,bfacets,bvalues))
-            
-            
-            # TODO: use distinguishable colors
-            # http://juliagraphics.github.io/Colors.jl/stable/colormapsandcolorscales/#Generating-distinguishable-colors-1
-            if ctx[:interior]
-                for i=1:nregions
-                    Makie.mesh!(ctx[:scene],Makie.lift(a->a, ctx[:meshes][i]), color=(frgb(Makie,i,nregions,pastel=true),alpha),transparency=trans)
-                    if (!trans)
-                        Makie.wireframe!(ctx[:scene],Makie.lift(a->a, ctx[:meshes][i]),strokecolor=:black)
-                    end
-                end
+            for i=1:ctx[:num_bfaceregions]
+                Makie.mesh!(ctx[:scene],Makie.lift(a->a, ctx[:bsegments][i]),
+                            color=(frgb(Makie,nregions+i,nregions+nbregions),0.2),
+                            transparency=true)
             end
-            
-            Makie.mesh!(ctx[:scene], Makie.lift(a->a, ctx[:bmesh]))
-
             # TODO: a priori angles aka pyplot3D
             # rect = ctx[:scene]
             # azim=ctx[:azim]
@@ -373,26 +367,36 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid , func)
             # arr = normalize([cosd(azim/2), 0, sind(azim/2), -sind(azim/2)])
             # Makie.rotate!(rect, Makie.Quaternionf0(arr...))
             
-            ctx[:fullscene]=Makie.vbox(ctx[:scene],Makie.hbox(ctx[:zslider],ctx[:yslider],ctx[:xslider]))
+            ctx[:fullscene]=Makie.vbox(ctx[:scene],
+                                       Makie.hbox(ctx[:zslider],
+                                                  ctx[:yslider],
+                                                  ctx[:xslider],
+                                                  ctx[:lslider]))
             Makie.display(ctx[:fullscene])
 
         else
-            if ctx[:interior]
-                regpoints,regfacets=extract_visible_cells3D(grid,xyzcut)
-                for i=1:nregions
-                    ctx[:meshes][i][]=makemesh(regpoints[i],regfacets[i])
-                end
-            end
-            bpoints,bfacets,bvalues=extract_visible_bfaces3D(ctx[:grid],ctx[:func],xyzcut)
-            ctx[:bmesh][]= makemesh(bpoints,bfacets,bvalues)
+            ppoints,pfacets,pvalues=marching_tetrahedra(ctx[:grid],ctx[:func],xyzcut,flevel)
+            ctx[:pmesh][]= makemesh(ppoints,pfacets,pvalues)
         end
     end
     
-    xplane=ctx[:xslider][end][:value]
-    yplane=ctx[:yslider][end][:value]
-    zplane=ctx[:zslider][end][:value]
-    makeplot(xplane[],yplane[],zplane[])
-    onany(makeplot,xplane,yplane,zplane)
+    if !haskey(ctx,:fullscene)
+        make_sliders(ctx,xyzmin,xyzmax)
+        ctx[:lslider] = Makie.slider(LinRange(fminmax...,101),start=fminmax[1],
+                                     camera=Makie.campixel!,
+                                     buttoncolor=:gray,
+                                     valueprinter= x->@sprintf("f=%.2g",x),
+                                     raw=false)
+
+        xplane=ctx[:xslider][end][:value]
+        yplane=ctx[:yslider][end][:value]
+        zplane=ctx[:zslider][end][:value]
+        flevel=ctx[:lslider][end][:value]
+        onany(makeplot,xplane,yplane,zplane,flevel)
+        makeplot(xplane[],yplane[],zplane[],flevel[])
+    else
+        makeplot(ctx[:xplane],ctx[:yplane],ctx[:zplane],ctx[:flevel])
+    end
 
 
     # on(ctx[:fullscene].events.unicode_input) do button
