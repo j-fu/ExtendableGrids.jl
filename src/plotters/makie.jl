@@ -10,43 +10,26 @@ function make_scene!(ctx::PlotterContext)
     ctx
 end
 
-function make_mesh(grid::ExtendableGrid)
-    coord=grid[Coordinates]
-    cellnodes=grid[CellNodes]
-    npoints=num_nodes(grid)
-    nfaces=num_cells(grid)
-    
-    points=Vector{Point2f0}(undef,npoints)
-    for i=1:npoints
-        points[i]=Point2f0(coord[1,i],coord[2,i])
-    end
-    faces=Vector{GLTriangleFace}(undef,nfaces)
-    for i=1:nfaces
-        faces[i]=TriangleFace(cellnodes[1,i],cellnodes[2,i],cellnodes[3,i])
-    end
-    Mesh(points,faces)
-end
 
+points(coord) =points(coord,Val{size(coord,1)})
+points(coord,::Type{Val{2}}) =[Point2f0(coord[1,i],coord[2,i]) for i=1:size(coord,2)]
+points(coord,::Type{Val{3}}) =[Point3f0(coord[1,i],coord[2,i],coord[3,i]) for i=1:size(coord,2)]
+
+faces(cellnodes) = faces(cellnodes,Val{size(cellnodes,1)-1})
+faces(cellnodes,::Type{Val{2}}) = [TriangleFace(cellnodes[1,i],cellnodes[2,i],cellnodes[3,i]) for i=1:size(cellnodes,2)]
+
+make_mesh(grid::ExtendableGrid)=Mesh(points(grid[Coordinates]),faces(grid[CellNodes]))
 
 
 
 function make_mesh(grid::ExtendableGrid, elevation; elevation_factor=1.0)
     coord=grid[Coordinates]
-    cellnodes=grid[CellNodes]
     npoints=num_nodes(grid)
-    nfaces=num_cells(grid)
-
-    points=Vector{Point3f0}(undef,npoints)
-    for i=1:npoints
-        points[i]=Point3f0(coord[1,i],coord[2,i],elevation[i]*elevation_factor)
-    end
-    faces=Vector{GLTriangleFace}(undef,nfaces)
-    for i=1:nfaces
-        faces[i]=TriangleFace(cellnodes[1,i],cellnodes[2,i],cellnodes[3,i])
-    end
-    Mesh(points,faces)
+    points=[Point3f0(coord[1,i],coord[2,i],elevation[i]*elevation_factor) for i=1:npoints]
+    Mesh(points,faces(grid[CellNodes]))
 end
 
+         
 function region_bfacesegments(grid::ExtendableGrid,ibreg)
     coord=grid[Coordinates]
     nbfaces=num_bfaces(grid)
@@ -116,6 +99,7 @@ function make_sliders(ctx,xyzmin,xyzmax)
     scaled_range(idim)=LinRange(-0.02,1.02,105)*(xyzmax[idim]-xyzmin[idim]).+xyzmin[idim]
     ctx[:xslider] = Makie.slider(scaled_range(1),start=ctx[:xplane],
                                  camera=Makie.campixel!,
+                                 sliderheight=25,
                                  buttoncolor=:gray,
                                  valueprinter= x->@sprintf("x=%.2g",x),
                                  raw=false)
@@ -123,10 +107,12 @@ function make_sliders(ctx,xyzmin,xyzmax)
                                  camera=Makie.campixel!,
                                  buttoncolor=:gray,
                                  valueprinter= y->@sprintf("y=%.2g",y),
+                                 sliderheight=25,
                                  raw=false)
     ctx[:zslider] = Makie.slider(scaled_range(3),start = ctx[:zplane],
                                  camera=Makie.campixel!,
                                  buttoncolor=:gray,
+                                 sliderheight=25,
                                  valueprinter= z->@sprintf("z=%.2g",z),
                                  raw=false)
 end
@@ -150,6 +136,17 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid)
     Makie=ctx[:Plotter]
     coord=grid[Coordinates]
     xyzmin,xyzmax=xyzminmax(grid)
+
+
+    ctx[:xplane]=min(xyzmax[1],ctx[:xplane])
+    ctx[:yplane]=min(xyzmax[2],ctx[:yplane])
+    ctx[:zplane]=min(xyzmax[3],ctx[:zplane])
+
+    ctx[:xplane]=max(xyzmin[1],ctx[:xplane])
+    ctx[:yplane]=max(xyzmin[2],ctx[:yplane])
+    ctx[:zplane]=max(xyzmin[3],ctx[:zplane])
+
+
     
     if !haskey(ctx,:fullscene)
         make_sliders(ctx,xyzmin,xyzmax)
@@ -164,18 +161,18 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid)
         nbregions=num_bfaceregions(grid)
         coord=grid[Coordinates]
         xyzcut=[x,y,z]
+         
         function makemesh(pts,fcs)
-            pts=vec(collect(reinterpret(Point3f0,pts)))
+            pts=points(pts)
             push!(pts,Point3f0(xyzmin...))
             push!(pts,Point3f0(xyzmax...))
-            fcs=vec(collect(reinterpret(NgonFace{3,Int32},fcs)))
+            fcs=faces(fcs)
             Mesh(meta(pts,normals=normals(pts, fcs)),fcs)
         end
         
-        if (!haskey(ctx,:scene)||
+        if (!haskey(ctx,:fullscene)||
             ctx[:num_cellregions]!=nregions ||
             ctx[:num_bfaceregions]!=nbregions)
-            
             ctx[:scene] = Makie.Scene(scale_plot=false)
             
             # TODO: allow aspect scaling
@@ -199,6 +196,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid)
                 for i=1:nregions
                     Makie.mesh!(ctx[:scene],Makie.lift(a->a, ctx[:meshes][i]),
                                 color=(frgb(Makie,i,nregions+nbregions,pastel=true),alpha),
+                                backlight=1f0,
                                 transparency=trans
                                 )
                     if (!trans)
@@ -267,8 +265,8 @@ end
 function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid, func)
     Makie=ctx[:Plotter]
     make_scene!(ctx)
-    if ctx[:elevation]
-        mesh=make_mesh(grid,func,elevation_factor=ctx[:elevation_factor])
+    if ctx[:elevation]!=0
+        mesh=make_mesh(grid,func,elevation_factor=ctx[:elevation])
     else
         mesh=make_mesh(grid)
     end        
@@ -303,7 +301,16 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid , func)
     xyzmin,xyzmax=xyzminmax(grid)
     fminmax = extrema(func)
     cmap = Makie.to_colormap(ctx[:colormap])
-     
+
+    ctx[:xplane]=min(xyzmax[1],ctx[:xplane])
+    ctx[:yplane]=min(xyzmax[2],ctx[:yplane])
+    ctx[:zplane]=min(xyzmax[3],ctx[:zplane])
+
+    ctx[:xplane]=max(xyzmin[1],ctx[:xplane])
+    ctx[:yplane]=max(xyzmin[2],ctx[:yplane])
+    ctx[:zplane]=max(xyzmin[3],ctx[:zplane])
+
+    
     ctx[:grid]=grid
     ctx[:func]=func
     function makeplot(x,y,z,flevel)
@@ -318,18 +325,18 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid , func)
                     [0,0,1,-z]]
         
         function makemesh(pts,fcs)
-            pts=vec(collect(reinterpret(Point3f0,pts)))
+            pts=points(pts)
             push!(pts,Point3f0(xyzmin...))
             push!(pts,Point3f0(xyzmax...))
-            fcs=vec(collect(reinterpret(NgonFace{3,Int32},fcs)))
+            fcs=faces(fcs)
             Mesh(pts,fcs)
         end
         
         function makemesh(pts,fcs,vals)
-            pts=vec(collect(reinterpret(Point3f0,pts)))
+            pts=points(pts)
             push!(pts,Point3f0(xyzmin...))
             push!(pts,Point3f0(xyzmax...))
-            fcs=vec(collect(reinterpret(NgonFace{3,Int32},fcs)))
+            fcs=faces(fcs)
             push!(vals,0)
             push!(vals,0)
             colors = Makie.AbstractPlotting.interpolated_getindex.((cmap,), vals, (fminmax,))
@@ -369,12 +376,8 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}},grid , func)
             # elev=ctx[:elev]
             # arr = normalize([cosd(azim/2), 0, sind(azim/2), -sind(azim/2)])
             # Makie.rotate!(rect, Makie.Quaternionf0(arr...))
-            
-            ctx[:fullscene]=Makie.vbox(ctx[:scene],
-                                       Makie.hbox(ctx[:zslider],
-                                                  ctx[:yslider],
-                                                  ctx[:xslider],
-                                                  ctx[:lslider]))
+
+            ctx[:fullscene]=Makie.vbox(ctx[:scene],Makie.hbox(ctx[:zslider],ctx[:yslider],ctx[:xslider],ctx[:lslider]))
             Makie.display(ctx[:fullscene])
 
         else

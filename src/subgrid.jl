@@ -125,7 +125,7 @@ function subgrid(parent,
     subgrid[Coordinates]=sub_coord
     subgrid[CellRegions]=sub_cr
     subgrid[CellGeometries]=sub_ct
-    subgrid[CellNodes]=sub_xnodes
+    subgrid[CellNodes]=tryfix(sub_xnodes)
     subgrid[ParentGrid]=parent
     subgrid[NodeInParent]=sub_nip
 
@@ -162,7 +162,7 @@ function subgrid(parent,
     
         subgrid[BFaceRegions]=sub_bfaceregions
         subgrid[BFaceGeometries]=sub_bfacetypes
-        subgrid[BFaceNodes]=sub_bfacenodes
+        subgrid[BFaceNodes]=tryfix(sub_bfacenodes)
         subgrid[NumBFaceRegions]=maximum(sub_bfaceregions)
     end
     

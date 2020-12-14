@@ -236,3 +236,18 @@ function atranspose(adj::Adjacency{T}) where T
     return t_adj
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+Try to turn variable target adjacency into fixed target adjacency
+"""
+function tryfix(a::Adjacency{T}) where T
+    ntargets=num_targets(a,1)
+    for i=1:num_sources(a)
+        if num_targets(a,i)!=ntargets
+            return a
+        end
+    end
+    FixedTargetAdjacency(reshape(a.colentries,ntargets,num_sources(a)))
+end
+

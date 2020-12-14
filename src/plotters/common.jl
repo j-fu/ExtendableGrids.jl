@@ -58,7 +58,7 @@ function extract_visible_cells3D(grid::ExtendableGrid,xyzcut)
                 icut=icut+1
             end
         end
-        mapreduce(a->a<=0,*,cutcoord)|| mapreduce(a->a>=0,*,cutcoord)
+        mapreduce(a->a<=0,*,cutcoord)  ||  mapreduce(a->a>=0,*,cutcoord)
     end
 
     pmark=[zeros(Int32,size(coord,2)) for ireg=1:nregions]
@@ -266,15 +266,15 @@ end
 
     Better yet:
 
- struct MeshCollector
+ struct TetrahedronMarcher
   ...
  end
- mcoll=MeshCollector(planes,levels)
+ tm=TetrahedronMarcher(planes,levels)
 
  foreach tet
-   collect!(mcoll, tet_node_coord, node_function_values)
+       collect!(tm, tet_node_coord, node_function_values)
  end
- mcoll.colors=AbstractPlotting.interpolated_getindex.((cmap,), mcoll.vals, (fminmax,))
+ tm.colors=AbstractPlotting.interpolated_getindex.((cmap,), mcoll.vals, (fminmax,))
  mesh!(collect(mcoll),backlight=1f0) 
  
 """
