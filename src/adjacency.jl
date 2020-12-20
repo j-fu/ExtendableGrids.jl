@@ -248,6 +248,6 @@ function tryfix(a::Adjacency{T}) where T
             return a
         end
     end
-    FixedTargetAdjacency(reshape(a.colentries,ntargets,num_sources(a)))
+    FixedTargetAdjacency(reshape(a.colentries,(ntargets,num_sources(a))))
 end
 
