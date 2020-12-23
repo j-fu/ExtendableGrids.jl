@@ -8,7 +8,7 @@ function simplexgrid(coord::Array{Tc,2},
                      ) where {Tc,Ti}
 ````
 
-Create simplex grid from five arrays.
+    Create simplex grid from five arrays.
 """
 function simplexgrid(coord::Array{Tc,2},
                      cellnodes::Array{Ti,2},
@@ -433,6 +433,222 @@ function  simplexgrid(X::AbstractArray{Tc,1},Y::AbstractArray{Tc,1}) where {Tc}
 
     grid[XCoordinates]=X
     grid[YCoordinates]=Y
+    grid
+end
+
+
+##########################################################
+"""
+$(TYPEDSIGNATURES)
+
+Constructor for 3D grid
+from coordinate arrays. 
+Boundary region numbers:
+
+| location  |  number |
+| --------- | ------- |
+| south     |       1 |
+| east      |       2 |
+| north     |       3 |
+| west      |       4 |
+| bottom    |       5 |
+| top       |       6 |
+
+"""
+function  simplexgrid(X::AbstractArray{Tc,1},Y::AbstractArray{Tc,1},Z::AbstractArray{Tc,1}) where {Tc}
+
+    
+    function leq(x, x1, x2, x3)
+        if (x>x1)
+            return false
+        end
+        if (x>x2)
+            return false
+        end
+        if (x>x3)
+            return false
+        end
+        return true
+    end
+    
+    function geq(x, x1, x2, x3)
+        if (x<x1)
+            return false
+        end
+        if (x<x2)
+            return false
+        end
+        if (x<x3)
+            return false
+        end
+        return true
+    end
+
+    nx=length(X)
+    ny=length(Y)
+    nz=length(Z)
+    
+    hmin=X[2]-X[1]
+    for i=1:nx-1
+        h=X[i+1]-X[i]
+        if h <hmin
+            hmin=h
+        end
+    end
+    for i=1:ny-1
+        h=Y[i+1]-Y[i]
+        if h <hmin
+            hmin=h
+        end
+    end
+    
+    for i=1:ny-1
+        h=Z[i+1]-Z[i]
+        if h <hmin
+            hmin=h
+        end
+    end
+    
+    @assert(hmin>0.0)
+    eps=1.0e-5*hmin
+
+    x1=X[1]+eps
+    xn=X[nx]-eps
+    y1=Y[1]+eps
+    yn=Y[ny]-eps
+    z1=Z[1]+eps
+    zn=Z[ny]-eps
+    
+    
+    function  check_insert_bface(n1,n2,n3)
+                
+        if (geq(x1,coord[1,n1],coord[1,n2],coord[1,n3]))
+            ibface=ibface+1
+            bfacenodes[1,ibface]=n1
+            bfacenodes[2,ibface]=n2
+            bfacenodes[3,ibface]=n3
+	    bfaceregions[ibface]=4
+            return
+        end
+        if (leq(xn,coord[1,n1],coord[1,n2],coord[1,n3]))
+            ibface=ibface+1
+            bfacenodes[1,ibface]=n1
+            bfacenodes[2,ibface]=n2
+            bfacenodes[3,ibface]=n3
+	    bfaceregions[ibface]=2
+            return
+        end
+        if (geq(y1,coord[2,n1],coord[2,n2],coord[2,n3]))
+            ibface=ibface+1
+            bfacenodes[1,ibface]=n1
+            bfacenodes[2,ibface]=n2
+            bfacenodes[3,ibface]=n3
+	    bfaceregions[ibface]=1
+            return
+        end
+        if (leq(yn,coord[2,n1],coord[2,n2],coord[2,n3]))
+            ibface=ibface+1
+            bfacenodes[1,ibface]=n1
+            bfacenodes[2,ibface]=n2
+            bfacenodes[3,ibface]=n3
+	    bfaceregions[ibface]=3
+            return
+        end
+        if (geq(z1,coord[3,n1],coord[3,n2],coord[3,n3]))
+            ibface=ibface+1
+            bfacenodes[1,ibface]=n1
+            bfacenodes[2,ibface]=n2
+            bfacenodes[3,ibface]=n3
+	    bfaceregions[ibface]=5
+            return
+        end
+        if (leq(zn,coord[3,n1],coord[3,n2],coord[3,n3]))
+            ibface=ibface+1
+            bfacenodes[1,ibface]=n1
+            bfacenodes[2,ibface]=n2
+            bfacenodes[3,ibface]=n3
+	    bfaceregions[ibface]=6
+            return
+        end
+    end
+    
+    num_nodes=nx*ny*nz
+    num_cells=6*(nx-1)*(ny-1)*(nz-1)
+    num_bfacenodes=4*(nx-1)*(ny-1)+4*(nx-1)*(nz-1)+4*(ny-1)*(nz-1)
+    
+    coord=zeros(Tc,3,num_nodes)
+    cellnodes=zeros(Int32,4,num_cells)
+    cellregions=zeros(Int32,num_cells)
+    bfacenodes=zeros(Int32,3,num_bfacenodes)
+    bfaceregions=zeros(Int32,num_bfacenodes)
+    
+    ipoint=0
+    for iz=1:nz
+        for iy=1:ny
+            for ix=1:nx
+                ipoint=ipoint+1
+                coord[1,ipoint]=X[ix]
+                coord[2,ipoint]=Y[iy]
+                coord[3,ipoint]=Z[iz]
+            end
+        end
+    end
+
+    @assert(ipoint==num_nodes)
+    
+    icell=0
+    nxy=nx*ny
+    for iz=1:nz-1
+        for iy=1:ny-1
+            for ix=1:nx-1
+
+	        ip=ix+(iy-1)*nx+(iz-1)*nxy;
+                
+	        p000 = ip ;
+	        p100 = ip+1;
+	        p010 = ip  +nx;
+	        p110 = ip+1+nx;
+	        p001 = ip	+nxy;
+	        p101 = ip+1	+nxy;
+	        p011 = ip  +nx+nxy;
+	        p111 = ip+1+nx+nxy;
+
+                icell=icell+1; cellregions[icell]=1;@. cellnodes[:,icell]=(p000,p100,p110,p111)
+                icell=icell+1; cellregions[icell]=1;@. cellnodes[:,icell]=(p000,p100,p101,p111)
+                icell=icell+1; cellregions[icell]=1;@. cellnodes[:,icell]=(p000,p010,p011,p111)
+                icell=icell+1; cellregions[icell]=1;@. cellnodes[:,icell]=(p000,p010,p110,p111)
+                icell=icell+1; cellregions[icell]=1;@. cellnodes[:,icell]=(p000,p001,p101,p111)
+                icell=icell+1; cellregions[icell]=1;@. cellnodes[:,icell]=(p000,p001,p011,p111)
+            end
+        end
+    end
+    @assert(icell==num_cells)
+    #lazy way to  create boundary grid
+    # lazy but easy... bad for partitioning !!!
+    
+    ibface=0
+    for icell=1:num_cells
+        n1=cellnodes[1,icell]
+	n2=cellnodes[2,icell]
+	n3=cellnodes[3,icell]
+     	n4=cellnodes[4,icell]
+        check_insert_bface(n1,n2,n3)
+	check_insert_bface(n1,n2,n4)
+	check_insert_bface(n1,n3,n4)
+	check_insert_bface(n2,n3,n4)
+    end
+    @assert(ibface==num_bfacenodes)
+    
+    
+    grid=simplexgrid(coord,
+                     cellnodes,
+                     cellregions,
+                     bfacenodes,
+                     bfaceregions)
+
+    grid[XCoordinates]=X
+    grid[YCoordinates]=Y
+    grid[ZCoordinates]=Z
     grid
 end
 
