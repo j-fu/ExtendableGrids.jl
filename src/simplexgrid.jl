@@ -242,7 +242,7 @@ grid marking control volumes: marked by `|`.
  |--|-----|-----|-----|-----|-----|-----|-----|--|
 ```
 """
-function simplexgrid(X::AbstractArray{Tc,1}) where {Tc}
+function simplexgrid(X::AbstractArray{Tc,1}) where Tc
     coord=reshape(X,1,length(X))
     cellnodes=zeros(Int32,2,length(X)-1)
     cellregions=zeros(Int32,length(X)-1)
@@ -502,7 +502,7 @@ function  simplexgrid(X::AbstractArray{Tc,1},Y::AbstractArray{Tc,1},Z::AbstractA
         end
     end
     
-    for i=1:ny-1
+    for i=1:nz-1
         h=Z[i+1]-Z[i]
         if h <hmin
             hmin=h
@@ -511,17 +511,19 @@ function  simplexgrid(X::AbstractArray{Tc,1},Y::AbstractArray{Tc,1},Z::AbstractA
     
     @assert(hmin>0.0)
     eps=1.0e-5*hmin
-
+    
     x1=X[1]+eps
-    xn=X[nx]-eps
+    xn=X[end]-eps
+    
     y1=Y[1]+eps
-    yn=Y[ny]-eps
+    yn=Y[end]-eps
+    
     z1=Z[1]+eps
-    zn=Z[ny]-eps
+    zn=Z[end]-eps
     
     
     function  check_insert_bface(n1,n2,n3)
-                
+        
         if (geq(x1,coord[1,n1],coord[1,n2],coord[1,n3]))
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
@@ -601,7 +603,7 @@ function  simplexgrid(X::AbstractArray{Tc,1},Y::AbstractArray{Tc,1},Z::AbstractA
     for iz=1:nz-1
         for iy=1:ny-1
             for ix=1:nx-1
-
+                
 	        ip=ix+(iy-1)*nx+(iz-1)*nxy;
                 
 	        p000 = ip ;
@@ -613,12 +615,12 @@ function  simplexgrid(X::AbstractArray{Tc,1},Y::AbstractArray{Tc,1},Z::AbstractA
 	        p011 = ip  +nx+nxy;
 	        p111 = ip+1+nx+nxy;
 
-                icell=icell+1; cellregions[icell]=1;@. cellnodes[:,icell]=(p000,p100,p110,p111)
-                icell=icell+1; cellregions[icell]=1;@. cellnodes[:,icell]=(p000,p100,p101,p111)
-                icell=icell+1; cellregions[icell]=1;@. cellnodes[:,icell]=(p000,p010,p011,p111)
-                icell=icell+1; cellregions[icell]=1;@. cellnodes[:,icell]=(p000,p010,p110,p111)
-                icell=icell+1; cellregions[icell]=1;@. cellnodes[:,icell]=(p000,p001,p101,p111)
-                icell=icell+1; cellregions[icell]=1;@. cellnodes[:,icell]=(p000,p001,p011,p111)
+                icell=icell+1; cellregions[icell]=1; @. cellnodes[:,icell]=(p000,p100,p110,p111)
+                icell=icell+1; cellregions[icell]=1; @. cellnodes[:,icell]=(p000,p100,p101,p111)
+                icell=icell+1; cellregions[icell]=1; @. cellnodes[:,icell]=(p000,p010,p011,p111)
+                icell=icell+1; cellregions[icell]=1; @. cellnodes[:,icell]=(p000,p010,p110,p111)
+                icell=icell+1; cellregions[icell]=1; @. cellnodes[:,icell]=(p000,p001,p101,p111)
+                icell=icell+1; cellregions[icell]=1; @. cellnodes[:,icell]=(p000,p001,p011,p111)
             end
         end
     end

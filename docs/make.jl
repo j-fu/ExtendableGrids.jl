@@ -1,47 +1,52 @@
-push!(LOAD_PATH,"../src/")
-using Documenter, ExtendableGrids, Literate
+ENV["MPLBACKEND"]="agg"
+using Documenter, ExtendableGrids, Literate, PyPlot
+
+
+example_md_dir  = joinpath(@__DIR__,"src","examples")
+
+examples1d=joinpath(@__DIR__,"..","examples","examples1d.jl")
+include(examples1d)
+examples2d=joinpath(@__DIR__,"..","examples","examples2d.jl")
+include(examples2d)
+examples3d=joinpath(@__DIR__,"..","examples","examples3d.jl")
+include(examples3d)
 
 
 
-#
-# Replace SOURCE_URL marker with github url of source
-#
-function replace_source_url(input,source_url)
-    lines_in = collect(eachline(IOBuffer(input)))
-    lines_out=IOBuffer()
-    for line in lines_in
-        println(lines_out,replace(line,"SOURCE_URL" => source_url))
+
+function makeplots(picdir)
+    function makeplot(func)
+        clf()
+        f=getfield(Main,Symbol(func))
+        ExtendableGrids.plot(f(), Plotter=PyPlot)
+        savefig(joinpath(picdir,func*".svg"))
     end
-    return String(take!(lines_out))
+    makeplot("interval_from_vector")
+    makeplot("interval_localref")
+    makeplot("interval_multiregion")
+    makeplot("interval_subgrid")
+    makeplot("rectangle")
+    makeplot("rectangle_localref")
+    makeplot("rectangle_multiregion")
+    makeplot("rectangle_subgrid")
+    makeplot("quadrilateral")
 end
 
 
-
-
 function mkdocs()
-    example_jl_dir = joinpath(@__DIR__,"..","examples")
-    example_md_dir  = joinpath(@__DIR__,"src","examples")
 
-    for example_source in readdir(example_jl_dir)
-        base,ext=splitext(example_source)
-        if ext==".jl" && occursin("Example",base)
-            source_url="https://github.com/j-fu/ExtendableGrids.jl/raw/master/examples/"*example_source
-            preprocess(buffer)=replace_source_url(buffer,source_url)
-            Literate.markdown(joinpath(@__DIR__,"..","examples",example_source),
-                              example_md_dir,
-                              documenter=false,
-                              info=false,
-                              preprocess=preprocess)
-        end
-    end
-    generated_examples=joinpath.("examples",readdir(example_md_dir))
+    Literate.markdown(examples1d, example_md_dir, documenter=false,info=false)
+    Literate.markdown(examples2d, example_md_dir, documenter=false,info=false)
+    Literate.markdown(examples3d, example_md_dir, documenter=false,info=false)
+    
+    generated_examples=joinpath.("examples",filter(x->endswith(x, ".md"),readdir(example_md_dir)))
 
-
-
+    makeplots(example_md_dir)
+    
     makedocs(sitename="ExtendableGrids.jl",
-             modules = [ExtendableGrids],
-             doctest = true,
-             clean = true,
+    modules = [ExtendableGrids],
+    doctest = false,
+    clean = true,
              authors = "J. Fuhrmann, Ch. Merdon",
              repo="https://github.com/j-fu/ExtendableGrids.jl",
              pages=[
