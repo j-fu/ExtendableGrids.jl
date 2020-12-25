@@ -168,8 +168,8 @@ function extract_visible_bfaces3D(grid::ExtendableGrid,func,xyzcut)
     nbfaces=num_bfaces(grid)
     bfacenodes=grid[BFaceNodes]
     
-    pmark=zeros(Int32,size(coord,2))
-    faces=ElasticArray{Int32}(undef,3,0)
+    pmark=zeros(UInt32,size(coord,2))
+    faces=ElasticArray{UInt32}(undef,3,0)
     npoints=0
     
     for i=1:nbfaces
@@ -287,14 +287,14 @@ function marching_tetrahedra(grid::ExtendableGrid,func,planes,flevels)
     cellregions=grid[CellRegions]
     nregions=grid[NumCellRegions]
     
-    all_ixfaces=ElasticArray{Int32}(undef,3,0)
+    all_ixfaces=ElasticArray{UInt32}(undef,3,0)
     all_ixcoord=ElasticArray{Float32}(undef,3,0)
-    all_ixvalues=zeros(0)
+    all_ixvalues=zeros(Float32,0)
 
     planeq=zeros(4)
     ixcoord=zeros(3,6)
     ixvalues=zeros(6)
-    cn=zeros(Int64,4)
+    cn=zeros(4)
 
     plane_equation(plane,coord)=coord[1]*plane[1]+coord[2]*plane[2]+coord[3]*plane[3]+plane[4]
 
