@@ -16,7 +16,7 @@ function simplexgrid(coord::Array{Tc,2},
                      bfacenodes::Array{Ti,2},
                      bfaceregions::Array{Ti,1}
                      ) where {Tc,Ti}
-    
+    @assert size(coord,2)>0
     dim=size(coord,1)
     if dim==1
         eltype=Edge1D
