@@ -106,6 +106,7 @@ export plot,plot!
 export isplots,isvtkview,ispyplot,ismakie
 export tridata,rectdata
 export PlotterContext
+export SubPlotContext
 export plottertype
 export PyPlotType,MakieType,PlotsType,VTKViewType 
 export make_mesh

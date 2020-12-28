@@ -1,20 +1,31 @@
-function initialize_context!(ctx::PlotterContext,::Type{PyPlotType})
+function initialize_plot!(p, ::Type{PyPlotType})
+    PyPlot=p.context[:Plotter]
+    PyPlot.PyObject(PyPlot.axes3D)# see https://github.com/JuliaPy/PyPlot.jl/issues/351
+    if !haskey(p.context,:figure)
+        res=p.context[:resolution]
+        p.context[:figure]=PyPlot.figure(p.context[:fignumber],figsize=(res[1]/100,res[2]/100),dpi=100)
+        for ctx in p.subplots
+            ctx[:figure]=p.context[:figure]
+        end
+    end
+    if p.context[:clear]
+        p.context[:figure].clf()
+    end
+end
+
+function initialize_subplot!(ctx,::Type{PyPlotType})
     PyPlot=ctx[:Plotter]
+    splot=ctx[:subplot]
+    iplot=ctx[:layout][2]*(splot[1]-1)+splot[2]
+    @show ctx[:subplot],iplot
+    ctx[:iplot]=iplot
+    ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,iplot)
+    if ctx[:clear]
+        ctx[:ax].cla()
+    end
     ctx
 end
 
-function prepare_figure!(ctx::PlotterContext)
-    PyPlot=ctx[:Plotter]
-    if !haskey(ctx,:figure)
-        res=ctx[:resolution]
-        ctx[:figure]=PyPlot.figure(ctx[:fignumber],figsize=(res[1]/100,res[2]/100),dpi=100)
-    end
-    if ctx[:clear]
-        PyPlot.clf()
-    end
-    PyPlot.subplot(ctx[:subplot])
-    ctx
-end
 
 
 """
@@ -27,13 +38,12 @@ function tridata(grid)
     coord[1,:], coord[2,:],transpose(cellnodes.-1)
 end
 
-
+### 1D grid
 function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}}, grid)
     PyPlot=ctx[:Plotter]
+    ax=ctx[:ax]
+    fig=ctx[:figure]
 
-    prepare_figure!(ctx)
-
-    ax=PyPlot.matplotlib.pyplot.gca()
     cellregions=grid[CellRegions]
     cellnodes=grid[CellNodes]
     coord=grid[Coordinates]
@@ -60,9 +70,9 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}}, grid)
         rgb=frgb(PyPlot,ireg,ncellregions)
         x1=coord[1,cellnodes[1,icell]]
         x2=coord[1,cellnodes[2,icell]]
-        PyPlot.plot([x1,x1],[-h,h],linewidth=0.5,color="k",label="")
-        PyPlot.plot([x2,x2],[-h,h],linewidth=0.5,color="k",label="")
-        PyPlot.plot([x1,x2],[0,0],linewidth=3.0,color=rgb,label=label)
+        ax.plot([x1,x1],[-h,h],linewidth=0.5,color="k",label="")
+        ax.plot([x2,x2],[-h,h],linewidth=0.5,color="k",label="")
+        ax.plot([x1,x2],[0,0],linewidth=3.0,color=rgb,label=label)
     end
     
     for ibface=1:num_bfaces(grid)
@@ -72,23 +82,22 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}}, grid)
             brflag[ireg]=false
             rgb=frgb(PyPlot,bfaceregions[ibface],nbfaceregions)
             x1=coord[1,bfacenodes[1,ibface]]
-            PyPlot.plot([x1,x1],[-2*h,2*h],linewidth=3.0,color=rgb,label=label)
+            ax.plot([x1,x1],[-2*h,2*h],linewidth=3.0,color=rgb,label=label)
         end
     end
     if ctx[:legend]
-        PyPlot.legend()
+        ax.legend()
     end
     ctx[:figure]
 end
 
 
 
+### 2D grid
 function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid)
     PyPlot=ctx[:Plotter]
-
-    prepare_figure!(ctx)
-
-    ax=PyPlot.matplotlib.pyplot.gca()
+    ax=ctx[:ax]
+    fig=ctx[:figure]
     cellregions=grid[CellRegions]
     cellnodes=grid[CellNodes]
     coord=grid[Coordinates]
@@ -104,13 +113,11 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid)
     brflag=ones(Bool,nbfaceregions)
     ax.set_aspect(ctx[:aspect])
     tridat=tridata(grid)
-    PyPlot.tripcolor(tridat...,facecolors=grid[CellRegions],cmap="Pastel2")
-    cbar=PyPlot.colorbar(ticks=collect(1:ncellregions))
+    cdata=ax.tripcolor(tridat...,facecolors=grid[CellRegions],cmap="Pastel2")
+    cbar=fig.colorbar(cdata,ax=ax,ticks=collect(1:ncellregions))
     if ctx[:edges]
-        PyPlot.triplot(tridat...,color="k",linewidth=0.5)
+        ax.triplot(tridat...,color="k",linewidth=0.5)
     end
-
-
 
     if nbfaceregions>0
         # see https://gist.github.com/gizmaa/7214002
@@ -120,23 +127,25 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid)
         ax.add_collection(PyPlot.matplotlib.collections.LineCollection(collect(zip(xc,yc)),colors=rgb,linewidth=3))
     
         for i=1:nbfaceregions
-            PyPlot.plot(coord[:,1], coord[:,1],label="b_$(i)", color=frgb(PyPlot,i,nbfaceregions))
+            ax.plot(coord[:,1], coord[:,1],label="b_$(i)", color=frgb(PyPlot,i,nbfaceregions))
         end
     end
     if ctx[:legend]
-        PyPlot.legend()
-        PyPlot.legend(loc=ctx[:legend_location])
+        ax.legend(loc=ctx[:legend_location])
     end
     ctx[:figure]
 end
 
 
+### 3D Grid
 function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{3}},grid)
     # See https://jakevdp.github.io/PythonDataScienceHandbook/04.12-three-dimensional-plotting.html
 
     PyPlot=ctx[:Plotter]
+    ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot],projection="3d")
+    ax=ctx[:ax]
+    fig=ctx[:figure]
     
-    prepare_figure!(ctx)
     nregions=num_cellregions(grid)
     nbregions=num_bfaceregions(grid)
 
@@ -155,7 +164,7 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{3}},grid)
         for ireg=1:nregions
             rgb=frgb(PyPlot,ireg,nregions+nbregions)
             if size(regfacets[ireg],2)>0
-                PyPlot.plot_trisurf(regpoints[ireg][1,:],regpoints[ireg][2,:],transpose(regfacets[ireg].-1),regpoints[ireg][3,:],color=rgb)
+                ax.plot_trisurf(regpoints[ireg][1,:],regpoints[ireg][2,:],transpose(regfacets[ireg].-1),regpoints[ireg][3,:],color=rgb)
             end
         end
     end
@@ -164,32 +173,30 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{3}},grid)
     for ireg=1:nbregions
         rgb=frgb(PyPlot,nregions+ireg,nregions+nbregions)
         if size(bregfacets[ireg],2)>0
-            PyPlot.plot_trisurf(bregpoints[ireg][1,:],bregpoints[ireg][2,:],transpose(bregfacets[ireg].-1),bregpoints[ireg][3,:],color=rgb)
+            ax.plot_trisurf(bregpoints[ireg][1,:],bregpoints[ireg][2,:],transpose(bregfacets[ireg].-1),bregpoints[ireg][3,:],color=rgb)
         end
     end
 
-    axes=PyPlot.gca()
-    axes.set_xlim3d(xyzmin[1],xyzmax[1])
-    axes.set_ylim3d(xyzmin[2],xyzmax[2])
-    axes.set_zlim3d(xyzmin[3],xyzmax[3])
-    axes.view_init(ctx[:elev],ctx[:azim])
+    ax.set_xlim3d(xyzmin[1],xyzmax[1])
+    ax.set_ylim3d(xyzmin[2],xyzmax[2])
+    ax.set_zlim3d(xyzmin[3],xyzmax[3])
+    ax.view_init(ctx[:elev],ctx[:azim])
 
         
     if ctx[:legend]
-        PyPlot.legend()
-        PyPlot.legend(loc=ctx[:legend_location])
+        ax.legend(loc=ctx[:legend_location])
     end
     ctx[:figure]
 end
 
 
 
-
+### 1D Function
 function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}},grid, func)
     PyPlot=ctx[:Plotter]
-
-    prepare_figure!(ctx)
-
+    ax=ctx[:ax]
+    fig=ctx[:figure]
+    
     cellnodes=grid[CellNodes]
     coord=grid[Coordinates]
     for icell=1:num_cells(grid)
@@ -198,26 +205,26 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}},grid, func)
         x1=coord[1,i1]
         x2=coord[1,i2]
         if icell==1 && ctx[:label] !=""
-            PyPlot.plot([x1,x2],[func[i1],func[i2]],color=ctx[:color],label=ctx[:label])
+            ax.plot([x1,x2],[func[i1],func[i2]],color=ctx[:color],label=ctx[:label])
         else
-            PyPlot.plot([x1,x2],[func[i1],func[i2]],color=ctx[:color])
+            ax.plot([x1,x2],[func[i1],func[i2]],color=ctx[:color])
         end                
     end
     if ctx[:legend]
-        PyPlot.legend(loc=ctx[:legend_location])
+        ax.legend(loc=ctx[:legend_location])
     end
     if ctx[:axisgrid]
-        PyPlot.grid()
+        ax.grid()
     end
     ctx[:figure]
 end
 
+### 2D Function
 function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid, func)
     PyPlot=ctx[:Plotter]
-
-    prepare_figure!(ctx)
     
-    ax=PyPlot.matplotlib.pyplot.gca()
+    ax=ctx[:ax]
+    fig=ctx[:figure]
     ax.set_aspect(ctx[:aspect])
     umin=minimum(func)
     umax=maximum(func)
@@ -227,13 +234,13 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid, func)
         ctx[:grid]=grid
         ctx[:tridata]=tridata(grid)
     end
-    cnt=PyPlot.tricontourf(ctx[:tridata]...,func;levels=colorlevels,cmap=PyPlot.ColorMap(ctx[:colormap]))
+    cnt=ax.tricontourf(ctx[:tridata]...,func;levels=colorlevels,cmap=PyPlot.ColorMap(ctx[:colormap]))
     for c in cnt.collections
         c.set_edgecolor("face")
     end
     if ctx[:colorbar]
-        PyPlot.colorbar(ticks=isolines,boundaries=colorlevels)
+        fig.colorbar(cnt,ax=ax,ticks=isolines,boundaries=colorlevels)
     end
-    PyPlot.tricontour(ctx[:tridata]...,func,colors="k",levels=isolines)
+    ax.tricontour(ctx[:tridata]...,func,colors="k",levels=isolines)
     ctx[:figure]
 end

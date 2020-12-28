@@ -58,7 +58,7 @@ $(SIGNATURES)
 Heuristically detect type of plotter, returns the corresponding 
 abstract type fro plotting.
 """
-function plottertype(Plotter)
+function plottertype(Plotter::Union{Module,Nothing})
     if ismakie(Plotter)
         return MakieType
     elseif isplots(Plotter)
@@ -72,29 +72,40 @@ function plottertype(Plotter)
 end
 
 
+const SubPlotContext=Union{Dict{Symbol,Any},Nothing}
+#
+# Update plotter context from dict
+#
+function update_context!(ctx::SubPlotContext,kwargs)
+    for (k,v) in kwargs
+        ctx[Symbol(k)]=v
+    end
+    ctx
+end
+
+
 
 """
 $(TYPEDEF)
 
 Context type for plots. Wrapper around dict.
 """
-struct PlotterContext<: AbstractDict{Any,Any}
-    dict::Dict{Any,Any}
-    PlotterContext(default_values::Dict{Any,Any})=new(default_values)
+struct PlotterContext
+    Plotter::Union{Module,Nothing}
+    subplots::Array{SubPlotContext,2}
+    context::SubPlotContext
+    PlotterContext(Plotter::Union{Module,Nothing}, layout::Tuple, default::SubPlotContext)=new(Plotter, [copy(default) for I in CartesianIndices(layout)],copy(default))
 end
 
-Base.setindex!(ctx::PlotterContext,v,k)=setindex!(ctx.dict,v,k)
-Base.getindex(ctx::PlotterContext,k)=getindex(ctx.dict,k)
-Base.keys(ctx::PlotterContext)=keys(ctx.dict)
-Base.haskey(ctx::PlotterContext)=haskey(ctx.dict)
-Base.iterate(ctx::PlotterContext) = iterate(ctx.dict)
-Base.iterate(ctx::PlotterContext,state) = iterate(ctx.dict,state)
-Base.length(ctx::PlotterContext)=length(ctx.dict)
+layout(p::PlotterContext)=size(p.subplots)
+subplot(p::PlotterContext, idx::Tuple)=p.subplots[idx...]
+plottertype(p::PlotterContext)=plottertype(p.Plotter)
+Base.copy(::Nothing)=nothing
 
 #
 # Default context information with help info.
 #
-default_plot_kwargs()=Dict{Any,Pair{Any,String}}(
+default_plot_kwargs()=Dict{Symbol,Pair{Any,String}}(
     :colorlevels => Pair(51,"Number of color levels for contour plot"),
     :isolines => Pair(11,"Number of isolines in contour plot"),
     :colorbar => Pair(true,"Show colorbar in plots"),
@@ -106,8 +117,8 @@ default_plot_kwargs()=Dict{Any,Pair{Any,String}}(
     :legend_location => Pair("upper right","Location of legend"),
     :colormap => Pair("hot","Contour plot colormap"),
     :label => Pair("f","Label of plot"),
-    :layout => Pair((1,1),"Layout of multiple plots (experimental)"),
-    :subplot => Pair(111,"Subplot number for multiple plots"),
+    :layout => Pair((1,1),"Layout of plots"),
+    :subplot => Pair((1,1),"Actual subplot"),
     :color => Pair((0,0,0),"Color of lines on plot"),
     :edges => Pair(true,"Plot grid edges when plotting grid"),
     :alpha => Pair(1.0,"Surface alpha value"),
@@ -129,7 +140,7 @@ default_plot_kwargs()=Dict{Any,Pair{Any,String}}(
 #
 # Print default dict for interpolation into docstrings
 #
-function myprint(dict::Dict{Any,Pair{Any,String}})
+function myprint(dict::Dict{Symbol,Pair{Any,String}})
     lines_out=IOBuffer()
     for (k,v) in dict
         println(lines_out,"  - $(k): $(v[2]). Default: $(v[1])\n")
@@ -148,26 +159,29 @@ Keyword arguments:
 
 $(myprint(default_plot_kwargs()))
 """
-function PlotterContext(Plotter::Module; kwargs...)
-    ctx=PlotterContext(Dict{Any,Any}(:backend => plottertype(Plotter),
-                                     :Plotter => Plotter,
-                                     ))
-    update_context!(ctx,Dict{Any,Any}( k => v[1] for (k,v) in default_plot_kwargs()))
-    initialize_context!(ctx,ctx[:backend])
-    update_context!(ctx,kwargs)
-end
-
-
-#
-# Update plotter context from dict
-#
-function update_context!(ctx::PlotterContext,kwargs)
-    for (k,v) in kwargs
-        ctx[Symbol(k)]=v
+function PlotterContext(;Plotter::Union{Module,Nothing}=nothing, kwargs...)
+    default_ctx=Dict{Symbol,Any}( k => v[1] for (k,v) in default_plot_kwargs())
+    update_context!(default_ctx,kwargs)
+    layout=default_ctx[:layout]
+    if isnothing(Plotter)
+        default_ctx=nothing
     end
-    ctx
+    p=PlotterContext(Plotter,layout,default_ctx)
+    if !isnothing(Plotter)
+        p.context[:Plotter]=Plotter
+        initialize_plot!(p,plottertype(Plotter))
+    
+        for I in CartesianIndices(layout)
+            ctx=p.subplots[I]
+            ctx[:subplot]=Tuple(I)
+            ctx[:Plotter]=Plotter
+            initialize_subplot!(ctx,plottertype(Plotter))
+        end
+    end
+    p
 end
 
+Base.getindex(p::PlotterContext,i,j)=p.subplots[i,j]
 
 """
 $(SIGNATURES)
@@ -178,19 +192,8 @@ Keyword arguments:
 
 $(myprint(default_plot_kwargs()))
 """
-plot!(ctx::PlotterContext,grid::ExtendableGrid;kwargs...)=plot!(update_context!(ctx,kwargs),ctx[:backend],Val{dim_space(grid)},grid)
-
-"""
-$(SIGNATURES)
-
-Plot vector on grid as P1 FEM function.
-
-Keyword arguments:
-
-$(myprint(default_plot_kwargs()))
-"""
-plot!(ctx::PlotterContext,grid::ExtendableGrid,func;kwargs...)=plot!(update_context!(ctx,kwargs),ctx[:backend],Val{dim_space(grid)},grid,func)
-
+plot!(ctx::SubPlotContext,grid::ExtendableGrid; kwargs...)=plot!(update_context!(ctx,kwargs),plottertype(ctx[:Plotter]),Val{dim_space(grid)},grid)
+plot!(p::PlotterContext,grid::ExtendableGrid; kwargs...)=plot!(p[1,1],grid,kwargs...)
 
 """
 $(SIGNATURES)
@@ -201,7 +204,21 @@ Keyword arguments:
 
 $(myprint(default_plot_kwargs()))
 """
-plot(grid::ExtendableGrid;Plotter=nothing, kwargs...)=plot!(update_context!(PlotterContext(Plotter),kwargs),grid)
+plot(grid::ExtendableGrid; Plotter=nothing, kwargs...)=plot!(PlotterContext(Plotter=Plotter; kwargs...),grid)
+
+
+
+"""
+$(SIGNATURES)
+
+Plot vector on grid as P1 FEM function.
+
+Keyword arguments
+
+$(myprint(default_plot_kwargs()))
+"""
+plot!(ctx::SubPlotContext,grid::ExtendableGrid,func;kwargs...)=plot!(update_context!(ctx,kwargs),plottertype(ctx[:Plotter]),Val{dim_space(grid)},grid,func)
+plot!(p::PlotterContext, grid::ExtendableGrid, func; kwargs...)=plot!(p[1,1],grid,func,kwargs...)
 
 
 """
@@ -213,7 +230,7 @@ Keyword arguments:
 
 $(myprint(default_plot_kwargs()))
 """
-plot(grid::ExtendableGrid,func ;Plotter=nothing,kwargs...)=plot!(update_context!(PlotterContext(Plotter),kwargs),grid,func)
+plot(grid::ExtendableGrid,func ;Plotter=nothing,kwargs...)=plot!(PlotterContext(Plotter=Plotter;kwargs...),grid,func)
 
 
 
@@ -221,8 +238,7 @@ plot(grid::ExtendableGrid,func ;Plotter=nothing,kwargs...)=plot!(update_context!
 #
 # Dummy functions to allow Plotter=nothing
 #
-PlotterContext(::Nothing; kwargs...)=nothing
-initialize_context(ctx::PlotterContext,::Type{Nothing})=ctx
+initialize_subplot(ctx::SubPlotContext,::Type{Nothing})=ctx
 update_context!(::Nothing,kwargs)=nothing
 
 plot!(ctx::Nothing,grid::ExtendableGrid;kwargs...)=nothing
