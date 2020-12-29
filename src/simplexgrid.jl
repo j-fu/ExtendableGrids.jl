@@ -332,36 +332,29 @@ function  simplexgrid(X::AbstractArray{Tc,1},Y::AbstractArray{Tc,1}) where {Tc}
     yn=Y[ny]-eps
     
     
-    function  check_insert_bface(n1,n2)
-                
+    function  check_insert_bface(ibface,coord,n1,n2)
         if (geq(x1,coord[1,n1],coord[1,n2]))
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
 	    bfaceregions[ibface]=4
-            return
-        end
-        if (leq(xn,coord[1,n1],coord[1,n2]))
+        elseif (leq(xn,coord[1,n1],coord[1,n2]))
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
 	    bfaceregions[ibface]=2
-            return
-        end
-        if (geq(y1,coord[2,n1],coord[2,n2]))
+        elseif (geq(y1,coord[2,n1],coord[2,n2]))
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
 	    bfaceregions[ibface]=1
-            return
-        end
-        if (leq(yn,coord[2,n1],coord[2,n2]))
+        elseif (leq(yn,coord[2,n1],coord[2,n2]))
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
 	    bfaceregions[ibface]=3
-            return
         end
+        ibface
     end
     
     
@@ -373,7 +366,6 @@ function  simplexgrid(X::AbstractArray{Tc,1},Y::AbstractArray{Tc,1}) where {Tc}
     cellnodes=zeros(Int32,3,num_cells)
     cellregions=zeros(Int32,num_cells)
     bfacenodes=Array{Int32}(undef,2,num_bfacenodes)
-#    resize!(bfacenodes,2,num_bfacenodes)
     bfaceregions=zeros(Int32,num_bfacenodes)
     
     ipoint=0
@@ -418,9 +410,9 @@ function  simplexgrid(X::AbstractArray{Tc,1},Y::AbstractArray{Tc,1}) where {Tc}
         n1=cellnodes[1,icell]
 	n2=cellnodes[2,icell]
 	n3=cellnodes[3,icell]
-        check_insert_bface(n1,n2)
-	check_insert_bface(n1,n3)
-	check_insert_bface(n2,n3)
+        ibface=check_insert_bface(ibface,coord,n1,n2)
+	ibface=check_insert_bface(ibface,coord,n1,n3)
+	ibface=check_insert_bface(ibface,coord,n2,n3)
     end
     @assert(ibface==num_bfacenodes)
 
@@ -458,31 +450,8 @@ Boundary region numbers:
 function  simplexgrid(X::AbstractArray{Tc,1},Y::AbstractArray{Tc,1},Z::AbstractArray{Tc,1}) where {Tc}
 
     
-    function leq(x, x1, x2, x3)
-        if (x>x1)
-            return false
-        end
-        if (x>x2)
-            return false
-        end
-        if (x>x3)
-            return false
-        end
-        return true
-    end
-    
-    function geq(x, x1, x2, x3)
-        if (x<x1)
-            return false
-        end
-        if (x<x2)
-            return false
-        end
-        if (x<x3)
-            return false
-        end
-        return true
-    end
+    leq(x, x1, x2, x3)=x≤x1 && x≤x2 && x≤x3
+    geq(x, x1, x2, x3)=x≥x1 && x≥x2 && x≥x3
 
     nx=length(X)
     ny=length(Y)
@@ -520,69 +489,59 @@ function  simplexgrid(X::AbstractArray{Tc,1},Y::AbstractArray{Tc,1},Z::AbstractA
     
     z1=Z[1]+eps
     zn=Z[end]-eps
+
     
-    
-    function  check_insert_bface(n1,n2,n3)
-        
-        if (geq(x1,coord[1,n1],coord[1,n2],coord[1,n3]))
+    function  check_insert_bface(ibface,coord,bfacenodes,n1,n2,n3)
+        if geq(x1,coord[1,n1],coord[1,n2],coord[1,n3])
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
             bfacenodes[3,ibface]=n3
 	    bfaceregions[ibface]=4
-            return
-        end
-        if (leq(xn,coord[1,n1],coord[1,n2],coord[1,n3]))
+        elseif leq(xn,coord[1,n1],coord[1,n2],coord[1,n3])
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
             bfacenodes[3,ibface]=n3
 	    bfaceregions[ibface]=2
-            return
-        end
-        if (geq(y1,coord[2,n1],coord[2,n2],coord[2,n3]))
+        elseif geq(y1,coord[2,n1],coord[2,n2],coord[2,n3])
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
             bfacenodes[3,ibface]=n3
 	    bfaceregions[ibface]=1
-            return
-        end
-        if (leq(yn,coord[2,n1],coord[2,n2],coord[2,n3]))
+        elseif leq(yn,coord[2,n1],coord[2,n2],coord[2,n3])
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
             bfacenodes[3,ibface]=n3
 	    bfaceregions[ibface]=3
-            return
-        end
-        if (geq(z1,coord[3,n1],coord[3,n2],coord[3,n3]))
+        elseif geq(z1,coord[3,n1],coord[3,n2],coord[3,n3])
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
             bfacenodes[3,ibface]=n3
 	    bfaceregions[ibface]=5
-            return
-        end
-        if (leq(zn,coord[3,n1],coord[3,n2],coord[3,n3]))
+        elseif leq(zn,coord[3,n1],coord[3,n2],coord[3,n3])
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
             bfacenodes[3,ibface]=n3
 	    bfaceregions[ibface]=6
-            return
         end
+        ibface
     end
     
     num_nodes=nx*ny*nz
     num_cells=6*(nx-1)*(ny-1)*(nz-1)
     num_bfacenodes=4*(nx-1)*(ny-1)+4*(nx-1)*(nz-1)+4*(ny-1)*(nz-1)
-    
+
+    Ti=Int32
     coord=zeros(Tc,3,num_nodes)
-    cellnodes=zeros(Int32,4,num_cells)
-    cellregions=zeros(Int32,num_cells)
-    bfacenodes=zeros(Int32,3,num_bfacenodes)
-    bfaceregions=zeros(Int32,num_bfacenodes)
+    cellnodes=zeros(Ti,4,num_cells)
+    cellregions=zeros(Ti,num_cells)
+    bfacenodes=zeros(Ti,3,num_bfacenodes)
+    bfaceregions=zeros(Ti,num_bfacenodes)
     
     ipoint=0
     for iz=1:nz
@@ -633,11 +592,11 @@ function  simplexgrid(X::AbstractArray{Tc,1},Y::AbstractArray{Tc,1},Z::AbstractA
         n1=cellnodes[1,icell]
 	n2=cellnodes[2,icell]
 	n3=cellnodes[3,icell]
-     	n4=cellnodes[4,icell]
-        check_insert_bface(n1,n2,n3)
-	check_insert_bface(n1,n2,n4)
-	check_insert_bface(n1,n3,n4)
-	check_insert_bface(n2,n3,n4)
+	n4=cellnodes[4,icell]
+        ibface=check_insert_bface(ibface,coord,bfacenodes,n1,n2,n3)
+	ibface=check_insert_bface(ibface,coord,bfacenodes,n1,n2,n4)
+	ibface=check_insert_bface(ibface,coord,bfacenodes,n1,n3,n4)
+	ibface=check_insert_bface(ibface,coord,bfacenodes,n2,n3,n4)
     end
     @assert(ibface==num_bfacenodes)
     

@@ -446,11 +446,11 @@ function Base.map(f::Function, grid::ExtendableGrid)
     coord=grid[Coordinates]
     dim=dim_space(grid)
     if dim==1
-        Base.map(f,coord[1,:])
+        @views Base.map(f,coord[1,:])
     elseif dim==2
-        Base.map(f,coord[1,:], coord[2,:])
+        @views Base.map(f,coord[1,:], coord[2,:])
     else
-        Base.map(f,coord[1,:], coord[2,:], coord[3,:])
+        @views Base.map(f,coord[1,:], coord[2,:], coord[3,:])
     end
 end
 
