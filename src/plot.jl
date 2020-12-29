@@ -115,7 +115,7 @@ default_plot_kwargs()=Dict{Symbol,Pair{Any,String}}(
     :clear => Pair(true,"Clear plot before new plot."),
     :legend => Pair(true,"Add legend  to plot"),
     :legend_location => Pair("upper right","Location of legend"),
-    :colormap => Pair("hot","Contour plot colormap"),
+    :colormap => Pair("viridis","Contour plot colormap"),
     :label => Pair("f","Label of plot"),
     :layout => Pair((1,1),"Layout of plots"),
     :subplot => Pair((1,1),"Actual subplot"),
@@ -170,12 +170,12 @@ function PlotterContext(;Plotter::Union{Module,Nothing}=nothing, kwargs...)
     if !isnothing(Plotter)
         p.context[:Plotter]=Plotter
         initialize_plot!(p,plottertype(Plotter))
-    
         for I in CartesianIndices(layout)
             ctx=p.subplots[I]
-            ctx[:subplot]=Tuple(I)
+            i=Tuple(I)
+            ctx[:subplot]=i
+            ctx[:iplot]=layout[2]*(i[1]-1)+i[2]
             ctx[:Plotter]=Plotter
-            initialize_subplot!(ctx,plottertype(Plotter))
         end
     end
     p
@@ -217,7 +217,10 @@ Keyword arguments
 
 $(myprint(default_plot_kwargs()))
 """
-plot!(ctx::SubPlotContext,grid::ExtendableGrid,func;kwargs...)=plot!(update_context!(ctx,kwargs),plottertype(ctx[:Plotter]),Val{dim_space(grid)},grid,func)
+function plot!(ctx::SubPlotContext,grid::ExtendableGrid,func; kwargs...)
+    plot!(update_context!(ctx,kwargs),plottertype(ctx[:Plotter]),Val{dim_space(grid)},grid,func)
+end
+
 plot!(p::PlotterContext, grid::ExtendableGrid, func; kwargs...)=plot!(p[1,1],grid,func,kwargs...)
 
 

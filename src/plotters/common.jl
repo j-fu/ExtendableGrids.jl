@@ -48,17 +48,21 @@ function extract_visible_cells3D(grid::ExtendableGrid,xyzcut)
     cellregions=grid[CellRegions]
     nregions=grid[NumCellRegions]
     
-    cutcoord=zeros(3*4)
 
     function take(coord,simplex,xyzcut)
-        icut=1
+        all_lt=@MVector ones(Bool,3)
+        all_gt=@MVector ones(Bool,3)
         for idim=1:3
             for inode=1:4
-                cutcoord[icut]=coord[idim,simplex[inode]]-xyzcut[idim]
-                icut=icut+1
+                c=coord[idim,simplex[inode]]-xyzcut[idim]
+                all_lt[idim]=all_lt[idim] && (c<0.0)
+                all_gt[idim]=all_gt[idim] && (c>0.0)
             end
         end
-        mapreduce(a->a<=0,*,cutcoord)  ||  mapreduce(a->a>=0,*,cutcoord)
+        tke=false
+        tke=tke  ||   (!all_lt[1])  &&  (!all_gt[1]) && (!all_gt[2]) && (!all_gt[3])
+        tke=tke  ||   (!all_lt[2])  &&  (!all_gt[2]) && (!all_gt[1]) && (!all_gt[3])
+        tke=tke  ||   (!all_lt[3])  &&  (!all_gt[3]) && (!all_gt[1]) && (!all_gt[2])
     end
 
     pmark=[zeros(Int32,size(coord,2)) for ireg=1:nregions]
@@ -102,10 +106,12 @@ function extract_visible_bfaces3D(grid::ExtendableGrid,xyzcut)
     
     function take(coord,simplex,xyzcut)
         for idim=1:3
+            all_gt=true
             for inode=1:3
-                cutcoord[inode]=coord[idim,simplex[inode]]-xyzcut[idim]
+                c=coord[idim,simplex[inode]]-xyzcut[idim]
+                all_gt= all_gt && c>0
             end
-            if !mapreduce(a->a<=0,*,cutcoord)
+            if all_gt
                 return false
             end
         end
@@ -232,7 +238,6 @@ function tet_x_plane!(ixcoord,ixvalues,pointlist,node_indices,planeq_values,func
     if (mapreduce(a->a< -tol,*,planeq_values) || mapreduce(a->a>tol,*,planeq_values))
         return 0
     end
-
     # Interpolate coordinates and function_values according to
     # evaluation of the plane equation
     nxs=0
@@ -312,9 +317,10 @@ function marching_tetrahedra(grid::ExtendableGrid,func,planes,flevels)
             end
         end
     end
+
     for itet=1:size(cellnodes,2)
         node_indices=view(cellnodes,:,itet)
-
+        
         for iplane=1:nplanes
             @views map!(inode->plane_equation(planes[iplane],coord[:,inode]),planeq,node_indices)
             nxs=tet_x_plane!(ixcoord,ixvalues,coord,node_indices,planeq,func)
@@ -328,5 +334,5 @@ function marching_tetrahedra(grid::ExtendableGrid,func,planes,flevels)
         end
 
     end
-    all_ixcoord,all_ixfaces, all_ixvalues
+    all_ixcoord, all_ixfaces, all_ixvalues
 end

@@ -1,6 +1,7 @@
 module ExtendableGrids
 using DocStringExtensions
 using ElasticArrays
+using StaticArrays
 using ExtendableSparse
 using AbstractTrees
 using InteractiveUtils

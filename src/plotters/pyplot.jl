@@ -13,19 +13,6 @@ function initialize_plot!(p, ::Type{PyPlotType})
     end
 end
 
-function initialize_subplot!(ctx,::Type{PyPlotType})
-    PyPlot=ctx[:Plotter]
-    splot=ctx[:subplot]
-    iplot=ctx[:layout][2]*(splot[1]-1)+splot[2]
-    @show ctx[:subplot],iplot
-    ctx[:iplot]=iplot
-    ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,iplot)
-    if ctx[:clear]
-        ctx[:ax].cla()
-    end
-    ctx
-end
-
 
 
 """
@@ -41,6 +28,10 @@ end
 ### 1D grid
 function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}}, grid)
     PyPlot=ctx[:Plotter]
+    ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
+    if ctx[:clear]
+        ctx[:ax].cla()
+    end
     ax=ctx[:ax]
     fig=ctx[:figure]
 
@@ -96,6 +87,10 @@ end
 ### 2D grid
 function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid)
     PyPlot=ctx[:Plotter]
+    ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
+    if ctx[:clear]
+        ctx[:ax].cla()
+    end
     ax=ctx[:ax]
     fig=ctx[:figure]
     cellregions=grid[CellRegions]
@@ -194,6 +189,10 @@ end
 ### 1D Function
 function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}},grid, func)
     PyPlot=ctx[:Plotter]
+    ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
+    if ctx[:clear]
+        ctx[:ax].cla()
+    end
     ax=ctx[:ax]
     fig=ctx[:figure]
     
@@ -222,6 +221,10 @@ end
 ### 2D Function
 function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid, func)
     PyPlot=ctx[:Plotter]
+    ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
+    if ctx[:clear]
+        ctx[:ax].cla()
+    end
     
     ax=ctx[:ax]
     fig=ctx[:figure]
