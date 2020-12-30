@@ -11,6 +11,8 @@ examples2d=joinpath(@__DIR__,"..","examples","examples2d.jl")
 include(examples2d)
 examples3d=joinpath(@__DIR__,"..","examples","examples3d.jl")
 include(examples3d)
+plotting=joinpath(@__DIR__,"..","examples","plotting.jl")
+include(plotting)
 
 
 
@@ -22,6 +24,14 @@ function makeplots(picdir)
         plot(f(), Plotter=PyPlot)
         PyPlot.savefig(joinpath(picdir,func*".svg"))
     end
+
+    function makeplot2(func)
+        PyPlot.clf()
+        f=getfield(Main,Symbol(func))
+        f(Plotter=PyPlot)
+        PyPlot.savefig(joinpath(picdir,func*".svg"))
+    end
+
     makeplot("interval_from_vector")
     makeplot("interval_localref")
     makeplot("interval_multiregion")
@@ -31,6 +41,10 @@ function makeplots(picdir)
     makeplot("rectangle_multiregion")
     makeplot("rectangle_subgrid")
     makeplot("quadrilateral")
+
+    makeplot2("plotting_grid3d")
+    makeplot2("plotting_func3d")
+    makeplot2("plotting_multiscene")
 end
 
 
@@ -39,6 +53,7 @@ function mkdocs()
     Literate.markdown(examples1d, example_md_dir, documenter=false,info=false)
     Literate.markdown(examples2d, example_md_dir, documenter=false,info=false)
     Literate.markdown(examples3d, example_md_dir, documenter=false,info=false)
+    Literate.markdown(plotting, example_md_dir, documenter=false,info=false)
     
     generated_examples=joinpath.("examples",filter(x->endswith(x, ".md"),readdir(example_md_dir)))
 
@@ -48,7 +63,7 @@ function mkdocs()
     modules = [ExtendableGrids],
     doctest = false,
     clean = true,
-             authors = "J. Fuhrmann, Ch. Merdon",
+             authors = "J. Fuhrmann, Ch. Merdon, J. Krummbiegel",
              repo="https://github.com/j-fu/ExtendableGrids.jl",
              pages=[
                  "Home"=>"index.md",

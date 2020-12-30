@@ -3,7 +3,7 @@ using .MultiScene
 
 function initialize_plot!(p::PlotContext,::Type{MakieType})
     Makie=p.context[:Plotter]
-    MultiScene.setmakie(Makie)
+    MultiScene.setmakie!(Makie)
     layout=p.context[:layout]
     parent,subscenes=multiscene(layout=layout,resolution=p.context[:resolution])
     p.context[:scene]=parent
@@ -90,7 +90,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{1}}, grid)
         Makie.display(ctx[:figure])
     else
         ctx[:grid][]=grid
-        yield()
+        yieldwait()
     end
     ctx[:figure]
 
@@ -109,7 +109,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{1}}, grid,func)
         Makie.display(ctx[:figure])
     else
         ctx[:data][]=(g=grid,f=func)
-        yield()
+        yieldwait()
     end
     ctx[:figure]
 
@@ -164,7 +164,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid)
         Makie.display(ctx[:figure])
     else
         ctx[:grid][]=grid
-        yield()
+        yieldwait()
     end
     ctx[:figure]
 end
@@ -200,7 +200,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid, func)
         Makie.display(ctx[:figure])
     else
         ctx[:data][]=(g=grid,f=func,e=ctx[:elevation])
-        yield()
+        yieldwait()
     end
     ctx[:figure]
 end
@@ -299,7 +299,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid)
         Makie.display(ctx[:figure])
     else
         ctx[:data][]=(g=grid,x=ctx[:xplane],y=ctx[:yplane],z=ctx[:zplane])
-        yield()
+        yieldwait()
     end
 end
 
@@ -390,7 +390,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid , func)
         end
     else
         ctx[:data][]=(g=grid,f=func,x=ctx[:xplane],y=ctx[:yplane],z=ctx[:zplane],l=ctx[:flevel])
-        yield()
+        yieldwait()
     end
     ctx[:figure]
 end

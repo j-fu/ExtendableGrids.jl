@@ -91,7 +91,7 @@ export cellmask!,bfacemask!
 
 include("simplexgrid.jl")
 export simplexgrid, geomspace,glue
-export XCoordinates, YCoordinates
+export XCoordinates, YCoordinates, ZCoordinates
 
 include("tokenstream.jl")
 export TokenStream, gettoken, expecttoken,trytoken
