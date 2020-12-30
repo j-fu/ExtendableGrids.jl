@@ -1,7 +1,7 @@
 include("multiscene.jl")
 using .MultiScene
 
-function initialize_plot!(p::PlotterContext,::Type{MakieType})
+function initialize_plot!(p::PlotContext,::Type{MakieType})
     Makie=p.context[:Plotter]
     MultiScene.setmakie(Makie)
     layout=p.context[:layout]
@@ -13,6 +13,106 @@ function initialize_plot!(p::PlotterContext,::Type{MakieType})
         ctx[:figure]=parent
     end
     p
+end
+
+
+makestatus(grid::ExtendableGrid)="p: $(num_nodes(grid)) t: $(num_cells(grid)) b: $(num_bfaces(grid))"
+
+
+
+#1D grid
+function plot!(ctx, ::Type{MakieType}, ::Type{Val{1}}, grid)
+    
+    Makie=ctx[:Plotter]
+    nregions=num_cellregions(grid)
+    nbregions=num_bfaceregions(grid)
+    
+    function basemesh(grid)
+        coord=vec(grid[Coordinates])
+        xmin=minimum(coord)
+        xmax=maximum(coord)
+        h=(xmax-xmin)/40.0
+        ncoord=length(coord)
+        points=Vector{Point2f0}(undef,0)
+        for i=1:ncoord
+            push!(points,Point2f0(coord[i],h))
+            push!(points,Point2f0(coord[i],-h))
+        end
+        points
+    end
+
+    function regionmesh(grid,iregion)
+        coord=vec(grid[Coordinates])
+        cn=grid[CellNodes]
+        cr=grid[CellRegions]
+        ncells=length(cr)
+        points=Vector{Point2f0}(undef,0)
+        for i=1:ncells
+            if cr[i]==iregion
+                push!(points,Point2f0(coord[cn[1,i]],0))
+                push!(points,Point2f0(coord[cn[2,i]],0))
+            end
+        end
+        points
+    end
+
+    function bmesh(grid,ibreg)
+        coord=vec(grid[Coordinates])
+        xmin=minimum(coord)
+        xmax=maximum(coord)
+        h=(xmax-xmin)/20.0
+        nbfaces=num_bfaces(grid)
+        bfacenodes=grid[BFaceNodes]
+        bfaceregions=grid[BFaceRegions]
+        points=Vector{Point2f0}(undef,0)
+        for ibface=1:nbfaces
+            if bfaceregions[ibface]==ibreg
+                push!(points,Point2f0(coord[bfacenodes[1,ibface]],h))
+                push!(points,Point2f0(coord[bfacenodes[1,ibface]],-h))
+            end
+        end
+        points
+    end
+
+    
+    if !haskey(ctx,:scene)
+        ctx[:scene]=Makie.Scene(scale_plot=false)
+        ctx[:grid]=Makie.Node(grid)
+        Makie.linesegments!(ctx[:scene],Makie.lift(g->basemesh(g), ctx[:grid]),color=:black)
+        for i=1:nregions
+            Makie.linesegments!(ctx[:scene],Makie.lift(g->regionmesh(g,i), ctx[:grid]) , color=frgb(Makie,i,nregions,pastel=true), strokecolor=:black)
+        end
+        
+        for i=1:nbregions
+            Makie.linesegments!(ctx[:scene],Makie.lift(g->bmesh(g,i),ctx[:grid]) , color=frgb(Makie,i,nbregions), linewidth=4)
+        end
+        add_scene!(ctx[:ax],ctx[:scene],title=ctx[:title],status=Makie.lift(g->makestatus(g),ctx[:grid]))
+        Makie.display(ctx[:figure])
+    else
+        ctx[:grid][]=grid
+        yield()
+    end
+    ctx[:figure]
+
+end
+
+# 1D function
+function plot!(ctx, ::Type{MakieType}, ::Type{Val{1}}, grid,func)
+    Makie=ctx[:Plotter]
+
+    if !haskey(ctx,:scene)
+        ctx[:scene]=Makie.Scene(scale_plot=true)
+        ctx[:data]=Makie.Node((g=grid,f=func))
+        Makie.lines!(ctx[:scene],Makie.lift(data->(vec(data.g[Coordinates]),data.f), ctx[:data]))
+
+        add_scene!(ctx[:ax],ctx[:scene],title=ctx[:title])
+        Makie.display(ctx[:figure])
+    else
+        ctx[:data][]=(g=grid,f=func)
+        yield()
+    end
+    ctx[:figure]
+
 end
 
 # 2D grid
@@ -50,7 +150,6 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid)
         points
     end
 
-    makestatus(grid)="p: $(num_nodes(grid)) t: $(num_cells(grid)) b: $(num_bfaces(grid))"
     
     if !haskey(ctx,:scene)
         ctx[:scene]=Makie.Scene(scale_plot=false)

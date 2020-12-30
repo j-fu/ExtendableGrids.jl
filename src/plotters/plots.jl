@@ -1,4 +1,4 @@
-function initialize_context!(ctx::PlotterContext,::Type{PlotsType})
+function initialize_context!(ctx::PlotContext,::Type{PlotsType})
     ctx
 end
 function prepare_plot!(ctx)

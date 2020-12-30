@@ -157,7 +157,7 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{3}},grid)
     if ctx[:interior]
         regpoints,regfacets=extract_visible_cells3D(grid,xyzcut)
         for ireg=1:nregions
-            rgb=frgb(PyPlot,ireg,nregions+nbregions)
+            rgb=frgb(PyPlot,ireg,nregions,pastel=true)
             if size(regfacets[ireg],2)>0
                 ax.plot_trisurf(regpoints[ireg][1,:],regpoints[ireg][2,:],transpose(regfacets[ireg].-1),regpoints[ireg][3,:],color=rgb)
             end
@@ -166,7 +166,7 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{3}},grid)
 
     bregpoints,bregfacets=extract_visible_bfaces3D(grid,xyzcut)
     for ireg=1:nbregions
-        rgb=frgb(PyPlot,nregions+ireg,nregions+nbregions)
+        rgb=frgb(PyPlot,ireg,nbregions)
         if size(bregfacets[ireg],2)>0
             ax.plot_trisurf(bregpoints[ireg][1,:],bregpoints[ireg][2,:],transpose(bregfacets[ireg].-1),bregpoints[ireg][3,:],color=rgb)
         end
@@ -247,3 +247,60 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid, func)
     ax.tricontour(ctx[:tridata]...,func,colors="k",levels=isolines)
     ctx[:figure]
 end
+
+function plot!(ctx, T::Type{PyPlotType}, ::Type{Val{3}},grid,func)
+
+    PyPlot=ctx[:Plotter]
+    ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot],projection="3d")
+    ax=ctx[:ax]
+    fig=ctx[:figure]
+    
+    nregions=num_cellregions(grid)
+    nbregions=num_bfaceregions(grid)
+
+    xyzmin=zeros(3)
+    xyzmax=ones(3)
+    coord=grid[Coordinates]
+    @views for idim=1:3
+        xyzmin[idim]=minimum(coord[idim,:])
+        xyzmax[idim]=maximum(coord[idim,:])
+    end
+    xyzcut=[ctx[:xplane],ctx[:yplane],ctx[:zplane]]
+    fminmax=extrema(func)
+    
+    ctx[:xplane]=max(xyzmin[1],min(xyzmax[1],ctx[:xplane]) )
+    ctx[:yplane]=max(xyzmin[2],min(xyzmax[2],ctx[:yplane]) )
+    ctx[:zplane]=max(xyzmin[3],min(xyzmax[3],ctx[:zplane]) )
+    ctx[:flevel]=max(fminmax[1],min(fminmax[2],ctx[:flevel]))
+
+    makeplanes(x,y,z)=[[1,0,0,-x], 
+                       [0,1,0,-y], 
+                       [0,0,1,-z]]
+
+    ccoord,faces,values=marching_tetrahedra(grid,func,makeplanes(ctx[:xplane],ctx[:yplane],ctx[:zplane]),[ctx[:flevel]])
+    faces=collect(faces)
+
+    nfaces=size(faces,2)
+    if nfaces>0
+        colors=zeros(nfaces)
+        for i=1:nfaces
+            colors[i]=(values[faces[1,i]]+values[faces[2,i]]+values[faces[3,i]])/3
+        end
+        # thx, https://stackoverflow.com/a/24229480/8922290 
+        collec=ctx[:ax].plot_trisurf(ccoord[1,:],ccoord[2,:],transpose(faces.-1),ccoord[3,:],cmap=ctx[:colormap])
+        collec.set_array(colors)
+        collec.autoscale()
+    end
+
+    ax.set_xlim3d(xyzmin[1],xyzmax[1])
+    ax.set_ylim3d(xyzmin[2],xyzmax[2])
+    ax.set_zlim3d(xyzmin[3],xyzmax[3])
+    ax.view_init(ctx[:elev],ctx[:azim])
+    
+    
+    if ctx[:legend]
+        ax.legend(loc=ctx[:legend_location])
+    end
+    ctx[:figure]
+end
+

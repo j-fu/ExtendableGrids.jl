@@ -1,5 +1,6 @@
 ENV["MPLBACKEND"]="agg"
-using Documenter, ExtendableGrids, Literate, PyPlot
+using Documenter, ExtendableGrids, Literate
+import PyPlot
 
 
 example_md_dir  = joinpath(@__DIR__,"src","examples")
@@ -16,10 +17,10 @@ include(examples3d)
 
 function makeplots(picdir)
     function makeplot(func)
-        clf()
+        PyPlot.clf()
         f=getfield(Main,Symbol(func))
-        ExtendableGrids.plot(f(), Plotter=PyPlot)
-        savefig(joinpath(picdir,func*".svg"))
+        plot(f(), Plotter=PyPlot)
+        PyPlot.savefig(joinpath(picdir,func*".svg"))
     end
     makeplot("interval_from_vector")
     makeplot("interval_localref")

@@ -283,7 +283,7 @@ end
  mesh!(collect(mcoll),backlight=1f0) 
  
 """
-function marching_tetrahedra(grid::ExtendableGrid,func,planes,flevels)
+function marching_tetrahedra(grid::ExtendableGrid,func,planes,flevels;tol=0.0)
     nplanes=length(planes)
     nlevels=length(flevels)
     
@@ -323,7 +323,7 @@ function marching_tetrahedra(grid::ExtendableGrid,func,planes,flevels)
         
         for iplane=1:nplanes
             @views map!(inode->plane_equation(planes[iplane],coord[:,inode]),planeq,node_indices)
-            nxs=tet_x_plane!(ixcoord,ixvalues,coord,node_indices,planeq,func)
+            nxs=tet_x_plane!(ixcoord,ixvalues,coord,node_indices,planeq,func,tol=tol)
             pushtris(nxs,ixcoord,ixvalues)
         end
         

@@ -101,15 +101,15 @@ include("plotters/common.jl")
 include("plotters/pyplot.jl")
 include("plotters/makie.jl")
 include("plotters/vtkview.jl")
-include("plotters/plots.jl")
+
+# Plots is unable to handle triangulations, so
+# maintenence of this does not make much sense.
+# include("plotters/plots.jl")
 
 export plot,plot!
 export isplots,isvtkview,ispyplot,ismakie
-export tridata,rectdata
-export PlotterContext
-export SubPlotContext
+export PlotContext, SubPlotContext
 export plottertype
 export PyPlotType,MakieType,PlotsType,VTKViewType 
-export make_mesh
 
 end # module
