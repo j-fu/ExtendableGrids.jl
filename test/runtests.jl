@@ -46,7 +46,7 @@ end
 
 @testset "Read/Write" begin
     function testrw(grid)
-        ftmp=tempname(cleanup=true)
+        ftmp=tempname()
         write(ftmp,grid,format="sg")
         grid1=simplexgrid(ftmp,format="sg")
         seemingly_equal(grid1,grid)
