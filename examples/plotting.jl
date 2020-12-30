@@ -86,5 +86,6 @@ function plotting_multiscene(;Plotter=nothing)
     plot!(p[2,2],func2d()...)
     plot!(p[1,3],grid3d(),zplane=0.49)
     plot!(p[2,3],func3d()...,zplane=0.49,flevel=0.5)
+    p
 end
 # ![](plotting_multiscene.svg)

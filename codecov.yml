@@ -1,6 +1,8 @@
 ignore:
-  - "src/plot.jl"
-  - "src/plotters
+  - "src/plotters/makie.py
+  - "src/plotters/plots.py
+  - "src/plotters/multiscene.py
+  - "src/plotters/vtkview.py
 
   # - "path/to/folder"  # ignore folders and all its contents
   # - "test_*.rb"       # wildcards accepted

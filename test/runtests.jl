@@ -1,4 +1,5 @@
 using Test, ExtendableGrids
+import PyPlot
 
 @testset "Basic" begin
     function test_geomspace()
@@ -61,9 +62,17 @@ function testgrid(grid,testdata)
     (num_nodes(grid),num_cells(grid), num_bfaces(grid))==testdata
 end
 
+examples1d=joinpath(@__DIR__,"..","examples","examples1d.jl")
+include(examples1d)
+examples2d=joinpath(@__DIR__,"..","examples","examples2d.jl")
+include(examples2d)
+examples3d=joinpath(@__DIR__,"..","examples","examples3d.jl")
+include(examples3d)
+plotting=joinpath(@__DIR__,"..","examples","plotting.jl")
+include(plotting)
+
 
 @testset "1D" begin
-    include("../examples/examples1d.jl")
     @test testgrid(interval_from_vector(),(21,20,2))
     @test testgrid(interval_localref(),   (27,26,2))
     @test testgrid(interval_multiregion(),(21,20,3))
@@ -71,7 +80,6 @@ end
 end
 
 @testset "2D" begin
-    include("../examples/examples2d.jl")
     @test testgrid(rectangle(),(441,800,80))
     @test testgrid(rectangle_localref(),(729, 1352, 104))
     @test testgrid(rectangle_multiregion(),(441,800,80))
@@ -79,6 +87,26 @@ end
 end
 
 @testset "3D" begin
-    include("../examples/examples3d.jl")
     @test testgrid(quadrilateral(),(330,1200,440))
 end
+
+@testset "plotting" begin
+    include("../docs/makeplots.jl")
+    picdir=mktempdir()
+
+    @test makeplot("interval_from_vector",picdir)
+    @test makeplot("interval_localref",picdir)
+    @test makeplot("interval_multiregion",picdir)
+    @test makeplot("interval_subgrid",picdir)
+    @test makeplot("rectangle",picdir)
+    @test makeplot("rectangle_localref",picdir)
+    @test makeplot("rectangle_multiregion",picdir)
+    @test makeplot("rectangle_subgrid",picdir)
+    @test makeplot("quadrilateral",picdir)
+
+    @test makeplot2("plotting_grid3d",picdir)
+    @test makeplot2("plotting_func3d",picdir)
+    @test makeplot2("plotting_multiscene",picdir)
+
+end
+

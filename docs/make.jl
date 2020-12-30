@@ -5,6 +5,8 @@ import PyPlot
 
 example_md_dir  = joinpath(@__DIR__,"src","examples")
 
+
+
 examples1d=joinpath(@__DIR__,"..","examples","examples1d.jl")
 include(examples1d)
 examples2d=joinpath(@__DIR__,"..","examples","examples2d.jl")
@@ -15,38 +17,7 @@ plotting=joinpath(@__DIR__,"..","examples","plotting.jl")
 include(plotting)
 
 
-
-
-function makeplots(picdir)
-    function makeplot(func)
-        PyPlot.clf()
-        f=getfield(Main,Symbol(func))
-        plot(f(), Plotter=PyPlot)
-        PyPlot.savefig(joinpath(picdir,func*".svg"))
-    end
-
-    function makeplot2(func)
-        PyPlot.clf()
-        f=getfield(Main,Symbol(func))
-        f(Plotter=PyPlot)
-        PyPlot.savefig(joinpath(picdir,func*".svg"))
-    end
-
-    makeplot("interval_from_vector")
-    makeplot("interval_localref")
-    makeplot("interval_multiregion")
-    makeplot("interval_subgrid")
-    makeplot("rectangle")
-    makeplot("rectangle_localref")
-    makeplot("rectangle_multiregion")
-    makeplot("rectangle_subgrid")
-    makeplot("quadrilateral")
-
-    makeplot2("plotting_grid3d")
-    makeplot2("plotting_func3d")
-    makeplot2("plotting_multiscene")
-end
-
+include("makeplots.jl")
 
 function mkdocs()
 

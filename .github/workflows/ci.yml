@@ -32,6 +32,7 @@ jobs:
           arch: ${{ matrix.arch }}
       - uses: actions/cache@v1
         env:
+          PYTHON: ""
           cache-name: cache-artifacts
         with:
           path: ~/.julia/artifacts
