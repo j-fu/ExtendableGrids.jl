@@ -1,15 +1,17 @@
 module ExtendableGrids
+
 using DocStringExtensions
 using ElasticArrays
 using StaticArrays
 using ExtendableSparse
 using AbstractTrees
-using InteractiveUtils
 
+
+using InteractiveUtils
 using SparseArrays
 using Printf
 using Random
-
+using Dates
 
 
 # for plotting
@@ -91,6 +93,7 @@ export cellmask!,bfacemask!
 include("simplexgrid.jl")
 export simplexgrid, geomspace,glue
 export XCoordinates, YCoordinates, ZCoordinates
+export writefile
 
 include("tokenstream.jl")
 export TokenStream, gettoken, expecttoken,trytoken

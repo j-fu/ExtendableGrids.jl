@@ -44,6 +44,19 @@ using Test, ExtendableGrids
     @test test_prepare_edges()
 end
 
+@testset "Read/Write" begin
+    function testrw(grid)
+        ftmp=tempname(cleanup=true)
+        write(ftmp,grid,format="sg")
+        grid1=simplexgrid(ftmp,format="sg")
+        seemingly_equal(grid1,grid)
+    end
+    X=collect(0:0.05:1)
+    @test testrw(simplexgrid(X))
+    @test testrw(simplexgrid(X,X))
+    @test testrw(simplexgrid(X,X,X))
+end
+
 function testgrid(grid,testdata)
     (num_nodes(grid),num_cells(grid), num_bfaces(grid))==testdata
 end

@@ -622,7 +622,7 @@ $(TYPEDSIGNATURES)
   
 Read grid from file. Currently for pdelib sg format only
 """
-function simplexgrid(::Type{<:IOStream};file::String="test.sg",format="")
+function simplexgrid(file;format="")
     (fbase,fext)=splitext(file)
     if format==""
         format=fext[2:end]
@@ -699,4 +699,68 @@ function simplexgrid(::Type{<:IOStream};file::String="test.sg",format="")
         end
     end
     simplexgrid(coord,cells,regions,faces,bregions);
+end
+
+"""
+$(TYPEDSIGNATURES)
+  
+Write grid to file. Currently for pdelib sg format only
+"""
+function Base.write(fname::String, g::ExtendableGrid; format="")
+    (fbase,fext)=splitext(fname)
+    if format==""
+        format=fext[2:end]
+    end
+    @assert format=="sg"
+
+    dim_g=dim_grid(g)
+    dim_s=dim_space(g)
+    nn=num_nodes(g)
+    nc=num_cells(g)
+    nbf=num_bfaces(g)
+    coord=g[Coordinates]
+    cellnodes=g[CellNodes]
+    bfacenodes=g[BFaceNodes]
+    cellregions=g[CellRegions]
+    bfaceregions=g[BFaceRegions]
+
+    # TODO: replace @sprintf by someting non-allocating
+    open(fname, "w") do file
+        write(file,@sprintf("SimplexGrid"))
+        write(file,@sprintf(" "))
+        write(file,@sprintf("2.1\n"))
+        write(file,@sprintf("#created by ExtendableGrids.jl (c) J.Fuhrmann et al\n"))
+        write(file,@sprintf("#mailto:{fuhrmann|streckenbach}@wias-berlin.de\n"))
+        write(file,@sprintf("#%s\n",Dates.format(Dates.now(),"yyyy-mm-ddTHH-mm-SS")))
+              
+        write(file,@sprintf("DIMENSION\n%d\n",dim_g))
+        write(file,@sprintf("NODES\n%d %d\n",nn,dim_s))
+        
+        for inode=1:nn
+            for idim=1:dim_s
+	        write(file,@sprintf("%.20e ",coord[idim,inode]))
+                write(file,@sprintf("\n"))
+            end
+        end
+
+        write(file,@sprintf("CELLS\n%d\n",nc))
+        for icell=1:nc
+            for inode=1:dim_g+1
+	        write(file,@sprintf("%d ", cellnodes[inode,icell]))
+            end
+            write(file,@sprintf("%d\n",cellregions[icell]))
+        end
+        
+        write(file,@sprintf("FACES\n%d\n",nbf))
+        for ibface=1:nbf
+            for inode=1:dim_g
+	        write(file,@sprintf("%d ", bfacenodes[inode,ibface]))
+            end
+            write(file,@sprintf("%d\n",bfaceregions[ibface]))
+        end
+        write(file,@sprintf("END\n"))
+        flush(file)
+        flush(file)
+    end
+    nothing
 end

@@ -83,6 +83,7 @@ function TokenStream(input::IOStream; comment='#', dlm=isspace)
     tks.comment=comment
     tks.dlm=dlm
     tks.tokens=split("")
+    tks.itoken=1
     _fetch!(tks)
     return tks
 end
@@ -111,6 +112,7 @@ function _fetch!(tks::TokenStream)
             hasline=true
         end
     end
+    # TODO: replace this by something non-allocating
     tks.tokens=split(buffer,tks.dlm,keepempty=false)
     tks.itoken=1
     return (tks.itoken<=length(tks.tokens))

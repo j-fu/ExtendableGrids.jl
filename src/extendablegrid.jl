@@ -510,20 +510,9 @@ seemingly_equal(x1::Number, x2::Number)=(x1≈x2)
 seemingly_equal(x1::Any, x2::Any)=(x1==x2)
 
 
+extrema(grid)=extrema(grid[Coordinates])
 
-### May be useful sometime...
 function bbox(grid)
-    dim=dim_space(grid)
-    coord=grid[Coordinates]
-    bbmin=Vector(undef,dim)
-    bbmax=Vector(undef,dim)
-    bbmin.=1.0e30
-    bbmax.=1.0e-30
-    for i=1:size(coord,2)
-        for idim=1:dim
-            bbmin[idim]=min(bbmin[idim],coord[idim,i])
-            bbmax[idim]=max(bbmax[idim],coord[idim,i])
-        end
-    end
-    (bbmin, bbmax)
+    e=extrema(grid)
+    map(a->a[1],e),map(a->a[2],e)
 end
