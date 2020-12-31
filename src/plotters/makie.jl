@@ -234,13 +234,7 @@ pgup/pgdown: coarse control control value
 """
 function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid)
 
-    function make_mesh(coord,tri)
-        @views pts=[Point3f0(coord[:,i]...) for i=1:size(coord,2)]
-        push!(pts,Point3f0(xyzmin...))
-        push!(pts,Point3f0(xyzmax...))
-        @views fcs=[GLTriangleFace(tri[:,i]...) for i=1:size(tri,2)]
-        Mesh(meta(pts,normals=normals(pts, fcs)),fcs)
-    end
+    make_mesh(pts,fcs)=Mesh(meta(pts,normals=normals(pts, fcs)),fcs)
     
     nregions=num_cellregions(grid)
     nbregions=num_bfaceregions(grid)
@@ -257,14 +251,29 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid)
 
     adjust_planes()
 
+    
+
     if !haskey(ctx,:scene)
         ctx[:scene]=Makie.Scene(scale_plot=false)
         ctx[:data]=Makie.Node((g=grid,x=ctx[:xplane],y=ctx[:yplane],z=ctx[:zplane]))
-        ctx[:facedata]=Makie.lift(d->extract_visible_bfaces3D(d.g,(d.x,d.y,d.z)), ctx[:data])
+        ctx[:facedata]=Makie.lift(
+            d->extract_visible_bfaces3D(d.g,
+                                        (d.x,d.y,d.z),
+                                        primepoints=hcat(xyzmin,xyzmax),
+                                        Tp=Point3f0,
+                                        Tf=GLTriangleFace),
+            ctx[:data])
+        
         ctx[:facemeshes]=Makie.lift(d->[make_mesh(d[1][i],d[2][i]) for i=1:nbregions], ctx[:facedata])
         
         if ctx[:interior]
-            ctx[:celldata]=Makie.lift(d->extract_visible_cells3D(d.g,(d.x,d.y,d.z)), ctx[:data])
+            ctx[:celldata]=Makie.lift(
+                d->extract_visible_cells3D(d.g,
+                                           (d.x,d.y,d.z),
+                                           primepoints=hcat(xyzmin,xyzmax),
+                                           Tp=Point3f0,
+                                           Tf=GLTriangleFace),
+                ctx[:data])
             ctx[:cellmeshes]=Makie.lift(d->[make_mesh(d[1][i],d[2][i]) for i=1:nregions], ctx[:celldata])
             for i=1:nregions
                 Makie.mesh!(ctx[:scene],Makie.lift(d->d[i], ctx[:cellmeshes]),
@@ -305,21 +314,9 @@ end
 
 function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid , func)
     
-    function make_mesh(coord,tri)
-        @views pts=[Point3f0(coord[:,i]...) for i=1:size(coord,2)]
-        push!(pts,Point3f0(xyzmin...))
-        push!(pts,Point3f0(xyzmax...))
-        @views fcs=[GLTriangleFace(tri[:,i]...) for i=1:size(tri,2)]
-        Mesh(pts,fcs)
-    end
+    make_mesh(pts,fcs)=Mesh(pts,fcs)
     
-    function make_mesh(coord,tri,vals)
-        append!(coord,Float32[xyzmin...])
-        append!(coord,Float32[xyzmax...])
-        push!(vals,fminmax[1])
-        push!(vals,fminmax[2])
-        @views pts=[Point3f0(coord[:,i]...) for i=1:size(coord,2)]
-        @views fcs=[GLTriangleFace(tri[:,i]...) for i=1:size(tri,2)]
+    function make_mesh(pts,fcs,vals)
         colors = Makie.AbstractPlotting.interpolated_getindex.((cmap,), vals, (fminmax,))
         GeometryBasics.Mesh(meta(pts, color=colors,normals=normals(pts, fcs)), fcs)
     end
@@ -358,7 +355,14 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid , func)
         ctx[:data]=Makie.Node((g=grid,f=func,x=ctx[:xplane],y=ctx[:yplane],z=ctx[:zplane],l=ctx[:flevel]))
                                   
         if ctx[:outline]
-            ctx[:facedata]=Makie.lift(d->extract_visible_bfaces3D(d.g,xyzmax), ctx[:data])
+
+
+            ctx[:facedata]=Makie.lift(d->extract_visible_bfaces3D(d.g,
+                                                                  xyzmax,
+                                                                  primepoints=hcat(xyzmin,xyzmax),
+                                                                  Tp=Point3f0,
+                                                                  Tf=GLTriangleFace),
+                                      ctx[:data])
             ctx[:facemeshes]=Makie.lift(d->[make_mesh(d[1][i],d[2][i]) for i=1:nbregions], ctx[:facedata])
             for i=1:nbregions
                 Makie.mesh!(ctx[:scene],Makie.lift(d->d[i], ctx[:facemeshes]),
@@ -370,7 +374,15 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid , func)
         end
         
         Makie.mesh!(ctx[:scene],
-                    Makie.lift(d->make_mesh(marching_tetrahedra(d.g,d.f,makeplanes(d.x,d.y,d.z),[d.l])...),ctx[:data]),
+                    Makie.lift(d->make_mesh(marching_tetrahedra(d.g,
+                                                                d.f,
+                                                                makeplanes(d.x,d.y,d.z),
+                                                                [d.l],
+                                                                primepoints=hcat(xyzmin,xyzmax),
+                                                                primevalues=fminmax,
+                                                                Tp=Point3f0,
+                                                                Tf=GLTriangleFace,
+                                                                Tv=Float32)...),ctx[:data]),
                     backlight=1f0)
         add_scene!(ctx[:ax],ctx[:scene],title=ctx[:title])
         Makie.display(ctx[:figure])

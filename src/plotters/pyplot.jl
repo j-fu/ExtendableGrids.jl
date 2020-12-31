@@ -155,20 +155,26 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{3}},grid)
 
     
     if ctx[:interior]
-        regpoints,regfacets=extract_visible_cells3D(grid,xyzcut)
+        regpoints0,regfacets0=extract_visible_cells3D(grid,xyzcut)
+        regfacets=[reshape(reinterpret(Int32,regfacets0[i]),(3,length(regfacets0[i]))) for i=1:nregions]
+        regpoints=[reshape(reinterpret(Float32,regpoints0[i]),(3,length(regpoints0[i]))) for i=1:nregions]
         for ireg=1:nregions
             rgb=frgb(PyPlot,ireg,nregions,pastel=true)
             if size(regfacets[ireg],2)>0
-                ax.plot_trisurf(regpoints[ireg][1,:],regpoints[ireg][2,:],transpose(regfacets[ireg].-1),regpoints[ireg][3,:],color=rgb)
+                ax.plot_trisurf(regpoints[ireg][1,:],regpoints[ireg][2,:],transpose(regfacets[ireg].-1),regpoints[ireg][3,:],
+                                color=rgb,edgecolors=:black,linewidth=0.5)
             end
         end
     end
 
-    bregpoints,bregfacets=extract_visible_bfaces3D(grid,xyzcut)
+    bregpoints0,bregfacets0=extract_visible_bfaces3D(grid,xyzcut)
+    bregfacets=[reshape(reinterpret(Int32,bregfacets0[i]),(3,length(bregfacets0[i]))) for i=1:nbregions]
+    bregpoints=[reshape(reinterpret(Float32,bregpoints0[i]),(3,length(bregpoints0[i]))) for i=1:nbregions]
     for ireg=1:nbregions
         rgb=frgb(PyPlot,ireg,nbregions)
         if size(bregfacets[ireg],2)>0
-            ax.plot_trisurf(bregpoints[ireg][1,:],bregpoints[ireg][2,:],transpose(bregfacets[ireg].-1),bregpoints[ireg][3,:],color=rgb)
+            ax.plot_trisurf(bregpoints[ireg][1,:],bregpoints[ireg][2,:],transpose(bregfacets[ireg].-1),bregpoints[ireg][3,:],
+                            color=rgb,edgecolors=:black,linewidth=0.5)
         end
     end
 
@@ -277,8 +283,10 @@ function plot!(ctx, T::Type{PyPlotType}, ::Type{Val{3}},grid,func)
                        [0,1,0,-y], 
                        [0,0,1,-z]]
 
-    ccoord,faces,values=marching_tetrahedra(grid,func,makeplanes(ctx[:xplane],ctx[:yplane],ctx[:zplane]),[ctx[:flevel]])
-    faces=collect(faces)
+    ccoord0,faces0,values=marching_tetrahedra(grid,func,makeplanes(ctx[:xplane],ctx[:yplane],ctx[:zplane]),[ctx[:flevel]])
+
+    faces=reshape(reinterpret(Int32,faces0),(3,length(faces0)))
+    ccoord=reshape(reinterpret(Float32,ccoord0),(3,length(ccoord0)))
 
     nfaces=size(faces,2)
     if nfaces>0
