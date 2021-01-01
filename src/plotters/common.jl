@@ -27,6 +27,9 @@ function frgb(Plotter,i,max;pastel=false)
     if ismakie(Plotter)
         return RGB(r,g,b)
     end
+    if ismeshcat(Plotter)
+        return (r,g,b)
+    end
     if isplots(Plotter)
         return Plotter.RGB(r,g,b)
     end
@@ -42,7 +45,7 @@ Extract visible tetrahedra - those intersecting with the planes
 Return corresponding points and facets for each region for drawing as mesh (Makie,MeshCat)
 or trisurf (pyplot)
 """
-function extract_visible_cells3D(grid::ExtendableGrid,xyzcut)
+function extract_visible_cells3D(grid::ExtendableGrid,xyzcut; primepoints=zeros(0,0),Tp=SVector{3,Float32},Tf=SVector{3,Int32})
     coord=grid[Coordinates]
     cellnodes=grid[CellNodes]
     cellregions=grid[CellRegions]
@@ -64,35 +67,33 @@ function extract_visible_cells3D(grid::ExtendableGrid,xyzcut)
         tke=tke  ||   (!all_lt[2])  &&  (!all_gt[2]) && (!all_gt[1]) && (!all_gt[3])
         tke=tke  ||   (!all_lt[3])  &&  (!all_gt[3]) && (!all_gt[1]) && (!all_gt[2])
     end
-
-    pmark=[zeros(Int32,size(coord,2)) for ireg=1:nregions]
-    faces=[ElasticArray{Int32}(undef,3,0) for iregion=1:nregions]
-    npoints=zeros(Int32,nregions)
-
-    mtet=zeros(4)
-    for itet=1:size(cellnodes,2)
-        iregion=cellregions[itet]
-        tet=view(cellnodes,:, itet)
-        if take(coord,tet,xyzcut)
-            for inode=1:4
-                if pmark[iregion][tet[inode]]==0
-                    npoints[iregion]+=1
-                    pmark[iregion][tet[inode]]=npoints[iregion]
-                end
-                mtet[inode]=pmark[iregion][tet[inode]]
-            end
-            append!(faces[iregion],(mtet[1],mtet[2],mtet[3]))
-            append!(faces[iregion],(mtet[1],mtet[2],mtet[4]))
-            append!(faces[iregion],(mtet[2],mtet[3],mtet[4]))
-            append!(faces[iregion],(mtet[3],mtet[1],mtet[4]))
+    
+    faces=[Vector{Tf}(undef,0) for iregion=1:nregions]
+    points=[Vector{Tp}(undef,0) for iregion=1:nregions]
+    
+    for iregion=1:nregions
+        for iprime=1:size(primepoints,2)
+            @views push!(points[iregion],Tp(primepoints[:,iprime]))
         end
     end
+    tet=zeros(Int32,4)
     
-    points=[ Array{Float32,2}(undef,3,npoints[iregion]) for iregion=1:nregions]
-    for i=1:size(coord,2)
-        for iregion=1:nregions
-            if pmark[iregion][i]>0
-                @views  points[iregion][:,pmark[iregion][i]].=(coord[1,i],coord[2,i],coord[3,i])
+    for itet=1:size(cellnodes,2)
+        iregion=cellregions[itet]
+        for i=1:4
+            tet[i]=cellnodes[i,itet]
+        end
+        if take(coord,tet,xyzcut)
+            npts=size(points[iregion],1)
+            @views begin
+                push!(points[iregion],coord[:,cellnodes[1,itet]])
+                push!(points[iregion],coord[:,cellnodes[2,itet]])
+                push!(points[iregion],coord[:,cellnodes[3,itet]])
+                push!(points[iregion],coord[:,cellnodes[4,itet]])
+                push!(faces[iregion],(npts+1,npts+2,npts+3))
+                push!(faces[iregion],(npts+1,npts+2,npts+4))
+                push!(faces[iregion],(npts+2,npts+3,npts+4))
+                push!(faces[iregion],(npts+3,npts+1,npts+4))
             end
         end
     end
@@ -101,7 +102,7 @@ end
 
 
 
-function extract_visible_bfaces3D(grid::ExtendableGrid,xyzcut)
+function extract_visible_bfaces3D(grid::ExtendableGrid,xyzcut; primepoints=zeros(0,0), Tp=SVector{3,Float32},Tf=SVector{3,Int32})
     cutcoord=zeros(3)
     
     function take(coord,simplex,xyzcut)
@@ -124,37 +125,32 @@ function extract_visible_bfaces3D(grid::ExtendableGrid,xyzcut)
     bfaceregions=grid[BFaceRegions]
     nbregions=grid[NumBFaceRegions]
 
-    pmark=[zeros(Int32,size(coord,2)) for ireg=1:nbregions]
-    faces=[ElasticArray{Int32}(undef,3,0) for iregion=1:nbregions]
-    npoints=zeros(Int32,nbregions)
-    
+    faces=[Vector{Tf}(undef,0) for iregion=1:nbregions]
+    points=[Vector{Tp}(undef,0) for iregion=1:nbregions]
 
-    for i=1:nbfaces
-        ibregion=bfaceregions[i]
-        tri=view(bfacenodes,:, i)
-        if take(coord,tri,xyzcut)
-            for inode=1:3
-                if pmark[ibregion][tri[inode]]==0
-                    npoints[ibregion]+=1
-                    pmark[ibregion][tri[inode]]=npoints[ibregion]
-                end
-            end
-            tri=map(i->pmark[ibregion][i],tri)
-            append!(faces[ibregion],tri)
+    for iregion=1:nbregions
+        for iprime=1:size(primepoints,2)
+            @views push!(points[iregion],Tp(primepoints[:,iprime]))
         end
     end
-    points=[ Array{Float32,2}(undef,3,npoints[ibregion]) for ibregion=1:nbregions]
-    for i=1:size(coord,2)
-        for ibregion=1:nbregions
-            if pmark[ibregion][i]>0
-                @views points[ibregion][:,pmark[ibregion][i]].=(coord[1,i],coord[2,i],coord[3,i])
-            end
+
+    for i=1:nbfaces
+        iregion=bfaceregions[i]
+        tri=view(bfacenodes,:, i)
+        if take(coord,tri,xyzcut)
+            npts=size(points[iregion],1)
+            @views push!(points[iregion],coord[:,bfacenodes[1,i]])
+            @views push!(points[iregion],coord[:,bfacenodes[2,i]])
+            @views push!(points[iregion],coord[:,bfacenodes[3,i]])
+            push!(faces[iregion],(npts+1,npts+2,npts+3))
         end
     end
     points,faces
 end
 
 
+
+# old version with function values
 function extract_visible_bfaces3D(grid::ExtendableGrid,func,xyzcut)
     cutcoord=zeros(3)
     
@@ -283,7 +279,9 @@ end
  mesh!(collect(mcoll),backlight=1f0) 
  
 """
-function marching_tetrahedra(grid::ExtendableGrid,func,planes,flevels;tol=0.0)
+function marching_tetrahedra(grid::ExtendableGrid,func,planes,flevels;tol=0.0,
+                             primepoints=zeros(0,0), primevalues=zeros(0), Tv=Float32,
+                             Tp=SVector{3,Float32},Tf=SVector{3,Int32})
     nplanes=length(planes)
     nlevels=length(flevels)
     
@@ -292,15 +290,22 @@ function marching_tetrahedra(grid::ExtendableGrid,func,planes,flevels;tol=0.0)
     cellregions=grid[CellRegions]
     nregions=grid[NumCellRegions]
     
-    all_ixfaces=ElasticArray{UInt32}(undef,3,0)
-    all_ixcoord=ElasticArray{Float32}(undef,3,0)
-    all_ixvalues=zeros(Float32,0)
+    all_ixfaces=Vector{Tf}(undef,0)
+    all_ixcoord=Vector{Tp}(undef,0)
+    all_ixvalues=Vector{Tv}(undef,0)
 
+    @assert(length(primevalues)==size(primepoints,2))
+    for iprime=1:size(primepoints,2)
+        @views push!(all_ixcoord,primepoints[:,iprime])
+        @views push!(all_ixvalues,primevalues[iprime])
+    end
+    
     planeq=zeros(4)
     ixcoord=zeros(3,6)
     ixvalues=zeros(6)
     cn=zeros(4)
-
+    node_indices=zeros(Int32,4)
+    
     plane_equation(plane,coord)=coord[1]*plane[1]+coord[2]*plane[2]+coord[3]*plane[3]+plane[4]
 
     function pushtris(ns,ixcoord,ixvalues)
@@ -308,18 +313,21 @@ function marching_tetrahedra(grid::ExtendableGrid,func,planes,flevels;tol=0.0)
         if ns>=3
             last_i=length(all_ixvalues)
             for is=1:ns
-                append!(all_ixcoord,ixcoord[:,is])
+                @views push!(all_ixcoord,ixcoord[:,is])
                 push!(all_ixvalues,ixvalues[is])
             end
-            append!(all_ixfaces,(last_i+1,last_i+2,last_i+3))
+            push!(all_ixfaces,(last_i+1,last_i+2,last_i+3))
             if ns==4
-                append!(all_ixfaces,(last_i+3,last_i+2,last_i+4))
+                push!(all_ixfaces,(last_i+3,last_i+2,last_i+4))
             end
         end
     end
 
+    # allocation free (besides push!)
     for itet=1:size(cellnodes,2)
-        node_indices=view(cellnodes,:,itet)
+        for i=1:4
+            node_indices[i]=cellnodes[i,itet]
+        end
         
         for iplane=1:nplanes
             @views map!(inode->plane_equation(planes[iplane],coord[:,inode]),planeq,node_indices)

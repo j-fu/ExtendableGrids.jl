@@ -1,4 +1,3 @@
-
 """
 $(SIGNATURES)
 Heuristically check if Plotter is VTKView
@@ -23,6 +22,12 @@ $(SIGNATURES)
 Heuristically check if Plotter is Makie/WGLMakie
 """
 ismakie(Plotter)= (typeof(Plotter)==Module)&&isdefined(Plotter,:AbstractPlotting)
+
+"""
+$(SIGNATURES)
+Heuristically check if Plotter is MeshCat
+"""
+ismeshcat(Plotter)= (typeof(Plotter)==Module)&&isdefined(Plotter,:Visualizer)
 
 """
 $(TYPEDEF)
@@ -53,6 +58,13 @@ Abstract type for dispatching on plotter
 abstract type VTKViewType end
 
 """
+$(TYPEDEF)
+
+Abstract type for dispatching on plotter
+"""
+abstract type MeshCatType end
+
+"""
 $(SIGNATURES)
 
 Heuristically detect type of plotter, returns the corresponding 
@@ -67,6 +79,8 @@ function plottertype(Plotter::Union{Module,Nothing})
         return PyPlotType
     elseif isvtkview(Plotter)
         return VTKViewType
+    elseif ismeshcat(Plotter)
+        return MeshCatType
     end
     Nothing
 end
@@ -235,6 +249,13 @@ function PlotContext(;Plotter::Union{Module,Nothing}=nothing, kwargs...)
     p
 end
 
+"""
+$(SIGNATURES)
+
+Return displayable representation of figue  (for notebooks)
+"""
+displayable(p)=displayable(p,plottertype(p))
+
 
 """
 $(SIGNATURES)
@@ -325,4 +346,8 @@ plot!(ctx, ::Type{Nothing}, ::Type{Val{3}},grid)=nothing
 plot!(ctx, ::Type{Nothing}, ::Type{Val{1}},grid,func)=nothing
 plot!(ctx, ::Type{Nothing}, ::Type{Val{2}},grid,func)=nothing
 plot!(ctx, ::Type{Nothing}, ::Type{Val{3}},grid,func)=nothing
+
+
+displayable(ctx,Any)=nothing
+
 
