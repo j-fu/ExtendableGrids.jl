@@ -90,23 +90,24 @@ end
     @test testgrid(quadrilateral(),(330,1200,440))
 end
 
-@testset "plotting" begin
-    include("../docs/makeplots.jl")
-    picdir=mktempdir()
-
-    @test makeplot("interval_from_vector",picdir)
-    @test makeplot("interval_localref",picdir)
-    @test makeplot("interval_multiregion",picdir)
-    @test makeplot("interval_subgrid",picdir)
-    @test makeplot("rectangle",picdir)
-    @test makeplot("rectangle_localref",picdir)
-    @test makeplot("rectangle_multiregion",picdir)
-    @test makeplot("rectangle_subgrid",picdir)
-    @test makeplot("quadrilateral",picdir)
-
-    @test makeplot2("plotting_grid3d",picdir)
-    @test makeplot2("plotting_func3d",picdir)
-    @test makeplot2("plotting_multiscene",picdir)
-
+if !Sys.isapple()
+    @testset "plotting" begin
+        include("../docs/makeplots.jl")
+        picdir=mktempdir()
+        
+        @test makeplot("interval_from_vector",picdir)
+        @test makeplot("interval_localref",picdir)
+        @test makeplot("interval_multiregion",picdir)
+        @test makeplot("interval_subgrid",picdir)
+        @test makeplot("rectangle",picdir)
+        @test makeplot("rectangle_localref",picdir)
+        @test makeplot("rectangle_multiregion",picdir)
+        @test makeplot("rectangle_subgrid",picdir)
+        @test makeplot("quadrilateral",picdir)
+        
+        @test makeplot2("plotting_grid3d",picdir)
+        @test makeplot2("plotting_func3d",picdir)
+        @test makeplot2("plotting_multiscene",picdir)
+        
+    end
 end
-
