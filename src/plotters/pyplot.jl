@@ -151,11 +151,20 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{3}},grid)
         xyzmin[idim]=minimum(coord[idim,:])
         xyzmax[idim]=maximum(coord[idim,:])
     end
-    xyzcut=[ctx[:xplane],ctx[:yplane],ctx[:zplane]]
 
+    ax.set_xlim3d(xyzmin[1],xyzmax[1])
+    ax.set_ylim3d(xyzmin[2],xyzmax[2])
+    ax.set_zlim3d(xyzmin[3],xyzmax[3])
+    ax.view_init(ctx[:elev],ctx[:azim])
+
+
+    xyzcut=[ctx[:xplane],ctx[:yplane],ctx[:zplane]]
     
     if ctx[:interior]
-        regpoints0,regfacets0=extract_visible_cells3D(grid,xyzcut)
+        regpoints0,regfacets0=extract_visible_cells3D(grid,
+                                                      xyzcut,
+                                                      primepoints=hcat(xyzmin,xyzmax)
+                                                      )
         regfacets=[reshape(reinterpret(Int32,regfacets0[i]),(3,length(regfacets0[i]))) for i=1:nregions]
         regpoints=[reshape(reinterpret(Float32,regpoints0[i]),(3,length(regpoints0[i]))) for i=1:nregions]
         for ireg=1:nregions
@@ -167,7 +176,12 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{3}},grid)
         end
     end
 
-    bregpoints0,bregfacets0=extract_visible_bfaces3D(grid,xyzcut)
+    
+    
+    bregpoints0,bregfacets0=extract_visible_bfaces3D(grid,
+                                                     xyzcut,
+                                                     primepoints=hcat(xyzmin,xyzmax)
+                                                     )
     bregfacets=[reshape(reinterpret(Int32,bregfacets0[i]),(3,length(bregfacets0[i]))) for i=1:nbregions]
     bregpoints=[reshape(reinterpret(Float32,bregpoints0[i]),(3,length(bregpoints0[i]))) for i=1:nbregions]
     for ireg=1:nbregions
@@ -177,13 +191,11 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{3}},grid)
                             color=rgb,edgecolors=:black,linewidth=0.5)
         end
     end
+    
 
-    ax.set_xlim3d(xyzmin[1],xyzmax[1])
-    ax.set_ylim3d(xyzmin[2],xyzmax[2])
-    ax.set_zlim3d(xyzmin[3],xyzmax[3])
-    ax.view_init(ctx[:elev],ctx[:azim])
 
-        
+
+    
     if ctx[:legend]
         ax.legend(loc=ctx[:legend_location])
     end

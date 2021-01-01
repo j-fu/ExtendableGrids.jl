@@ -12,7 +12,7 @@ function initialize_plot!(p::PlotContext,::Type{MakieType})
         ctx[:ax]=subscenes[I]
         ctx[:figure]=parent
     end
-    p
+    p.context[:scene]
 end
 
 
@@ -93,7 +93,6 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{1}}, grid)
         yieldwait()
     end
     ctx[:figure]
-
 end
 
 # 1D function
@@ -112,7 +111,6 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{1}}, grid,func)
         yieldwait()
     end
     ctx[:figure]
-
 end
 
 # 2D grid
@@ -280,7 +278,9 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid)
                             color=(frgb(Makie,i,nregions,pastel=true)),
                             backlight=1f0
                             )
-                Makie.wireframe!(ctx[:scene],Makie.lift(d->d[i], ctx[:cellmeshes]),strokecolor=:black)
+                if ctx[:edges]
+                    Makie.wireframe!(ctx[:scene],Makie.lift(d->d[i], ctx[:cellmeshes]),strokecolor=:black)
+                end
             end
         end
 
@@ -289,7 +289,9 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid)
                         color=(frgb(Makie,i,nbregions,pastel=false)),
                         backlight=1f0
                         )
-            Makie.wireframe!(ctx[:scene],Makie.lift(d->d[i], ctx[:facemeshes]),strokecolor=:black)
+            if ctx[:edges]
+                Makie.wireframe!(ctx[:scene],Makie.lift(d->d[i], ctx[:facemeshes]),strokecolor=:black)
+            end
         end
         
         
@@ -310,6 +312,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid)
         ctx[:data][]=(g=grid,x=ctx[:xplane],y=ctx[:yplane],z=ctx[:zplane])
         yieldwait()
     end
+    ctx[:figure]
 end
 
 function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid , func)

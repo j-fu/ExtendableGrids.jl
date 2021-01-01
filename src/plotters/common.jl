@@ -27,6 +27,9 @@ function frgb(Plotter,i,max;pastel=false)
     if ismakie(Plotter)
         return RGB(r,g,b)
     end
+    if ismeshcat(Plotter)
+        return (r,g,b)
+    end
     if isplots(Plotter)
         return Plotter.RGB(r,g,b)
     end
