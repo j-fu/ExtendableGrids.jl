@@ -510,7 +510,7 @@ seemingly_equal(x1::Number, x2::Number)=(x1≈x2)
 seemingly_equal(x1::Any, x2::Any)=(x1==x2)
 
 
-Base.extrema(grid::ExtendableGrid)=Base.extrema(grid[Coordinates])
+Base.extrema(grid::ExtendableGrid)=Base.extrema(grid[Coordinates],dims=2)
 
 function bbox(grid)
     e=extrema(grid)
