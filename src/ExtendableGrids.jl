@@ -16,6 +16,7 @@ using Dates
 
 # for plotting
 using Colors
+using ColorSchemes
 using GeometryBasics
 using LinearAlgebra
 

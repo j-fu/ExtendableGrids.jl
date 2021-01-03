@@ -25,6 +25,12 @@ function tridata(grid)
     coord[1,:], coord[2,:],transpose(cellnodes.-1)
 end
 
+# Interfaces to Colors/Collorschemes
+rgbtuple(c::RGB)=(red(c),green(c),blue(c))
+plaincolormap(ctx)=colorschemes[ctx[:colormap]].colors
+
+
+
 ### 1D grid
 function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}}, grid)
     PyPlot=ctx[:Plotter]
@@ -53,27 +59,28 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}}, grid)
     ax.set_aspect(ctx[:aspect])
     ax.get_yaxis().set_ticks([])
     ax.set_ylim(-5*h,xmax-xmin)
+    cmap=region_cmap(ncellregions)
+
     for icell=1:num_cells(grid)
         ireg=cellregions[icell]
         label = crflag[ireg] ? "cellregion $(ireg)" : ""
         crflag[ireg]=false
         
-        rgb=frgb(PyPlot,ireg,ncellregions)
         x1=coord[1,cellnodes[1,icell]]
         x2=coord[1,cellnodes[2,icell]]
         ax.plot([x1,x1],[-h,h],linewidth=0.5,color="k",label="")
         ax.plot([x2,x2],[-h,h],linewidth=0.5,color="k",label="")
-        ax.plot([x1,x2],[0,0],linewidth=3.0,color=rgb,label=label)
+        ax.plot([x1,x2],[0,0],linewidth=3.0,color=rgbtuple(cmap[cellregions[icell]]),label=label)
     end
     
+    cmap=bregion_cmap(ncellregions)
     for ibface=1:num_bfaces(grid)
         ireg=bfaceregions[ibface]
         if ireg >0
             label = brflag[ireg] ? "boundary $(ireg)" : ""
             brflag[ireg]=false
-            rgb=frgb(PyPlot,bfaceregions[ibface],nbfaceregions)
             x1=coord[1,bfacenodes[1,ibface]]
-            ax.plot([x1,x1],[-2*h,2*h],linewidth=3.0,color=rgb,label=label)
+            ax.plot([x1,x1],[-2*h,2*h],linewidth=3.0,color=rgbtuple(cmap[ireg]),label=label)
         end
     end
     if ctx[:legend]
@@ -108,21 +115,23 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid)
     brflag=ones(Bool,nbfaceregions)
     ax.set_aspect(ctx[:aspect])
     tridat=tridata(grid)
-    cdata=ax.tripcolor(tridat...,facecolors=grid[CellRegions],cmap="Pastel2")
+    cmap=region_cmap(ncellregions)
+    cdata=ax.tripcolor(tridat...,facecolors=grid[CellRegions],cmap=PyPlot.ColorMap(cmap,length(cmap)))
     cbar=fig.colorbar(cdata,ax=ax,ticks=collect(1:ncellregions))
     if ctx[:edges]
         ax.triplot(tridat...,color="k",linewidth=0.5)
     end
 
-    if nbfaceregions>0
+
+    if nbfaceregions>0 
+        cmap=bregion_cmap(nbfaceregions)
         # see https://gist.github.com/gizmaa/7214002
         xc=[coord[:,bfacenodes[1,i]] for i=1:num_sources(bfacenodes)]
         yc=[coord[:,bfacenodes[2,i]] for i=1:num_sources(bfacenodes)]
-        rgb=[frgb(PyPlot,bfaceregions[i],nbfaceregions) for i=1:length(bfaceregions)]
+        rgb=[rgbtuple(cmap[bfaceregions[i]]) for i=1:length(bfaceregions)]
         ax.add_collection(PyPlot.matplotlib.collections.LineCollection(collect(zip(xc,yc)),colors=rgb,linewidth=3))
-    
         for i=1:nbfaceregions
-            ax.plot(coord[:,1], coord[:,1],label="b_$(i)", color=frgb(PyPlot,i,nbfaceregions))
+            ax.plot(coord[:,1], coord[:,1],label="b_$(i)", color=rgbtuple(cmap[i]))
         end
     end
     if ctx[:legend]
@@ -157,6 +166,8 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{3}},grid)
     ax.set_zlim3d(xyzmin[3],xyzmax[3])
     ax.view_init(ctx[:elev],ctx[:azim])
 
+    cmap=region_cmap(nregions)
+    bcmap=bregion_cmap(nbregions)
 
     xyzcut=[ctx[:xplane],ctx[:yplane],ctx[:zplane]]
     
@@ -167,11 +178,11 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{3}},grid)
                                                       )
         regfacets=[reshape(reinterpret(Int32,regfacets0[i]),(3,length(regfacets0[i]))) for i=1:nregions]
         regpoints=[reshape(reinterpret(Float32,regpoints0[i]),(3,length(regpoints0[i]))) for i=1:nregions]
+
         for ireg=1:nregions
-            rgb=frgb(PyPlot,ireg,nregions,pastel=true)
             if size(regfacets[ireg],2)>0
                 ax.plot_trisurf(regpoints[ireg][1,:],regpoints[ireg][2,:],transpose(regfacets[ireg].-1),regpoints[ireg][3,:],
-                                color=rgb,edgecolors=:black,linewidth=0.5)
+                                color=rgbtuple(cmap[ireg]),edgecolors=:black,linewidth=0.5)
             end
         end
     end
@@ -185,10 +196,9 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{3}},grid)
     bregfacets=[reshape(reinterpret(Int32,bregfacets0[i]),(3,length(bregfacets0[i]))) for i=1:nbregions]
     bregpoints=[reshape(reinterpret(Float32,bregpoints0[i]),(3,length(bregpoints0[i]))) for i=1:nbregions]
     for ireg=1:nbregions
-        rgb=frgb(PyPlot,ireg,nbregions)
         if size(bregfacets[ireg],2)>0
             ax.plot_trisurf(bregpoints[ireg][1,:],bregpoints[ireg][2,:],transpose(bregfacets[ireg].-1),bregpoints[ireg][3,:],
-                            color=rgb,edgecolors=:black,linewidth=0.5)
+                            color=rgbtuple(bcmap[ireg]),edgecolors=:black,linewidth=0.5)
         end
     end
     
@@ -255,7 +265,7 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid, func)
         ctx[:grid]=grid
         ctx[:tridata]=tridata(grid)
     end
-    cnt=ax.tricontourf(ctx[:tridata]...,func;levels=colorlevels,cmap=PyPlot.ColorMap(ctx[:colormap]))
+    cnt=ax.tricontourf(ctx[:tridata]...,func;levels=colorlevels,cmap=PyPlot.ColorMap(plaincolormap(ctx)))
     for c in cnt.collections
         c.set_edgecolor("face")
     end
@@ -307,7 +317,8 @@ function plot!(ctx, T::Type{PyPlotType}, ::Type{Val{3}},grid,func)
             colors[i]=(values[faces[1,i]]+values[faces[2,i]]+values[faces[3,i]])/3
         end
         # thx, https://stackoverflow.com/a/24229480/8922290 
-        collec=ctx[:ax].plot_trisurf(ccoord[1,:],ccoord[2,:],transpose(faces.-1),ccoord[3,:],cmap=ctx[:colormap])
+        collec=ctx[:ax].plot_trisurf(ccoord[1,:],ccoord[2,:],transpose(faces.-1),ccoord[3,:],
+                                     cmap=PyPlot.ColorMap(plaincolormap(ctx)))
         collec.set_array(colors)
         collec.autoscale()
     end

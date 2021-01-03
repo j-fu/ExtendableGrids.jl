@@ -78,13 +78,15 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{1}}, grid)
     if !haskey(ctx,:scene)
         ctx[:scene]=Makie.Scene(scale_plot=false)
         ctx[:grid]=Makie.Node(grid)
+        cmap=region_cmap(nregions)
         Makie.linesegments!(ctx[:scene],Makie.lift(g->basemesh(g), ctx[:grid]),color=:black)
         for i=1:nregions
-            Makie.linesegments!(ctx[:scene],Makie.lift(g->regionmesh(g,i), ctx[:grid]) , color=frgb(Makie,i,nregions,pastel=true), strokecolor=:black)
+            Makie.linesegments!(ctx[:scene],Makie.lift(g->regionmesh(g,i), ctx[:grid]) , color=cmap[i], strokecolor=:black,linewidth=4)
         end
         
+        bcmap=bregion_cmap(nbregions)
         for i=1:nbregions
-            Makie.linesegments!(ctx[:scene],Makie.lift(g->bmesh(g,i),ctx[:grid]) , color=frgb(Makie,i,nbregions), linewidth=4)
+            Makie.linesegments!(ctx[:scene],Makie.lift(g->bmesh(g,i),ctx[:grid]), color=bcmap[i], linewidth=4)
         end
         add_scene!(ctx[:ax],ctx[:scene],title=ctx[:title],status=Makie.lift(g->makestatus(g),ctx[:grid]))
         Makie.display(ctx[:figure])
@@ -119,45 +121,23 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid)
     nregions=num_cellregions(grid)
     nbregions=num_bfaceregions(grid)
 
-    function regionmesh(grid,iregion)
-        coord=grid[Coordinates]
-        cn=grid[CellNodes]
-        cr=grid[CellRegions]
-        @views points=[Point2f0(coord[:,i]) for i=1:size(coord,2)]
-        faces=Vector{GLTriangleFace}(undef,0)
-        for i=1:length(cr)
-            if cr[i]==iregion
-                @views push!(faces,cn[:,i])
-            end
-        end
-        Mesh(points,faces)
-    end
-
-    function bfacesegments(grid,ibreg)
-        coord=grid[Coordinates]
-        nbfaces=num_bfaces(grid)
-        bfacenodes=grid[BFaceNodes]
-        bfaceregions=grid[BFaceRegions]
-        points=Vector{Point2f0}(undef,0)
-        for ibface=1:nbfaces
-            if bfaceregions[ibface]==ibreg
-                push!(points,Point2f0(coord[1,bfacenodes[1,ibface]],coord[2,bfacenodes[1,ibface]]))
-                push!(points,Point2f0(coord[1,bfacenodes[2,ibface]],coord[2,bfacenodes[2,ibface]]))
-            end
-        end
-        points
-    end
 
     
     if !haskey(ctx,:scene)
         ctx[:scene]=Makie.Scene(scale_plot=false)
         ctx[:grid]=Makie.Node(grid)
+        cmap=region_cmap(nregions)
+
+        
         for i=1:nregions
-            Makie.poly!(ctx[:scene],Makie.lift(g->regionmesh(g,i), ctx[:grid]) , color=frgb(Makie,i,nregions,pastel=true), strokecolor=:black)
+            Makie.poly!(ctx[:scene],Makie.lift(g->regionmesh(g,i), ctx[:grid]) , color=cmap[i], strokecolor=:black)
         end
+
+        bcmap=bregion_cmap(nbregions)
         for i=1:nbregions
-            Makie.linesegments!(ctx[:scene],Makie.lift(g->bfacesegments(g,i),ctx[:grid]) , color=frgb(Makie,i,nbregions), linewidth=4)
+            Makie.linesegments!(ctx[:scene],Makie.lift(g->bfacesegments(g,i),ctx[:grid]) , color=bcmap[i], linewidth=4)
         end
+
         add_scene!(ctx[:ax],ctx[:scene],title=ctx[:title],status=Makie.lift(g->makestatus(g),ctx[:grid]))
         Makie.display(ctx[:figure])
     else
@@ -265,6 +245,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid)
         ctx[:facemeshes]=Makie.lift(d->[make_mesh(d[1][i],d[2][i]) for i=1:nbregions], ctx[:facedata])
         
         if ctx[:interior]
+            cmap=region_cmap(nregions)
             ctx[:celldata]=Makie.lift(
                 d->extract_visible_cells3D(d.g,
                                            (d.x,d.y,d.z),
@@ -275,7 +256,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid)
             ctx[:cellmeshes]=Makie.lift(d->[make_mesh(d[1][i],d[2][i]) for i=1:nregions], ctx[:celldata])
             for i=1:nregions
                 Makie.mesh!(ctx[:scene],Makie.lift(d->d[i], ctx[:cellmeshes]),
-                            color=(frgb(Makie,i,nregions,pastel=true)),
+                            color=cmap[i],
                             backlight=1f0
                             )
                 if ctx[:edges]
@@ -284,9 +265,10 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid)
             end
         end
 
+        bcmap=bregion_cmap(nbregions)
         for i=1:nbregions
             Makie.mesh!(ctx[:scene],Makie.lift(d->d[i], ctx[:facemeshes]),
-                        color=(frgb(Makie,i,nbregions,pastel=false)),
+                        color=bcmap[i],
                         backlight=1f0
                         )
             if ctx[:edges]
@@ -367,9 +349,10 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid , func)
                                                                   Tf=GLTriangleFace),
                                       ctx[:data])
             ctx[:facemeshes]=Makie.lift(d->[make_mesh(d[1][i],d[2][i]) for i=1:nbregions], ctx[:facedata])
+            bcmap=bregion_cmap(nbregions)
             for i=1:nbregions
                 Makie.mesh!(ctx[:scene],Makie.lift(d->d[i], ctx[:facemeshes]),
-                color=(frgb(Makie,i,nbregions,pastel=true),ctx[:alpha]),
+                color=(bcmap[i],ctx[:alpha]),
                 transparency=true,
                 backlight=1f0
                 )

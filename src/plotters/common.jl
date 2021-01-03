@@ -1,39 +1,26 @@
-# TODO: use distinguishable colors
-# http://juliagraphics.github.io/Colors.jl/stable/colormapsandcolorscales/#Generating-distinguishable-colors-1
 """
 $(SIGNATURES)
 
-Color scale for grid colors.
+Create custumized distinguishable colormap for interior regions
 """
-function frgb(Plotter,i,max;pastel=false)
-    x=Float64(i-1)/Float64(max)
-    if (x<0.5)
-        r=1.0-2.0*x
-        g=2.0*x
-        b=0.0
-    else
-        r=0.0
-        g=2.0-2.0*x
-        b=2.0*x-1.0
-    end
-    if pastel
-        r=0.5+0.5*r
-        g=0.5+0.5*g
-        b=0.5+0.5*b
-    end
-    if ispyplot(Plotter)
-        return (r,g,b)
-    end
-    if ismakie(Plotter)
-        return RGB(r,g,b)
-    end
-    if ismeshcat(Plotter)
-        return (r,g,b)
-    end
-    if isplots(Plotter)
-        return Plotter.RGB(r,g,b)
-    end
-end
+region_cmap(n)=distinguishable_colors(max(5,n),
+                                      [RGB(0.85,0.6,0.6), RGB(0.6,0.85,0.6),RGB(0.6,0.6,0.85)],
+                                      lchoices = range(70, stop=80, length=5),
+                                      cchoices = range(25, stop=65, length=15),
+                                      hchoices = range(20, stop=360, length=15)
+                                      )
+
+"""
+$(SIGNATURES)
+
+Create custumized distinguishable colormap for boundary regions
+"""
+bregion_cmap(n)=distinguishable_colors(max(5,n),
+                                      [RGB(1,0,0), RGB(0,1,0), RGB(0,0,1)],
+                                      lchoices = range(50, stop=75, length=10),
+                                      cchoices = range(75, stop=100, length=10),
+                                      hchoices = range(20, stop=360, length=30)
+                                      )
 
 
 """
@@ -343,4 +330,52 @@ function marching_tetrahedra(grid::ExtendableGrid,func,planes,flevels;tol=0.0,
 
     end
     all_ixcoord, all_ixfaces, all_ixvalues
+end
+
+
+
+##############################################
+# Create meshes from grid data
+function regionmesh(grid,iregion)
+    coord=grid[Coordinates]
+    cn=grid[CellNodes]
+    cr=grid[CellRegions]
+    @views points=[Point2f0(coord[:,i]) for i=1:size(coord,2)]
+    faces=Vector{GLTriangleFace}(undef,0)
+    for i=1:length(cr)
+        if cr[i]==iregion
+            @views push!(faces,cn[:,i])
+        end
+    end
+    Mesh(points,faces)
+end
+
+function bfacesegments(grid,ibreg)
+    coord=grid[Coordinates]
+    nbfaces=num_bfaces(grid)
+    bfacenodes=grid[BFaceNodes]
+    bfaceregions=grid[BFaceRegions]
+    points=Vector{Point2f0}(undef,0)
+    for ibface=1:nbfaces
+        if bfaceregions[ibface]==ibreg
+            push!(points,Point2f0(coord[1,bfacenodes[1,ibface]],coord[2,bfacenodes[1,ibface]]))
+            push!(points,Point2f0(coord[1,bfacenodes[2,ibface]],coord[2,bfacenodes[2,ibface]]))
+        end
+    end
+    points
+end
+
+function bfacesegments3(grid,ibreg)
+    coord=grid[Coordinates]
+    nbfaces=num_bfaces(grid)
+    bfacenodes=grid[BFaceNodes]
+    bfaceregions=grid[BFaceRegions]
+    points=Vector{Point3f0}(undef,0)
+    for ibface=1:nbfaces
+        if bfaceregions[ibface]==ibreg
+            push!(points,Point3f0(coord[1,bfacenodes[1,ibface]],coord[2,bfacenodes[1,ibface]],0.0))
+            push!(points,Point3f0(coord[1,bfacenodes[2,ibface]],coord[2,bfacenodes[2,ibface]],0.0))
+        end
+    end
+    points
 end
