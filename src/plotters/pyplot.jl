@@ -13,6 +13,9 @@ function initialize_plot!(p, ::Type{PyPlotType})
     end
 end
 
+function save(fname,p,::Type{PyPlotType})
+    p.context[:figure].savefig(fname)
+end
 
 
 """

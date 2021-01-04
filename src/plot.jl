@@ -331,6 +331,14 @@ plot(grid::ExtendableGrid,func ;Plotter=nothing,kwargs...)=plot!(PlotContext(Plo
 
 
 
+"""
+$(SIGNATURES)
+
+Save figure to disk
+"""
+
+save(fname,p::PlotContext)=save(fname,p, plottertype(p.Plotter))
+
 #
 # Dummy methods to allow Plotter=nothing
 #

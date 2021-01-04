@@ -16,6 +16,12 @@ function initialize_plot!(p::PlotContext,::Type{MakieType})
 end
 
 
+function save(fname,p,::Type{MakieType})
+    Makie=p.context[:Plotter]
+    Makie.save(fname, p.context[:scene])
+end
+
+
 makestatus(grid::ExtendableGrid)="p: $(num_nodes(grid)) t: $(num_cells(grid)) b: $(num_bfaces(grid))"
 
 
