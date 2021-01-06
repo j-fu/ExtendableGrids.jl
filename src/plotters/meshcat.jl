@@ -14,13 +14,48 @@ end
 
 displayable(p,T::Type{MeshCatType})=p.context[:Plotter].IJuliaCell(p.context[:scene])
 
-function plot!(ctx, T::Type{MeshCatType}, ::Type{Val{3}},grid)
-
+# 2D grid
+function plot!(ctx, ::Type{MeshCatType}, ::Type{Val{2}},grid)
     MeshCat=ctx[:Plotter]
     vis=ctx[:figure]
     
     nregions=num_cellregions(grid)
     nbregions=num_bfaceregions(grid)
+    
+    cmap=region_cmap(nregions)
+    bcmap=bregion_cmap(nbregions)
+    for i=1:nregions
+        
+        mesh=regionmesh(grid,i)
+        MeshCat.setobject!(vis["interior"]["r$(i)"],
+                           mesh,
+                           MeshCat.MeshLambertMaterial(color=RGBA{Float32}(cmap[i],1.0)))
+        MeshCat.setobject!(vis["interior"]["r$(i)_edges"], mesh,MeshCat.MeshPhongMaterial(color=RGBA{Float32}(0.0, 0.0,0.0,1.0),wireframe=true))
+    end
+    
+    for i=1:nbregions
+        points=bfacesegments3(grid,i)
+        mat=MeshCat.MeshLambertMaterial(color=RGBA{Float32}(bcmap[i],1.0))
+        ls=MeshCat.LineSegments(points,mat)
+        MeshCat.setobject!(vis["boundary"]["b$(i)"],  ls)
+    end
+    MeshCat.send(vis.core, MeshCat.SetProperty(MeshCat.Path(["Axes"]), "visible", false))
+    
+    nothing
+end
+
+
+
+
+function plot!(ctx, T::Type{MeshCatType}, ::Type{Val{3}},grid)
+    
+    MeshCat=ctx[:Plotter]
+    vis=ctx[:figure]
+    
+    nregions=num_cellregions(grid)
+    nbregions=num_bfaceregions(grid)
+    cmap=region_cmap(nregions)
+    bcmap=bregion_cmap(nbregions)
     
     xyzmin=zeros(3)
     xyzmax=ones(3)
@@ -33,9 +68,9 @@ function plot!(ctx, T::Type{MeshCatType}, ::Type{Val{3}},grid)
     ctx[:xplane]=max(xyzmin[1],min(xyzmax[1],ctx[:xplane]) )
     ctx[:yplane]=max(xyzmin[2],min(xyzmax[2],ctx[:yplane]) )
     ctx[:zplane]=max(xyzmin[3],min(xyzmax[3],ctx[:zplane]) )
-
+    
     xyzcut=[ctx[:xplane],ctx[:yplane],ctx[:zplane]]
-
+    
     
     if ctx[:interior]
         pts,fcs=extract_visible_cells3D(grid,
@@ -48,12 +83,11 @@ function plot!(ctx, T::Type{MeshCatType}, ::Type{Val{3}},grid)
             mesh=Mesh(pts[i],fcs[i])
             MeshCat.setobject!(vis["r$(i)"],
                                mesh,
-                               MeshCat.MeshLambertMaterial(color=RGBA{Float32}(
-                                   frgb(MeshCat,i,nregions,pastel=true)...,1.0)))
+                               MeshCat.MeshLambertMaterial(color=RGBA{Float32}(cmap[i],1.0)))
             MeshCat.setobject!(vis["r$(i)_edges"], mesh,MeshCat.MeshPhongMaterial(color=RGBA{Float32}(0.0, 0.0,0.0,1.0),wireframe=true))
         end
     end
-
+    
     pts,fcs=extract_visible_bfaces3D(grid,
                                      xyzcut,
                                      primepoints=hcat(xyzmin,xyzmax),
@@ -64,8 +98,7 @@ function plot!(ctx, T::Type{MeshCatType}, ::Type{Val{3}},grid)
         mesh=Mesh(pts[i],fcs[i])
         MeshCat.setobject!(vis["b$(i)"],
                            mesh,
-                           MeshCat.MeshLambertMaterial(color=RGBA{Float32}(
-                               frgb(MeshCat,i,nbregions,pastel=false)...,1.0)))
+                           MeshCat.MeshLambertMaterial(color=RGBA{Float32}(bcmap[i],1.0)))
         MeshCat.setobject!(vis["b$(i)_edges"], mesh,MeshCat.MeshPhongMaterial(color=RGBA{Float32}(0.0, 0.0,0.0,1.0),wireframe=true))
     end
     nothing
@@ -78,7 +111,7 @@ function plot!(ctx, T::Type{MeshCatType}, ::Type{Val{3}},grid,func)
     
     nregions=num_cellregions(grid)
     nbregions=num_bfaceregions(grid)
-    
+    bcmap=bregion_cmap(nbregions)                           
     xyzmin=zeros(3)
     xyzmax=ones(3)
     coord=grid[Coordinates]
@@ -97,9 +130,9 @@ function plot!(ctx, T::Type{MeshCatType}, ::Type{Val{3}},grid,func)
     makeplanes(x,y,z)=[[1,0,0,-x], 
                        [0,1,0,-y], 
                        [0,0,1,-z]]
-
-
-
+    
+    
+    
     
     ccoord,faces,values=marching_tetrahedra(grid,
                                             func,
@@ -112,16 +145,18 @@ function plot!(ctx, T::Type{MeshCatType}, ::Type{Val{3}},grid,func)
                                             Tv=Float32
                                             )
     mesh=Mesh(ccoord,faces)
-
+    
     to01(v)=(v-fminmax[1])/(fminmax[2]-fminmax[1])
     rgb(v)=RGB(v,0.0,1.0-v)
-    mesh_meta=meta(mesh, vertexColors=[rgb(to01(values[i])) for i=1:length(values) ])
+
+    vcmap=colorschemes[ctx[:colormap]]
+    mesh_meta=meta(mesh, vertexColors=[get(vcmap,values[i]) for i=1:length(values) ])
     material = MeshCat.MeshLambertMaterial(vertexColors=true)
     
     MeshCat.setobject!(vis[:marching_tets], mesh_meta, material)
-
+    
     if ctx[:outline]
-
+        
         pts,fcs=extract_visible_bfaces3D(grid,
                                          xyzmax,
                                          primepoints=hcat(xyzmin,xyzmax),
@@ -131,8 +166,7 @@ function plot!(ctx, T::Type{MeshCatType}, ::Type{Val{3}},grid,func)
             mesh=Mesh(pts[i],fcs[i])
             MeshCat.setobject!(vis["b$(i)"],
                                mesh,
-                               MeshCat.MeshLambertMaterial(color=RGBA{Float32}(
-                                   frgb(MeshCat,i,nbregions,pastel=true)...,0.35)))
+                               MeshCat.MeshLambertMaterial(color=color=RGBA{Float32}(bcmap[i],0.35)))
         end
         
     end

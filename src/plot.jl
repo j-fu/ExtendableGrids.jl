@@ -156,7 +156,7 @@ default_plot_kwargs()=Dict{Symbol,Pair{Any,String}}(
     :clear => Pair(true,"Clear plot before new plot."),
     :legend => Pair(true,"Add legend  to plot"),
     :legend_location => Pair("upper right","Location of legend"),
-    :colormap => Pair("viridis","Contour plot colormap"),
+    :colormap => Pair(:viridis,"Contour plot colormap (any from [ColorSchemes.jl](https://juliagraphics.github.io/ColorSchemes.jl/stable/basics/#Pre-defined-schemes))"),
     :label => Pair("f","Label of plot"),
     :layout => Pair((1,1),"Layout of plots"),
     :subplot => Pair((1,1),"Actual subplot"),
@@ -330,6 +330,14 @@ $(_myprint(default_plot_kwargs()))
 plot(grid::ExtendableGrid,func ;Plotter=nothing,kwargs...)=plot!(PlotContext(Plotter=Plotter;kwargs...),grid,func)
 
 
+
+"""
+$(SIGNATURES)
+
+Save figure to disk
+"""
+
+save(fname,p::PlotContext)=save(fname,p, plottertype(p.Plotter))
 
 #
 # Dummy methods to allow Plotter=nothing

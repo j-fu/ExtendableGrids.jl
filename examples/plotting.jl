@@ -83,9 +83,9 @@ function plotting_multiscene(;Plotter=nothing)
     plot!(p[1,1],grid1d())
     plot!(p[2,1],func1d()...)
     plot!(p[1,2],grid2d())
-    plot!(p[2,2],func2d()...)
+    plot!(p[2,2],func2d()...,colormap=:bamako)
     plot!(p[1,3],grid3d(),zplane=0.49)
-    plot!(p[2,3],func3d()...,zplane=0.49,flevel=0.5)
+    plot!(p[2,3],func3d()...,zplane=0.49,flevel=0.5,colormap=:bamako)
     p
 end
 # ![](plotting_multiscene.svg)
