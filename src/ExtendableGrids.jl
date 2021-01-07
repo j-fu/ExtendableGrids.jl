@@ -110,9 +110,9 @@ include("plotters/meshcat.jl")
 # maintenence of this does not make much sense.
 # include("plotters/plots.jl")
 
-export plot,plot!,save
+export gridplot,gridplot!,save
 export isplots,isvtkview,ispyplot,ismakie
-export PlotContext, SubPlotContext
+export GridPlotContext, SubPlotContext
 export plottertype
 export displayable
 export PyPlotType,MakieType,PlotsType,VTKViewType 

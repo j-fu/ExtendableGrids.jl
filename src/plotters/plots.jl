@@ -1,7 +1,7 @@
-function initialize_context!(ctx::PlotContext,::Type{PlotsType})
+function initialize_context!(ctx::GridPlotContext,::Type{PlotsType})
     ctx
 end
-function prepare_plot!(ctx)
+function prepare_gridplot!(ctx)
     Plots=ctx[:Plotter]
     if !haskey(ctx,:plot) || ctx[:clear]
         ctx[:plot]=Plots.plot(size=ctx[:resolution])
@@ -9,9 +9,9 @@ function prepare_plot!(ctx)
     ctx
 end
 
-function plot!(ctx, ::Type{PlotsType}, ::Type{Val{1}},grid)
+function gridplot!(ctx, ::Type{PlotsType}, ::Type{Val{1}},grid)
     Plots=ctx[:Plotter]
-    prepare_plot!(ctx)
+    prepare_gridplot!(ctx)
     
     p=ctx[:plot]
     
@@ -50,9 +50,9 @@ function plot!(ctx, ::Type{PlotsType}, ::Type{Val{1}},grid)
     p
 end
 
-function plot!(ctx, ::Type{PlotsType}, ::Type{Val{2}},grid)
+function gridplot!(ctx, ::Type{PlotsType}, ::Type{Val{2}},grid)
     Plots=ctx[:Plotter]
-    prepare_plot!(ctx)
+    prepare_gridplot!(ctx)
     p=ctx[:plot]
     
     cellregions=grid[CellRegions]
@@ -92,9 +92,9 @@ function plot!(ctx, ::Type{PlotsType}, ::Type{Val{2}},grid)
     p
 end
 
-function plot!(ctx, ::Type{PlotsType}, ::Type{Val{1}},grid, func)
+function gridplot!(ctx, ::Type{PlotsType}, ::Type{Val{1}},grid, func)
     Plots=ctx[:Plotter]
-    prepare_plot!(ctx)
+    prepare_gridplot!(ctx)
     p=ctx[:plot]
     cellnodes=grid[CellNodes]
     coord=grid[Coordinates]
@@ -136,9 +136,9 @@ function rectdata(grid,U)
 end
 
 
-function plot!(ctx, ::Type{PlotsType}, ::Type{Val{2}},grid, func)
+function gridplot!(ctx, ::Type{PlotsType}, ::Type{Val{2}},grid, func)
     Plots=ctx[:Plotter]
-    prepare_plot!(ctx)
+    prepare_gridplot!(ctx)
     p=ctx[:plot]
 
     rdata=rectdata(grid,func)

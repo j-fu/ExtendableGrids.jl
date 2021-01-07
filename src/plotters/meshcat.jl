@@ -1,4 +1,4 @@
-function initialize_plot!(p::PlotContext,::Type{MeshCatType})
+function initialize_gridplot!(p::GridPlotContext,::Type{MeshCatType})
     MeshCat=p.context[:Plotter]
     layout=p.context[:layout]
     @assert(layout==(1,1))
@@ -15,7 +15,7 @@ end
 displayable(p,T::Type{MeshCatType})=p.context[:Plotter].IJuliaCell(p.context[:scene])
 
 # 2D grid
-function plot!(ctx, ::Type{MeshCatType}, ::Type{Val{2}},grid)
+function gridplot!(ctx, ::Type{MeshCatType}, ::Type{Val{2}},grid)
     MeshCat=ctx[:Plotter]
     vis=ctx[:figure]
     
@@ -47,7 +47,7 @@ end
 
 
 
-function plot!(ctx, T::Type{MeshCatType}, ::Type{Val{3}},grid)
+function gridplot!(ctx, T::Type{MeshCatType}, ::Type{Val{3}},grid)
     
     MeshCat=ctx[:Plotter]
     vis=ctx[:figure]
@@ -104,7 +104,7 @@ function plot!(ctx, T::Type{MeshCatType}, ::Type{Val{3}},grid)
     nothing
 end
 
-function plot!(ctx, T::Type{MeshCatType}, ::Type{Val{3}},grid,func)
+function gridplot!(ctx, T::Type{MeshCatType}, ::Type{Val{3}},grid,func)
     
     MeshCat=ctx[:Plotter]
     vis=ctx[:figure]

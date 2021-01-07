@@ -1,4 +1,4 @@
-function initialize_plot!(p::PlotContext,::Type{VTKViewType})
+function initialize_gridplot!(p::GridPlotContext,::Type{VTKViewType})
     pctx=p.context
     VTKView=pctx[:Plotter]
     frame=VTKView.StaticFrame()
@@ -17,7 +17,7 @@ function initialize_plot!(p::PlotContext,::Type{VTKViewType})
     pctx
 end
 
-function plot!(ctx, ::Type{VTKViewType},grid)
+function gridplot!(ctx, ::Type{VTKViewType},grid)
     VTKView=ctx[:Plotter]
     frame=ctx[:frame]
     if !haskey(ctx,:dataset)
@@ -37,11 +37,11 @@ function plot!(ctx, ::Type{VTKViewType},grid)
 end
 
 
-plot!(ctx, T::Type{VTKViewType}, ::Type{Val{2}},grid)=plot!(ctx, T,grid)
-plot!(ctx, T::Type{VTKViewType}, ::Type{Val{3}},grid)=plot!(ctx, T,grid)
+gridplot!(ctx, T::Type{VTKViewType}, ::Type{Val{2}},grid)=gridplot!(ctx, T,grid)
+gridplot!(ctx, T::Type{VTKViewType}, ::Type{Val{3}},grid)=gridplot!(ctx, T,grid)
 
 
-function plot!(ctx, ::Type{VTKViewType},grid,func)
+function gridplot!(ctx, ::Type{VTKViewType},grid,func)
     VTKView=ctx[:Plotter]
     frame=ctx[:frame]
     if !haskey(ctx,:dataset)
@@ -69,11 +69,11 @@ end
 
 
 
-plot!(ctx, T::Type{VTKViewType}, ::Type{Val{2}},grid, func)=plot!(ctx, T,grid,func)
-plot!(ctx, T::Type{VTKViewType}, ::Type{Val{3}},grid, func)=plot!(ctx, T,grid,func)
-plot!(ctx, T::Type{VTKViewType}, ::Type{Val{1}},grid)=nothing
+gridplot!(ctx, T::Type{VTKViewType}, ::Type{Val{2}},grid, func)=gridplot!(ctx, T,grid,func)
+gridplot!(ctx, T::Type{VTKViewType}, ::Type{Val{3}},grid, func)=gridplot!(ctx, T,grid,func)
+gridplot!(ctx, T::Type{VTKViewType}, ::Type{Val{1}},grid)=nothing
 
-function plot!(ctx, T::Type{VTKViewType}, ::Type{Val{1}},grid, func)
+function gridplot!(ctx, T::Type{VTKViewType}, ::Type{Val{1}},grid, func)
     VTKView=ctx[:Plotter]
     frame=ctx[:frame]
     if !haskey(ctx,:plot)

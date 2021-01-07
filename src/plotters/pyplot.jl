@@ -1,4 +1,4 @@
-function initialize_plot!(p, ::Type{PyPlotType})
+function initialize_gridplot!(p, ::Type{PyPlotType})
     PyPlot=p.context[:Plotter]
     PyPlot.PyObject(PyPlot.axes3D)# see https://github.com/JuliaPy/PyPlot.jl/issues/351
     if !haskey(p.context,:figure)
@@ -35,7 +35,7 @@ plaincolormap(ctx)=colorschemes[ctx[:colormap]].colors
 
 
 ### 1D grid
-function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}}, grid)
+function gridplot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}}, grid)
     PyPlot=ctx[:Plotter]
     ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
     if ctx[:clear]
@@ -95,7 +95,7 @@ end
 
 
 ### 2D grid
-function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid)
+function gridplot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid)
     PyPlot=ctx[:Plotter]
     ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
     if ctx[:clear]
@@ -145,7 +145,7 @@ end
 
 
 ### 3D Grid
-function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{3}},grid)
+function gridplot!(ctx, ::Type{PyPlotType}, ::Type{Val{3}},grid)
     # See https://jakevdp.github.io/PythonDataScienceHandbook/04.12-three-dimensional-plotting.html
 
     PyPlot=ctx[:Plotter]
@@ -218,7 +218,7 @@ end
 
 
 ### 1D Function
-function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}},grid, func)
+function gridplot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}},grid, func)
     PyPlot=ctx[:Plotter]
     ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
     if ctx[:clear]
@@ -250,7 +250,7 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}},grid, func)
 end
 
 ### 2D Function
-function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid, func)
+function gridplot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid, func)
     PyPlot=ctx[:Plotter]
     ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
     if ctx[:clear]
@@ -279,7 +279,7 @@ function plot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid, func)
     ctx[:figure]
 end
 
-function plot!(ctx, T::Type{PyPlotType}, ::Type{Val{3}},grid,func)
+function gridplot!(ctx, T::Type{PyPlotType}, ::Type{Val{3}},grid,func)
 
     PyPlot=ctx[:Plotter]
     ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot],projection="3d")
