@@ -111,11 +111,11 @@ $(TYPEDEF)
 
 Context type for plots.
 """
-struct PlotContext
+struct GridPlotContext
     Plotter::Union{Module,Nothing}
     subplots::Array{SubPlotContext,2}
     context::SubPlotContext
-    PlotContext(Plotter::Union{Module,Nothing}, layout::Tuple, default::SubPlotContext)=new(Plotter,
+    GridPlotContext(Plotter::Union{Module,Nothing}, layout::Tuple, default::SubPlotContext)=new(Plotter,
                                                                                             [copy(default) for I in CartesianIndices(layout)],
                                                                                             copy(default))
 end
@@ -124,16 +124,16 @@ end
 """
 $(SIGNATURES)
 
-Return the layout of a PlotContext
+Return the layout of a GridPlotContext
 """
-Base.size(p::PlotContext)=size(p.subplots)
+Base.size(p::GridPlotContext)=size(p.subplots)
 
 """
 $(SIGNATURES)
 
 Return a SubPlotContext
 """
-Base.getindex(p::PlotContext,i,j)=p.subplots[i,j]
+Base.getindex(p::GridPlotContext,i,j)=p.subplots[i,j]
 
 
 """
@@ -141,7 +141,7 @@ $(SIGNATURES)
 
 Return the type of a plotter.
 """
-plottertype(p::PlotContext)=plottertype(p.Plotter)
+plottertype(p::GridPlotContext)=plottertype(p.Plotter)
 
 #
 # Default context information with help info.
@@ -200,21 +200,21 @@ to create heavy default package dependencies.
 
 
 Depending on the `layout` keyword argument, a 2D grid of subplots is created.
-Further `plot!` commands then plot into one of these subplots:
+Further `gridplot!` commands then plot into one of these subplots:
 
 ```julia
-p=PlotContext(Plotter=PyPlot, layout=(2,2)
-plot!(p[1,2], ...)
+p=GridPlotContext(Plotter=PyPlot, layout=(2,2)
+gridplot!(p[1,2], ...)
 ````
 
 A `plot`  command just implicitely creates a plot context:
 ```julia
-plot(..., Plotter=PyPlot) 
+gridplot(..., Plotter=PyPlot) 
 ```
 is equivalent to
 ```julia
-p=PlotContext(Plotter=PyPlot, layout=(1,1)
-plot!(p,...) 
+p=GridPlotContext(Plotter=PyPlot, layout=(1,1)
+gridplot!(p,...) 
 ```
 
 Please not that the return values of all plot commands are specific to the Plotter.
@@ -227,14 +227,14 @@ Keyword arguments:
 
 $(_myprint(default_plot_kwargs()))
 """
-function PlotContext(;Plotter::Union{Module,Nothing}=nothing, kwargs...)
+function GridPlotContext(;Plotter::Union{Module,Nothing}=nothing, kwargs...)
     default_ctx=Dict{Symbol,Any}( k => v[1] for (k,v) in default_plot_kwargs())
     _update_context!(default_ctx,kwargs)
     layout=default_ctx[:layout]
     if isnothing(Plotter)
         default_ctx=nothing
     end
-    p=PlotContext(Plotter,layout,default_ctx)
+    p=GridPlotContext(Plotter,layout,default_ctx)
     if !isnothing(Plotter)
         p.context[:Plotter]=Plotter
         for I in CartesianIndices(layout)
@@ -244,7 +244,7 @@ function PlotContext(;Plotter::Union{Module,Nothing}=nothing, kwargs...)
             ctx[:iplot]=layout[2]*(i[1]-1)+i[2]
             ctx[:Plotter]=Plotter
         end
-        initialize_plot!(p,plottertype(Plotter))
+        initialize_gridplot!(p,plottertype(Plotter))
     end
     p
 end
@@ -266,7 +266,7 @@ Keyword arguments:
 
 $(_myprint(default_plot_kwargs()))
 """
-plot!(ctx::SubPlotContext,grid::ExtendableGrid; kwargs...)=plot!(_update_context!(ctx,kwargs),plottertype(ctx[:Plotter]),Val{dim_space(grid)},grid)
+gridplot!(ctx::SubPlotContext,grid::ExtendableGrid; kwargs...)=gridplot!(_update_context!(ctx,kwargs),plottertype(ctx[:Plotter]),Val{dim_space(grid)},grid)
 
 
 """
@@ -278,7 +278,7 @@ Keyword arguments:
 
 $(_myprint(default_plot_kwargs()))
 """
-plot!(p::PlotContext,grid::ExtendableGrid; kwargs...)=plot!(p[1,1],grid,kwargs...)
+gridplot!(p::GridPlotContext,grid::ExtendableGrid; kwargs...)=gridplot!(p[1,1],grid,kwargs...)
 
 
 """
@@ -290,7 +290,7 @@ Keyword arguments:
 
 $(_myprint(default_plot_kwargs()))
 """
-plot(grid::ExtendableGrid; Plotter=nothing, kwargs...)=plot!(PlotContext(Plotter=Plotter; kwargs...),grid)
+gridplot(grid::ExtendableGrid; Plotter=nothing, kwargs...)=gridplot!(GridPlotContext(Plotter=Plotter; kwargs...),grid)
 
 
 """
@@ -302,8 +302,8 @@ Keyword arguments
 
 $(_myprint(default_plot_kwargs()))
 """
-function plot!(ctx::SubPlotContext,grid::ExtendableGrid,func; kwargs...)
-    plot!(_update_context!(ctx,kwargs),plottertype(ctx[:Plotter]),Val{dim_space(grid)},grid,func)
+function gridplot!(ctx::SubPlotContext,grid::ExtendableGrid,func; kwargs...)
+    gridplot!(_update_context!(ctx,kwargs),plottertype(ctx[:Plotter]),Val{dim_space(grid)},grid,func)
 end
 
 """
@@ -315,7 +315,7 @@ Keyword arguments
 
 $(_myprint(default_plot_kwargs()))
 """
-plot!(p::PlotContext, grid::ExtendableGrid, func; kwargs...)=plot!(p[1,1],grid,func,kwargs...)
+gridplot!(p::GridPlotContext, grid::ExtendableGrid, func; kwargs...)=gridplot!(p[1,1],grid,func,kwargs...)
 
 
 """
@@ -327,7 +327,7 @@ Keyword arguments:
 
 $(_myprint(default_plot_kwargs()))
 """
-plot(grid::ExtendableGrid,func ;Plotter=nothing,kwargs...)=plot!(PlotContext(Plotter=Plotter;kwargs...),grid,func)
+gridplot(grid::ExtendableGrid,func ;Plotter=nothing,kwargs...)=gridplot!(GridPlotContext(Plotter=Plotter;kwargs...),grid,func)
 
 
 
@@ -337,23 +337,23 @@ $(SIGNATURES)
 Save figure to disk
 """
 
-save(fname,p::PlotContext)=save(fname,p, plottertype(p.Plotter))
+save(fname,p::GridPlotContext)=save(fname,p, plottertype(p.Plotter))
 
 #
 # Dummy methods to allow Plotter=nothing
 #
 _update_context!(::Nothing,kwargs)=nothing
 Base.copy(::Nothing)=nothing
-plot!(ctx::Nothing,grid::ExtendableGrid;kwargs...)=nothing
-plot!(ctx::Nothing,grid::ExtendableGrid,func;kwargs...)=nothing
+gridplot!(ctx::Nothing,grid::ExtendableGrid;kwargs...)=nothing
+gridplot!(ctx::Nothing,grid::ExtendableGrid,func;kwargs...)=nothing
 
-plot!(ctx, ::Type{Nothing}, ::Type{Val{1}},grid)=nothing
-plot!(ctx, ::Type{Nothing}, ::Type{Val{2}},grid)=nothing
-plot!(ctx, ::Type{Nothing}, ::Type{Val{3}},grid)=nothing
+gridplot!(ctx, ::Type{Nothing}, ::Type{Val{1}},grid)=nothing
+gridplot!(ctx, ::Type{Nothing}, ::Type{Val{2}},grid)=nothing
+gridplot!(ctx, ::Type{Nothing}, ::Type{Val{3}},grid)=nothing
 
-plot!(ctx, ::Type{Nothing}, ::Type{Val{1}},grid,func)=nothing
-plot!(ctx, ::Type{Nothing}, ::Type{Val{2}},grid,func)=nothing
-plot!(ctx, ::Type{Nothing}, ::Type{Val{3}},grid,func)=nothing
+gridplot!(ctx, ::Type{Nothing}, ::Type{Val{1}},grid,func)=nothing
+gridplot!(ctx, ::Type{Nothing}, ::Type{Val{2}},grid,func)=nothing
+gridplot!(ctx, ::Type{Nothing}, ::Type{Val{3}},grid,func)=nothing
 
 
 displayable(ctx,Any)=nothing

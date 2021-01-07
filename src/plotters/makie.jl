@@ -1,18 +1,77 @@
-include("multiscene.jl")
-using .MultiScene
+include("flippablelayout.jl")
+using .FlippableLayout
 
-function initialize_plot!(p::PlotContext,::Type{MakieType})
+function initialize_gridplot!(p::GridPlotContext,::Type{MakieType})
     Makie=p.context[:Plotter]
-    MultiScene.setmakie!(Makie)
+    if !isdefined(Makie.AbstractPlotting,:Box)
+        error("Outdated version of AbstractPlotting. Please upgrade to at least 0.15.1")
+    end
+    FlippableLayout.setmakie!(Makie)
     layout=p.context[:layout]
-    parent,subscenes=multiscene(layout=layout,resolution=p.context[:resolution])
+    parent,flayout=flayoutscene(resolution=p.context[:resolution])
     p.context[:scene]=parent
     for I in CartesianIndices(layout)
         ctx=p.subplots[I]
-        ctx[:ax]=subscenes[I]
         ctx[:figure]=parent
+        ctx[:flayout]=flayout
     end
     p.context[:scene]
+end
+
+add_scene!(ctx,ax)=ctx[:flayout][ctx[:subplot]...]=ax
+
+
+"""
+     scene_interaction(update_scene,view,switchkeys::Vector{Symbol}=[:nothing])   
+
+Control multiple scene elements via keyboard up/down keys. 
+Each switchkey is assumed to correspond to one of these elements.
+Pressing a switch key transfers control to its associated element.
+
+Control of values of the current associated element is performed
+by triggering change values via up/down (± 1)  resp. page_up/page_down (±10) keys
+
+The update_scene callbac gets passed the change value and the symbol.
+"""
+function scene_interaction(update_scene,scene,Makie,switchkeys::Vector{Symbol}=[:nothing])
+    function _inscene(scene,pos)
+        area=scene.px_area[]
+        pos[1]>area.origin[1] &&
+            pos[1] < area.origin[1]+area.widths[1] &&
+            pos[2]>area.origin[2] &&
+            pos[2] < area.origin[2]+area.widths[2]
+    end
+
+    # Initial active switch key is the first in the vector passed
+    activeswitch=Makie.Node(switchkeys[1])
+    # Handle mouse position within scene-
+    mouseposition=Makie.Node((0,0))
+    Makie.on(m->mouseposition[]=m, scene.events.mouseposition)
+
+    # Set keyboard event callback
+    Makie.on(scene.events.keyboardbuttons) do buttons
+        if _inscene(scene,mouseposition[])
+            # On pressing a switch key, pass control
+            for i=1:length(switchkeys)
+                if switchkeys[i]!=:nothing && Makie.ispressed(scene,getproperty(Makie.Keyboard,switchkeys[i]))
+                    activeswitch[]=switchkeys[i]
+                    update_scene(0,switchkeys[i])
+                    return
+                end
+            end
+            
+            # Handle change values via up/down control
+            if Makie.ispressed(scene, Makie.Keyboard.up)
+                update_scene(1,activeswitch[])
+            elseif Makie.ispressed(scene, Makie.Keyboard.down)
+                update_scene(-1,activeswitch[])
+            elseif Makie.ispressed(scene, Makie.Keyboard.page_up)
+                update_scene(10,activeswitch[])
+            elseif Makie.ispressed(scene, Makie.Keyboard.page_down)
+                update_scene(-10,activeswitch[])
+            end
+        end
+    end
 end
 
 
@@ -27,7 +86,7 @@ makestatus(grid::ExtendableGrid)="p: $(num_nodes(grid)) t: $(num_cells(grid)) b:
 
 
 #1D grid
-function plot!(ctx, ::Type{MakieType}, ::Type{Val{1}}, grid)
+function gridplot!(ctx, ::Type{MakieType}, ::Type{Val{1}}, grid)
     
     Makie=ctx[:Plotter]
     nregions=num_cellregions(grid)
@@ -82,7 +141,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{1}}, grid)
 
     
     if !haskey(ctx,:scene)
-        ctx[:scene]=Makie.Scene(scale_plot=false)
+        ctx[:scene]=Makie.Axis(ctx[:figure],title=ctx[:title])
         ctx[:grid]=Makie.Node(grid)
         cmap=region_cmap(nregions)
         Makie.linesegments!(ctx[:scene],Makie.lift(g->basemesh(g), ctx[:grid]),color=:black)
@@ -94,7 +153,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{1}}, grid)
         for i=1:nbregions
             Makie.linesegments!(ctx[:scene],Makie.lift(g->bmesh(g,i),ctx[:grid]), color=bcmap[i], linewidth=4)
         end
-        add_scene!(ctx[:ax],ctx[:scene],title=ctx[:title],status=Makie.lift(g->makestatus(g),ctx[:grid]))
+        add_scene!(ctx,ctx[:scene])
         Makie.display(ctx[:figure])
     else
         ctx[:grid][]=grid
@@ -104,15 +163,14 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{1}}, grid)
 end
 
 # 1D function
-function plot!(ctx, ::Type{MakieType}, ::Type{Val{1}}, grid,func)
+function gridplot!(ctx, ::Type{MakieType}, ::Type{Val{1}}, grid,func)
     Makie=ctx[:Plotter]
 
     if !haskey(ctx,:scene)
-        ctx[:scene]=Makie.Scene(scale_plot=true)
+        ctx[:scene]=Makie.Axis(ctx[:figure],title=ctx[:title])
         ctx[:data]=Makie.Node((g=grid,f=func))
         Makie.lines!(ctx[:scene],Makie.lift(data->(vec(data.g[Coordinates]),data.f), ctx[:data]))
-
-        add_scene!(ctx[:ax],ctx[:scene],title=ctx[:title])
+        add_scene!(ctx,ctx[:scene])
         Makie.display(ctx[:figure])
     else
         ctx[:data][]=(g=grid,f=func)
@@ -122,7 +180,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{1}}, grid,func)
 end
 
 # 2D grid
-function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid)
+function gridplot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid)
     Makie=ctx[:Plotter]
     nregions=num_cellregions(grid)
     nbregions=num_bfaceregions(grid)
@@ -130,7 +188,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid)
 
     
     if !haskey(ctx,:scene)
-        ctx[:scene]=Makie.Scene(scale_plot=false)
+        ctx[:scene]=Makie.Axis(ctx[:figure],title=ctx[:title])
         ctx[:grid]=Makie.Node(grid)
         cmap=region_cmap(nregions)
 
@@ -143,8 +201,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid)
         for i=1:nbregions
             Makie.linesegments!(ctx[:scene],Makie.lift(g->bfacesegments(g,i),ctx[:grid]) , color=bcmap[i], linewidth=4)
         end
-
-        add_scene!(ctx[:ax],ctx[:scene],title=ctx[:title],status=Makie.lift(g->makestatus(g),ctx[:grid]))
+        add_scene!(ctx,ctx[:scene])
         Makie.display(ctx[:figure])
     else
         ctx[:grid][]=grid
@@ -156,7 +213,7 @@ end
 
 
 # 2D function
-function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid, func)
+function gridplot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid, func)
     Makie=ctx[:Plotter]
     
     function make_mesh(grid::ExtendableGrid,func,elevation)
@@ -173,14 +230,13 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{2}},grid, func)
     end
     
     if !haskey(ctx,:scene)
-        ctx[:scene]=Makie.Scene(scale_plot=false)
+        ctx[:scene]=Makie.Axis(ctx[:figure],title=ctx[:title])
         ctx[:data]=Makie.Node((g=grid,f=func,e=ctx[:elevation]))
         Makie.poly!(ctx[:scene],
                     Makie.lift(data->make_mesh(data.g,data.f,data.e), ctx[:data]),
                     color=Makie.lift(data->data.f,ctx[:data]),
                     colormap=ctx[:colormap])
-
-        add_scene!(ctx[:ax],ctx[:scene],title=ctx[:title])
+        add_scene!(ctx,ctx[:scene])
         Makie.display(ctx[:figure])
     else
         ctx[:data][]=(g=grid,f=func,e=ctx[:elevation])
@@ -216,7 +272,7 @@ Keyboard interactions:
 pgup/pgdown: coarse control control value
           h: print this message
 """
-function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid)
+function gridplot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid)
 
     make_mesh(pts,fcs)=Mesh(meta(pts,normals=normals(pts, fcs)),fcs)
     
@@ -238,7 +294,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid)
     
 
     if !haskey(ctx,:scene)
-        ctx[:scene]=Makie.Scene(scale_plot=false)
+        ctx[:scene]=Makie.LScene(ctx[:figure])
         ctx[:data]=Makie.Node((g=grid,x=ctx[:xplane],y=ctx[:yplane],z=ctx[:zplane]))
         ctx[:facedata]=Makie.lift(
             d->extract_visible_bfaces3D(d.g,
@@ -283,7 +339,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid)
         end
         
         
-        scene_interaction(ctx[:scene],[:z,:y,:x]) do delta,key
+        scene_interaction(ctx[:scene].scene,Makie,[:z,:y,:x]) do delta,key
             if key==:x
                 ctx[:xplane]+=delta*xyzstep[1]
             elseif key==:y
@@ -294,7 +350,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid)
             adjust_planes()
             ctx[:data][]=(g=grid,x=ctx[:xplane],y=ctx[:yplane],z=ctx[:zplane])
         end
-        add_scene!(ctx[:ax],ctx[:scene],title=ctx[:title])
+        add_scene!(ctx,ctx[:scene])
         Makie.display(ctx[:figure])
     else
         ctx[:data][]=(g=grid,x=ctx[:xplane],y=ctx[:yplane],z=ctx[:zplane])
@@ -303,7 +359,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid)
     ctx[:figure]
 end
 
-function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid , func)
+function gridplot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid , func)
     
     make_mesh(pts,fcs)=Mesh(pts,fcs)
     
@@ -342,7 +398,7 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid , func)
                        [0,0,1,-z]]
     
     if !haskey(ctx,:scene)
-        ctx[:scene]=Makie.Scene(scale_plot=false)
+        ctx[:scene]=Makie.LScene(ctx[:figure])
         ctx[:data]=Makie.Node((g=grid,f=func,x=ctx[:xplane],y=ctx[:yplane],z=ctx[:zplane],l=ctx[:flevel]))
                                   
         if ctx[:outline]
@@ -376,10 +432,10 @@ function plot!(ctx, ::Type{MakieType}, ::Type{Val{3}}, grid , func)
                                                                 Tf=GLTriangleFace,
                                                                 Tv=Float32)...),ctx[:data]),
                     backlight=1f0)
-        add_scene!(ctx[:ax],ctx[:scene],title=ctx[:title])
+        add_scene!(ctx,ctx[:scene])
         Makie.display(ctx[:figure])
         
-        scene_interaction(ctx[:scene],[:z,:y,:x,:l]) do delta,key
+        scene_interaction(ctx[:scene].scene,Makie,[:z,:y,:x,:l]) do delta,key
             if key==:x
                 ctx[:xplane]+=delta*xyzstep[1]
             elseif key==:y

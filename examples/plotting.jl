@@ -35,7 +35,7 @@ end
 #
 # For Makie and VTKView, the cutplane values can be controlled interactively.
 function plotting_grid3d(;Plotter=nothing)
-    plot(grid3d(), Plotter=Plotter, zplane=0.49)
+    gridplot(grid3d(), Plotter=Plotter, zplane=0.49)
 end
 # ![](plotting_grid3d.svg)
 
@@ -67,7 +67,7 @@ end
 # For Makie and VTKView, the cutplane values and the flevel can be controlled interactively.
 function plotting_func3d(;Plotter=nothing)
     g,f=func3d()
-    plot(g,f, Plotter=Plotter, zplane=0.49,xplane=0.49,flevel=0.25)
+    gridplot(g,f, Plotter=Plotter, zplane=0.49,xplane=0.49,flevel=0.25)
 end
 # ![](plotting_func3d.svg)
 
@@ -79,13 +79,15 @@ end
 # switch between gallery view (default) and focused view of only
 # one subscene.
 function plotting_multiscene(;Plotter=nothing)
-    p=PlotContext(;Plotter=Plotter,layout=(2,3),clear=true,resolution=(800,500))
-    plot!(p[1,1],grid1d())
-    plot!(p[2,1],func1d()...)
-    plot!(p[1,2],grid2d())
-    plot!(p[2,2],func2d()...,colormap=:bamako)
-    plot!(p[1,3],grid3d(),zplane=0.49)
-    plot!(p[2,3],func3d()...,zplane=0.49,flevel=0.5,colormap=:bamako)
+    p=GridPlotContext(;Plotter=Plotter,layout=(2,3),clear=true,resolution=(800,500))
+
+    # 3D must come first for Makie, see https://github.com/JuliaPlots/Makie.jl/issues/805
+    gridplot!(p[1,3],grid3d(),zplane=0.49,title="3D grid")
+    gridplot!(p[2,3],func3d()...,zplane=0.49,flevel=0.5,colormap=:bamako, title="3D grid function")
+    gridplot!(p[1,1],grid1d(), title="1D grid")
+    gridplot!(p[2,1],func1d()..., title="1D grid function")
+    gridplot!(p[1,2],grid2d(),title="2D grid")
+    gridplot!(p[2,2],func2d()...,colormap=:bamako,title="2D grid function")
     p
 end
 # ![](plotting_multiscene.svg)

@@ -8,7 +8,7 @@ coverage:
 ignore:
   - "src/plotters/makie.jl"
   - "src/plotters/plots.jl"
-  - "src/plotters/multiscene.jl"
+  - "src/plotters/flippablelayout.jl"
   - "src/plotters/vtkview.jl"
   - "src/plotters/meshcat.jl"
 
