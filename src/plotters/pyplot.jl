@@ -10,12 +10,33 @@ function initialize_gridplot!(p, ::Type{PyPlotType})
     end
     if p.context[:clear]
         p.context[:figure].clf()
+        p.context[:revealed]=false
     end
 end
 
 function save(fname,p,::Type{PyPlotType})
     p.context[:figure].savefig(fname)
 end
+
+
+
+function reveal(p::GridPlotContext,::Type{PyPlotType})
+    p.context[:revealed]=true
+    p.Plotter.tight_layout()
+    if !(isdefined(Main,:PlutoRunner))&& isinteractive()
+         p.Plotter.pause(1.0e-10)
+         p.Plotter.draw()
+    end
+    p.context[:figure]
+end
+function reveal(ctx::SubPlotContext,TP::Type{PyPlotType})
+    yield()
+    if ctx[:show]||ctx[:reveal]
+        reveal(ctx[:GridPlotContext],TP)
+    end
+end
+
+
 
 
 """
@@ -28,16 +49,18 @@ function tridata(grid)
     coord[1,:], coord[2,:],transpose(cellnodes.-1)
 end
 
-# Interfaces to Colors/Collorschemes
-rgbtuple(c::RGB)=(red(c),green(c),blue(c))
+# Interfaces to Colors/Colorschemes
 plaincolormap(ctx)=colorschemes[ctx[:colormap]].colors
 
 
 
 ### 1D grid
-function gridplot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}}, grid)
+function gridplot!(ctx, TP::Type{PyPlotType}, ::Type{Val{1}}, grid)
     PyPlot=ctx[:Plotter]
-    ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
+
+    if !haskey(ctx,:ax)
+        ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
+    end
     if ctx[:clear]
         ctx[:ax].cla()
     end
@@ -89,15 +112,17 @@ function gridplot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}}, grid)
     if ctx[:legend]
         ax.legend()
     end
-    ctx[:figure]
+    reveal(ctx,TP)
 end
 
 
 
 ### 2D grid
-function gridplot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid)
+function gridplot!(ctx, TP::Type{PyPlotType}, ::Type{Val{2}},grid)
     PyPlot=ctx[:Plotter]
-    ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
+    if !haskey(ctx,:ax)
+        ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
+    end
     if ctx[:clear]
         ctx[:ax].cla()
     end
@@ -140,17 +165,27 @@ function gridplot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid)
     if ctx[:legend]
         ax.legend(loc=ctx[:legend_location])
     end
-    ctx[:figure]
+    reveal(ctx,TP)
 end
 
 
 ### 3D Grid
-function gridplot!(ctx, ::Type{PyPlotType}, ::Type{Val{3}},grid)
+function gridplot!(ctx, TP::Type{PyPlotType}, ::Type{Val{3}},grid)
     # See https://jakevdp.github.io/PythonDataScienceHandbook/04.12-three-dimensional-plotting.html
 
     PyPlot=ctx[:Plotter]
-    ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot],projection="3d")
+    if !haskey(ctx,:ax)
+        ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot],projection="3d")
+    end
+
+
     ax=ctx[:ax]
+
+    if ctx[:clear]
+        ctx[:ax].cla()
+    end
+
+
     fig=ctx[:figure]
     
     nregions=num_cellregions(grid)
@@ -212,17 +247,31 @@ function gridplot!(ctx, ::Type{PyPlotType}, ::Type{Val{3}},grid)
     if ctx[:legend]
         ax.legend(loc=ctx[:legend_location])
     end
-    ctx[:figure]
+    reveal(ctx,TP)
 end
 
-
-
 ### 1D Function
-function gridplot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}},grid, func)
+function gridplot!(ctx, TP::Type{PyPlotType}, ::Type{Val{1}},grid, func)
     PyPlot=ctx[:Plotter]
-    ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
+    if !haskey(ctx,:ax)
+        ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
+    end
     if ctx[:clear]
         ctx[:ax].cla()
+        xlimits=ctx[:xlimits]
+        ylimits=ctx[:flimits]
+        ax=ctx[:ax]
+        
+        if xlimits[1]<xlimits[2]
+            ax.set_xlim(xlimits...)
+        end
+        if ylimits[1]<ylimits[2]
+            ax.set_ylim(ylimits...)
+        end
+        if ctx[:axisgrid]
+            ax.grid()
+        end
+        ax.set_title(ctx[:title])
     end
     ax=ctx[:ax]
     fig=ctx[:figure]
@@ -234,7 +283,7 @@ function gridplot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}},grid, func)
         i2=cellnodes[2,icell]
         x1=coord[1,i1]
         x2=coord[1,i2]
-        if icell==1 && ctx[:label] !=""
+        if icell==1
             ax.plot([x1,x2],[func[i1],func[i2]],color=ctx[:color],label=ctx[:label])
         else
             ax.plot([x1,x2],[func[i1],func[i2]],color=ctx[:color])
@@ -243,25 +292,35 @@ function gridplot!(ctx, ::Type{PyPlotType}, ::Type{Val{1}},grid, func)
     if ctx[:legend]
         ax.legend(loc=ctx[:legend_location])
     end
-    if ctx[:axisgrid]
-        ax.grid()
-    end
-    ctx[:figure]
+    
+    reveal(ctx,TP)
 end
 
 ### 2D Function
-function gridplot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid, func)
+function gridplot!(ctx, TP::Type{PyPlotType}, ::Type{Val{2}},grid, func)
     PyPlot=ctx[:Plotter]
-    ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
+    if !haskey(ctx,:ax)
+        ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
+    end
     if ctx[:clear]
-        ctx[:ax].cla()
+        if haskey(ctx,:cbar)
+            ctx[:cbar].remove()
+        end
+        ctx[:ax].remove()
+        ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
     end
     
     ax=ctx[:ax]
     fig=ctx[:figure]
     ax.set_aspect(ctx[:aspect])
+    ax.set_title(ctx[:title])
     umin=minimum(func)
     umax=maximum(func)
+    flimits=ctx[:flimits]
+    if flimits[1]<flimits[2]
+        umin=flimits[1]
+        umax=flimits[2]
+    end
     colorlevels=collect(umin:(umax-umin)/(ctx[:colorlevels]-1):umax)
     isolines=collect(umin:(umax-umin)/(ctx[:isolines]-1):umax)
     if !haskey(ctx,:grid) || !seemingly_equal(ctx[:grid],grid)
@@ -272,17 +331,20 @@ function gridplot!(ctx, ::Type{PyPlotType}, ::Type{Val{2}},grid, func)
     for c in cnt.collections
         c.set_edgecolor("face")
     end
-    if ctx[:colorbar]
-        fig.colorbar(cnt,ax=ax,ticks=isolines,boundaries=colorlevels)
-    end
     ax.tricontour(ctx[:tridata]...,func,colors="k",levels=isolines)
-    ctx[:figure]
+    
+    if ctx[:colorbar]
+        ctx[:cbar]=fig.colorbar(cnt,ax=ax,ticks=isolines,boundaries=colorlevels)
+    end
+    reveal(ctx,TP)
 end
 
-function gridplot!(ctx, T::Type{PyPlotType}, ::Type{Val{3}},grid,func)
+function gridplot!(ctx, TP::Type{PyPlotType}, ::Type{Val{3}},grid,func)
 
     PyPlot=ctx[:Plotter]
-    ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot],projection="3d")
+    if !haskey(ctx,:ax)
+        ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot],projection="3d")
+    end
     ax=ctx[:ax]
     fig=ctx[:figure]
     
@@ -298,6 +360,12 @@ function gridplot!(ctx, T::Type{PyPlotType}, ::Type{Val{3}},grid,func)
     end
     xyzcut=[ctx[:xplane],ctx[:yplane],ctx[:zplane]]
     fminmax=extrema(func)
+    flimits=ctx[:flimits]
+    if flimits[1]<flimits[2]
+        fminmax[1]=flimits[1]
+        fminmax[2]=flimits[2]
+    end
+
     
     ctx[:xplane]=max(xyzmin[1],min(xyzmax[1],ctx[:xplane]) )
     ctx[:yplane]=max(xyzmin[2],min(xyzmax[2],ctx[:yplane]) )
@@ -321,7 +389,9 @@ function gridplot!(ctx, T::Type{PyPlotType}, ::Type{Val{3}},grid,func)
         end
         # thx, https://stackoverflow.com/a/24229480/8922290 
         collec=ctx[:ax].plot_trisurf(ccoord[1,:],ccoord[2,:],transpose(faces.-1),ccoord[3,:],
-                                     cmap=PyPlot.ColorMap(plaincolormap(ctx)))
+                                     cmap=PyPlot.ColorMap(plaincolormap(ctx)),
+                                     vmin=fminmax[1],
+                                     vmax=fminmax[2])
         collec.set_array(colors)
         collec.autoscale()
     end
@@ -335,6 +405,6 @@ function gridplot!(ctx, T::Type{PyPlotType}, ::Type{Val{3}},grid,func)
     if ctx[:legend]
         ax.legend(loc=ctx[:legend_location])
     end
-    ctx[:figure]
+    reveal(ctx,TP)
 end
 

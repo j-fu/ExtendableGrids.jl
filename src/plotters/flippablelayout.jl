@@ -32,12 +32,17 @@ end
 
 
 function Base.setindex!(flayout::FLayout,layoutable,i,j)
-    if !isa(layoutable,Makie.MakieLayout.Layoutable)
+    if isnothing(layoutable)
+        flayout.offscreen[1, 1] = flayout.layoutables[(i,j)]
+#        delete!(flayout.visible,flayout.layoutables[(i,j)])#may be this does not work anymore
+        delete!(flayout.layoutables,(i,j)) 
+    elseif !isa(layoutable,Makie.MakieLayout.Layoutable)
         error("can only set layoutables")
+    else
+        flayout.layoutables[(i,j)]=layoutable
+        _showall(flayout)
+        yield()
     end
-    flayout.layoutables[(i,j)]=layoutable
-    _showall(flayout)
-    yield()
 end
 
 

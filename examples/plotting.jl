@@ -88,6 +88,6 @@ function plotting_multiscene(;Plotter=nothing)
     gridplot!(p[2,1],func1d()..., title="1D grid function")
     gridplot!(p[1,2],grid2d(),title="2D grid")
     gridplot!(p[2,2],func2d()...,colormap=:bamako,title="2D grid function")
-    p
+    reveal(p)
 end
 # ![](plotting_multiscene.svg)

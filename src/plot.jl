@@ -151,13 +151,20 @@ default_plot_kwargs()=Dict{Symbol,Pair{Any,String}}(
     :isolines => Pair(11,"Number of isolines in contour plot"),
     :colorbar => Pair(true,"Show colorbar in plots"),
     :aspect => Pair(1.0,"Aspect ratio modification"),
-    :show => Pair(true,"Show plot immediately"),
+    :show => Pair(false,"Show plot immediately"),
+    :reveal => Pair(false,"Show plot immediately (same as :show)"),
+    :fast => Pair(true,"Fast updates (with Makie, restricted functionality)"),
+    :cellwise => Pair(false,"Cellwise 1D plot, can be slow)"),
     :axisgrid => Pair(true,"Show background grid in plots"),
     :clear => Pair(true,"Clear plot before new plot."),
     :legend => Pair(true,"Add legend  to plot"),
     :legend_location => Pair("upper right","Location of legend"),
     :colormap => Pair(:viridis,"Contour plot colormap (any from [ColorSchemes.jl](https://juliagraphics.github.io/ColorSchemes.jl/stable/basics/#Pre-defined-schemes))"),
-    :label => Pair("f","Label of plot"),
+    :label => Pair("","Label of plot"),
+    :xlimits => Pair((1,-1),"x limits"),
+    :ylimits => Pair((1,-1),"y limits"),
+    :zlimits => Pair((1,-1),"z limits"),
+    :flimits => Pair((1,-1),"function limits"),
     :layout => Pair((1,1),"Layout of plots"),
     :subplot => Pair((1,1),"Actual subplot"),
     :color => Pair((0,0,0),"Color of lines on plot"),
@@ -171,7 +178,7 @@ default_plot_kwargs()=Dict{Symbol,Pair{Any,String}}(
     :flevel => Pair(prevfloat(Inf),"isolevel for 3D visualization"),
     :azim => Pair(-60,"Azimuth angle for 3D visualization (in degrees)"),
     :elev => Pair(30,"Elevation angle for 3D visualization (in degrees)"),
-    :title => Pair(" ","Plot title"),
+    :title => Pair("","Plot title"),
     :elevation => Pair(0.0,"Height factor for elevation of 2D plot"),
     :resolution => Pair((500,500),"Plot xy resolution"),
     :framepos => Pair(1,"Subplot position in frame (VTKView)"),
@@ -243,18 +250,12 @@ function GridPlotContext(;Plotter::Union{Module,Nothing}=nothing, kwargs...)
             ctx[:subplot]=i
             ctx[:iplot]=layout[2]*(i[1]-1)+i[2]
             ctx[:Plotter]=Plotter
+            ctx[:GridPlotContext]=p
         end
         initialize_gridplot!(p,plottertype(Plotter))
     end
     p
 end
-
-"""
-$(SIGNATURES)
-
-Return displayable representation of figue  (for notebooks)
-"""
-displayable(p)=displayable(p,plottertype(p))
 
 
 """
@@ -266,8 +267,10 @@ Keyword arguments:
 
 $(_myprint(default_plot_kwargs()))
 """
-gridplot!(ctx::SubPlotContext,grid::ExtendableGrid; kwargs...)=gridplot!(_update_context!(ctx,kwargs),plottertype(ctx[:Plotter]),Val{dim_space(grid)},grid)
-
+function gridplot!(ctx::SubPlotContext,grid::ExtendableGrid; kwargs...)
+    _update_context!(ctx,kwargs)
+    gridplot!(ctx,plottertype(ctx[:Plotter]),Val{dim_space(grid)},grid)
+end
 
 """
 $(SIGNATURES)
@@ -290,7 +293,7 @@ Keyword arguments:
 
 $(_myprint(default_plot_kwargs()))
 """
-gridplot(grid::ExtendableGrid; Plotter=nothing, kwargs...)=gridplot!(GridPlotContext(Plotter=Plotter; kwargs...),grid)
+gridplot(grid::ExtendableGrid; Plotter=nothing, kwargs...)=gridplot!(GridPlotContext(Plotter=Plotter; show=true, kwargs...),grid)
 
 
 """
@@ -303,19 +306,10 @@ Keyword arguments
 $(_myprint(default_plot_kwargs()))
 """
 function gridplot!(ctx::SubPlotContext,grid::ExtendableGrid,func; kwargs...)
-    gridplot!(_update_context!(ctx,kwargs),plottertype(ctx[:Plotter]),Val{dim_space(grid)},grid,func)
+    _update_context!(ctx,Dict(:clear=>true,:show=>false,:reveal=>false))
+    _update_context!(ctx,kwargs)
+    gridplot!(ctx,plottertype(ctx[:Plotter]),Val{dim_space(grid)},grid,func)
 end
-
-"""
-$(SIGNATURES)
-
-Plot vector on grid as P1 FEM function.
-
-Keyword arguments
-
-$(_myprint(default_plot_kwargs()))
-"""
-gridplot!(p::GridPlotContext, grid::ExtendableGrid, func; kwargs...)=gridplot!(p[1,1],grid,func,kwargs...)
 
 
 """
@@ -327,17 +321,31 @@ Keyword arguments:
 
 $(_myprint(default_plot_kwargs()))
 """
-gridplot(grid::ExtendableGrid,func ;Plotter=nothing,kwargs...)=gridplot!(GridPlotContext(Plotter=Plotter;kwargs...),grid,func)
+gridplot(grid::ExtendableGrid,func ;Plotter=nothing,kwargs...)=gridplot!(GridPlotContext(Plotter=Plotter;kwargs...),grid,func,show=true)
+
+gridplot!(p::GridPlotContext,grid::ExtendableGrid, func; kwargs...)=gridplot!(p[1,1],grid,func; kwargs...)
+gridplot!(p::GridPlotContext,grid::ExtendableGrid, kwargs...)=gridplot!(p[1,1],grid; kwargs...)
 
 
+gridplot(X::Vector,func ;kwargs...)=gridplot(simplexgrid(X),func;kwargs...)
+gridplot!(ctx::SubPlotContext,X::Vector,func; kwargs...)=gridplot!(ctx,simplexgrid(X),func;kwargs...)
+gridplot!(ctx::GridPlotContext,X::Vector,func; kwargs...)=gridplot!(ctx,simplexgrid(X),func;kwargs...)
+
+"""
+$(SIGNATURES)
+
+Finish and show plot. Same as setting `:reveal=true` or `:show=true` in last gridplot statment
+for a context.
+"""
+reveal(p::GridPlotContext)=reveal(p, plottertype(p.Plotter))
 
 """
 $(SIGNATURES)
 
 Save figure to disk
 """
-
 save(fname,p::GridPlotContext)=save(fname,p, plottertype(p.Plotter))
+
 
 #
 # Dummy methods to allow Plotter=nothing
@@ -357,5 +365,6 @@ gridplot!(ctx, ::Type{Nothing}, ::Type{Val{3}},grid,func)=nothing
 
 
 displayable(ctx,Any)=nothing
+reveal(p,::Type{Nothing})=nothing
 
 
