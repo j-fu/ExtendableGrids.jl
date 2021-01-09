@@ -2,7 +2,7 @@
 function makeplot(func,picdir)
     PyPlot.clf()
     f=getfield(Main,Symbol(func))
-    gridplot(f(), Plotter=PyPlot)
+    visualize(f(), Plotter=PyPlot)
     fname=joinpath(picdir,func*".svg")
     PyPlot.savefig(fname)
     isfile(fname)
