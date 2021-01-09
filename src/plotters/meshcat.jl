@@ -12,10 +12,28 @@ function initialize_gridplot!(p::GridPlotContext,::Type{MeshCatType})
     end
 end
 
-displayable(p,T::Type{MeshCatType})=p.context[:Plotter].IJuliaCell(p.context[:scene])
+
+function reveal(p::GridPlotContext,::Type{MeshCatType})
+    MeshCat=p.context[:Plotter]
+    MeshCat.IJuliaCell(p.context[:scene])
+end
+
+function reveal(ctx::SubPlotContext,TP::Type{MeshCatType})
+    if ctx[:show]||ctx[:reveal]
+        reveal(ctx[:GridPlotContext],TP)
+    end
+end
+
+
+gridplot!(ctx, TP::Type{MeshCatType}, ::Type{Val{1}}, grid)=nothing
+gridplot!(ctx, TP::Type{MeshCatType}, ::Type{Val{1}}, grid,func)=nothing
+
+
+
+
 
 # 2D grid
-function gridplot!(ctx, ::Type{MeshCatType}, ::Type{Val{2}},grid)
+function gridplot!(ctx, TP::Type{MeshCatType}, ::Type{Val{2}},grid)
     MeshCat=ctx[:Plotter]
     vis=ctx[:figure]
     
@@ -40,14 +58,15 @@ function gridplot!(ctx, ::Type{MeshCatType}, ::Type{Val{2}},grid)
         MeshCat.setobject!(vis["boundary"]["b$(i)"],  ls)
     end
     MeshCat.send(vis.core, MeshCat.SetProperty(MeshCat.Path(["Axes"]), "visible", false))
-    
-    nothing
+
+    reveal(ctx,TP)
+
 end
 
 
 
 
-function gridplot!(ctx, T::Type{MeshCatType}, ::Type{Val{3}},grid)
+function gridplot!(ctx, TP::Type{MeshCatType}, ::Type{Val{3}},grid)
     
     MeshCat=ctx[:Plotter]
     vis=ctx[:figure]
@@ -101,10 +120,11 @@ function gridplot!(ctx, T::Type{MeshCatType}, ::Type{Val{3}},grid)
                            MeshCat.MeshLambertMaterial(color=RGBA{Float32}(bcmap[i],1.0)))
         MeshCat.setobject!(vis["b$(i)_edges"], mesh,MeshCat.MeshPhongMaterial(color=RGBA{Float32}(0.0, 0.0,0.0,1.0),wireframe=true))
     end
-    nothing
+
+    reveal(ctx,TP)
 end
 
-function gridplot!(ctx, T::Type{MeshCatType}, ::Type{Val{3}},grid,func)
+function gridplot!(ctx, TP::Type{MeshCatType}, ::Type{Val{3}},grid,func)
     
     MeshCat=ctx[:Plotter]
     vis=ctx[:figure]
@@ -170,6 +190,6 @@ function gridplot!(ctx, T::Type{MeshCatType}, ::Type{Val{3}},grid,func)
         end
         
     end
-    nothing
+    reveal(ctx,TP)
 end
 

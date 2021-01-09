@@ -23,6 +23,17 @@ bregion_cmap(n)=distinguishable_colors(max(5,n),
                                       )
 
 
+function Colors.RGB(c::String)
+    c64=Colors.color_names[c]
+    RGB(c64[1]/255,c64[2]/255, c64[3]/255)
+end
+
+Colors.RGB(c::Symbol)=Colors.RGB(String(c))
+Colors.RGB(c::Tuple)=Colors.RGB(c...)
+rgbtuple(c)=rgbtuple(Colors.RGB(c))
+rgbtuple(c::RGB)=(red(c),green(c),blue(c))
+
+
 """
 $(SIGNATURES)
 

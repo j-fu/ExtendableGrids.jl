@@ -105,12 +105,10 @@ include("plotters/pyplot.jl")
 include("plotters/makie.jl")
 include("plotters/vtkview.jl")
 include("plotters/meshcat.jl")
+include("plotters/plots.jl")
 
-# Plots is unable to handle triangulations, so
-# maintenence of this does not make much sense.
-# include("plotters/plots.jl")
 
-export gridplot,gridplot!,save
+export gridplot,gridplot!,save,reveal
 export isplots,isvtkview,ispyplot,ismakie
 export GridPlotContext, SubPlotContext
 export plottertype
