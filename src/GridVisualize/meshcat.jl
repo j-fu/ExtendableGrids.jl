@@ -1,4 +1,4 @@
-function initialize_gridplot!(p::GridPlotContext,::Type{MeshCatType})
+function initialize!(p::GridVisualizer,::Type{MeshCatType})
     MeshCat=p.context[:Plotter]
     layout=p.context[:layout]
     @assert(layout==(1,1))
@@ -13,27 +13,27 @@ function initialize_gridplot!(p::GridPlotContext,::Type{MeshCatType})
 end
 
 
-function reveal(p::GridPlotContext,::Type{MeshCatType})
+function reveal(p::GridVisualizer,::Type{MeshCatType})
     MeshCat=p.context[:Plotter]
     MeshCat.IJuliaCell(p.context[:scene])
 end
 
-function reveal(ctx::SubPlotContext,TP::Type{MeshCatType})
+function reveal(ctx::SubVis,TP::Type{MeshCatType})
     if ctx[:show]||ctx[:reveal]
-        reveal(ctx[:GridPlotContext],TP)
+        reveal(ctx[:GridVisualizer],TP)
     end
 end
 
 
-gridplot!(ctx, TP::Type{MeshCatType}, ::Type{Val{1}}, grid)=nothing
-gridplot!(ctx, TP::Type{MeshCatType}, ::Type{Val{1}}, grid,func)=nothing
+visualize!(ctx, TP::Type{MeshCatType}, ::Type{Val{1}}, grid)=nothing
+visualize!(ctx, TP::Type{MeshCatType}, ::Type{Val{1}}, grid,func)=nothing
 
 
 
 
 
 # 2D grid
-function gridplot!(ctx, TP::Type{MeshCatType}, ::Type{Val{2}},grid)
+function visualize!(ctx, TP::Type{MeshCatType}, ::Type{Val{2}},grid)
     MeshCat=ctx[:Plotter]
     vis=ctx[:figure]
     
@@ -66,7 +66,7 @@ end
 
 
 
-function gridplot!(ctx, TP::Type{MeshCatType}, ::Type{Val{3}},grid)
+function visualize!(ctx, TP::Type{MeshCatType}, ::Type{Val{3}},grid)
     
     MeshCat=ctx[:Plotter]
     vis=ctx[:figure]
@@ -124,7 +124,7 @@ function gridplot!(ctx, TP::Type{MeshCatType}, ::Type{Val{3}},grid)
     reveal(ctx,TP)
 end
 
-function gridplot!(ctx, TP::Type{MeshCatType}, ::Type{Val{3}},grid,func)
+function visualize!(ctx, TP::Type{MeshCatType}, ::Type{Val{3}},grid,func)
     
     MeshCat=ctx[:Plotter]
     vis=ctx[:figure]

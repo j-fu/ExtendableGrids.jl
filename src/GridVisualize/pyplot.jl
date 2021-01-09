@@ -1,4 +1,4 @@
-function initialize_gridplot!(p, ::Type{PyPlotType})
+function initialize!(p, ::Type{PyPlotType})
     PyPlot=p.context[:Plotter]
     PyPlot.PyObject(PyPlot.axes3D)# see https://github.com/JuliaPy/PyPlot.jl/issues/351
     if !haskey(p.context,:figure)
@@ -20,7 +20,7 @@ end
 
 
 
-function reveal(p::GridPlotContext,::Type{PyPlotType})
+function reveal(p::GridVisualizer,::Type{PyPlotType})
     p.context[:revealed]=true
     p.Plotter.tight_layout()
     if !(isdefined(Main,:PlutoRunner))&& isinteractive()
@@ -29,10 +29,10 @@ function reveal(p::GridPlotContext,::Type{PyPlotType})
     end
     p.context[:figure]
 end
-function reveal(ctx::SubPlotContext,TP::Type{PyPlotType})
+function reveal(ctx::SubVis,TP::Type{PyPlotType})
     yield()
     if ctx[:show]||ctx[:reveal]
-        reveal(ctx[:GridPlotContext],TP)
+        reveal(ctx[:GridVisualizer],TP)
     end
 end
 
@@ -55,7 +55,7 @@ plaincolormap(ctx)=colorschemes[ctx[:colormap]].colors
 
 
 ### 1D grid
-function gridplot!(ctx, TP::Type{PyPlotType}, ::Type{Val{1}}, grid)
+function visualize!(ctx, TP::Type{PyPlotType}, ::Type{Val{1}}, grid)
     PyPlot=ctx[:Plotter]
 
     if !haskey(ctx,:ax)
@@ -118,7 +118,7 @@ end
 
 
 ### 2D grid
-function gridplot!(ctx, TP::Type{PyPlotType}, ::Type{Val{2}},grid)
+function visualize!(ctx, TP::Type{PyPlotType}, ::Type{Val{2}},grid)
     PyPlot=ctx[:Plotter]
     if !haskey(ctx,:ax)
         ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
@@ -170,7 +170,7 @@ end
 
 
 ### 3D Grid
-function gridplot!(ctx, TP::Type{PyPlotType}, ::Type{Val{3}},grid)
+function visualize!(ctx, TP::Type{PyPlotType}, ::Type{Val{3}},grid)
     # See https://jakevdp.github.io/PythonDataScienceHandbook/04.12-three-dimensional-plotting.html
 
     PyPlot=ctx[:Plotter]
@@ -251,7 +251,7 @@ function gridplot!(ctx, TP::Type{PyPlotType}, ::Type{Val{3}},grid)
 end
 
 ### 1D Function
-function gridplot!(ctx, TP::Type{PyPlotType}, ::Type{Val{1}},grid, func)
+function visualize!(ctx, TP::Type{PyPlotType}, ::Type{Val{1}},grid, func)
     PyPlot=ctx[:Plotter]
     if !haskey(ctx,:ax)
         ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
@@ -297,7 +297,7 @@ function gridplot!(ctx, TP::Type{PyPlotType}, ::Type{Val{1}},grid, func)
 end
 
 ### 2D Function
-function gridplot!(ctx, TP::Type{PyPlotType}, ::Type{Val{2}},grid, func)
+function visualize!(ctx, TP::Type{PyPlotType}, ::Type{Val{2}},grid, func)
     PyPlot=ctx[:Plotter]
     if !haskey(ctx,:ax)
         ctx[:ax]=ctx[:figure].add_subplot(ctx[:layout]...,ctx[:iplot])
@@ -339,7 +339,7 @@ function gridplot!(ctx, TP::Type{PyPlotType}, ::Type{Val{2}},grid, func)
     reveal(ctx,TP)
 end
 
-function gridplot!(ctx, TP::Type{PyPlotType}, ::Type{Val{3}},grid,func)
+function visualize!(ctx, TP::Type{PyPlotType}, ::Type{Val{3}},grid,func)
 
     PyPlot=ctx[:Plotter]
     if !haskey(ctx,:ax)

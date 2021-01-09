@@ -102,15 +102,15 @@ end
 """
 $(TYPEDEF)
 
-A SubPlotContext is just a dictionary which contains plotting information,
+A SubVis is just a dictionary which contains plotting information,
 including type of the plotter and its position in the plot.
 """
-const SubPlotContext=Union{Dict{Symbol,Any},Nothing}
+const SubVis=Union{Dict{Symbol,Any},Nothing}
 
 #
 # Update subplot context from dict
 #
-function _update_context!(ctx::SubPlotContext,kwargs)
+function _update_context!(ctx::SubVis,kwargs)
     for (k,v) in kwargs
         ctx[Symbol(k)]=v
     end
@@ -124,11 +124,11 @@ $(TYPEDEF)
 
 Context type for plots.
 """
-struct GridPlotContext
+struct GridVisualizer
     Plotter::Union{Module,Nothing}
-    subplots::Array{SubPlotContext,2}
-    context::SubPlotContext
-    GridPlotContext(Plotter::Union{Module,Nothing}, layout::Tuple, default::SubPlotContext)=new(Plotter,
+    subplots::Array{SubVis,2}
+    context::SubVis
+    GridVisualizer(Plotter::Union{Module,Nothing}, layout::Tuple, default::SubVis)=new(Plotter,
                                                                                             [copy(default) for I in CartesianIndices(layout)],
                                                                                             copy(default))
 end
@@ -137,16 +137,16 @@ end
 """
 $(SIGNATURES)
 
-Return the layout of a GridPlotContext
+Return the layout of a GridVisualizer
 """
-Base.size(p::GridPlotContext)=size(p.subplots)
+Base.size(p::GridVisualizer)=size(p.subplots)
 
 """
 $(SIGNATURES)
 
-Return a SubPlotContext
+Return a SubVis
 """
-Base.getindex(p::GridPlotContext,i,j)=p.subplots[i,j]
+Base.getindex(p::GridVisualizer,i,j)=p.subplots[i,j]
 
 
 """
@@ -154,7 +154,7 @@ $(SIGNATURES)
 
 Return the type of a plotter.
 """
-plottertype(p::GridPlotContext)=plottertype(p.Plotter)
+plottertype(p::GridVisualizer)=plottertype(p.Plotter)
 
 #
 # Default context information with help info.
@@ -220,21 +220,21 @@ to create heavy default package dependencies.
 
 
 Depending on the `layout` keyword argument, a 2D grid of subplots is created.
-Further `gridplot!` commands then plot into one of these subplots:
+Further `visualize!` commands then plot into one of these subplots:
 
 ```julia
-p=GridPlotContext(Plotter=PyPlot, layout=(2,2)
-gridplot!(p[1,2], ...)
+p=GridVisualizer(Plotter=PyPlot, layout=(2,2)
+visualize!(p[1,2], ...)
 ````
 
 A `plot`  command just implicitely creates a plot context:
 ```julia
-gridplot(..., Plotter=PyPlot) 
+visualize(..., Plotter=PyPlot) 
 ```
 is equivalent to
 ```julia
-p=GridPlotContext(Plotter=PyPlot, layout=(1,1)
-gridplot!(p,...) 
+p=GridVisualizer(Plotter=PyPlot, layout=(1,1)
+visualize!(p,...) 
 ```
 
 Please not that the return values of all plot commands are specific to the Plotter.
@@ -247,14 +247,14 @@ Keyword arguments:
 
 $(_myprint(default_plot_kwargs()))
 """
-function GridPlotContext(;Plotter::Union{Module,Nothing}=nothing, kwargs...)
+function GridVisualizer(;Plotter::Union{Module,Nothing}=nothing, kwargs...)
     default_ctx=Dict{Symbol,Any}( k => v[1] for (k,v) in default_plot_kwargs())
     _update_context!(default_ctx,kwargs)
     layout=default_ctx[:layout]
     if isnothing(Plotter)
         default_ctx=nothing
     end
-    p=GridPlotContext(Plotter,layout,default_ctx)
+    p=GridVisualizer(Plotter,layout,default_ctx)
     if !isnothing(Plotter)
         p.context[:Plotter]=Plotter
         for I in CartesianIndices(layout)
@@ -263,9 +263,9 @@ function GridPlotContext(;Plotter::Union{Module,Nothing}=nothing, kwargs...)
             ctx[:subplot]=i
             ctx[:iplot]=layout[2]*(i[1]-1)+i[2]
             ctx[:Plotter]=Plotter
-            ctx[:GridPlotContext]=p
+            ctx[:GridVisualizer]=p
         end
-        initialize_gridplot!(p,plottertype(Plotter))
+        initialize!(p,plottertype(Plotter))
     end
     p
 end
@@ -280,9 +280,9 @@ Keyword arguments:
 
 $(_myprint(default_plot_kwargs()))
 """
-function gridplot!(ctx::SubPlotContext,grid::ExtendableGrid; kwargs...)
+function visualize!(ctx::SubVis,grid::ExtendableGrid; kwargs...)
     _update_context!(ctx,kwargs)
-    gridplot!(ctx,plottertype(ctx[:Plotter]),Val{dim_space(grid)},grid)
+    visualize!(ctx,plottertype(ctx[:Plotter]),Val{dim_space(grid)},grid)
 end
 
 """
@@ -294,7 +294,7 @@ Keyword arguments:
 
 $(_myprint(default_plot_kwargs()))
 """
-gridplot!(p::GridPlotContext,grid::ExtendableGrid; kwargs...)=gridplot!(p[1,1],grid,kwargs...)
+visualize!(p::GridVisualizer,grid::ExtendableGrid; kwargs...)=visualize!(p[1,1],grid,kwargs...)
 
 
 """
@@ -306,7 +306,7 @@ Keyword arguments:
 
 $(_myprint(default_plot_kwargs()))
 """
-gridplot(grid::ExtendableGrid; Plotter=nothing, kwargs...)=gridplot!(GridPlotContext(Plotter=Plotter; show=true, kwargs...),grid)
+visualize(grid::ExtendableGrid; Plotter=nothing, kwargs...)=visualize!(GridVisualizer(Plotter=Plotter; show=true, kwargs...),grid)
 
 
 """
@@ -318,10 +318,10 @@ Keyword arguments
 
 $(_myprint(default_plot_kwargs()))
 """
-function gridplot!(ctx::SubPlotContext,grid::ExtendableGrid,func; kwargs...)
+function visualize!(ctx::SubVis,grid::ExtendableGrid,func; kwargs...)
     _update_context!(ctx,Dict(:clear=>true,:show=>false,:reveal=>false))
     _update_context!(ctx,kwargs)
-    gridplot!(ctx,plottertype(ctx[:Plotter]),Val{dim_space(grid)},grid,func)
+    visualize!(ctx,plottertype(ctx[:Plotter]),Val{dim_space(grid)},grid,func)
 end
 
 
@@ -334,30 +334,30 @@ Keyword arguments:
 
 $(_myprint(default_plot_kwargs()))
 """
-gridplot(grid::ExtendableGrid,func ;Plotter=nothing,kwargs...)=gridplot!(GridPlotContext(Plotter=Plotter;kwargs...),grid,func,show=true)
+visualize(grid::ExtendableGrid,func ;Plotter=nothing,kwargs...)=visualize!(GridVisualizer(Plotter=Plotter;kwargs...),grid,func,show=true)
 
-gridplot!(p::GridPlotContext,grid::ExtendableGrid, func; kwargs...)=gridplot!(p[1,1],grid,func; kwargs...)
-gridplot!(p::GridPlotContext,grid::ExtendableGrid, kwargs...)=gridplot!(p[1,1],grid; kwargs...)
+visualize!(p::GridVisualizer,grid::ExtendableGrid, func; kwargs...)=visualize!(p[1,1],grid,func; kwargs...)
+visualize!(p::GridVisualizer,grid::ExtendableGrid, kwargs...)=visualize!(p[1,1],grid; kwargs...)
 
 
-gridplot(X::Vector,func ;kwargs...)=gridplot(simplexgrid(X),func;kwargs...)
-gridplot!(ctx::SubPlotContext,X::Vector,func; kwargs...)=gridplot!(ctx,simplexgrid(X),func;kwargs...)
-gridplot!(ctx::GridPlotContext,X::Vector,func; kwargs...)=gridplot!(ctx,simplexgrid(X),func;kwargs...)
+visualize(X::Vector,func ;kwargs...)=visualize(simplexgrid(X),func;kwargs...)
+visualize!(ctx::SubVis,X::Vector,func; kwargs...)=visualize!(ctx,simplexgrid(X),func;kwargs...)
+visualize!(ctx::GridVisualizer,X::Vector,func; kwargs...)=visualize!(ctx,simplexgrid(X),func;kwargs...)
 
 """
 $(SIGNATURES)
 
-Finish and show plot. Same as setting `:reveal=true` or `:show=true` in last gridplot statment
+Finish and show plot. Same as setting `:reveal=true` or `:show=true` in last visualize statment
 for a context.
 """
-reveal(p::GridPlotContext)=reveal(p, plottertype(p.Plotter))
+reveal(p::GridVisualizer)=reveal(p, plottertype(p.Plotter))
 
 """
 $(SIGNATURES)
 
 Save figure to disk
 """
-save(fname,p::GridPlotContext)=save(fname,p, plottertype(p.Plotter))
+save(fname,p::GridVisualizer)=save(fname,p, plottertype(p.Plotter))
 
 
 #
@@ -365,16 +365,16 @@ save(fname,p::GridPlotContext)=save(fname,p, plottertype(p.Plotter))
 #
 _update_context!(::Nothing,kwargs)=nothing
 Base.copy(::Nothing)=nothing
-gridplot!(ctx::Nothing,grid::ExtendableGrid;kwargs...)=nothing
-gridplot!(ctx::Nothing,grid::ExtendableGrid,func;kwargs...)=nothing
+visualize!(ctx::Nothing,grid::ExtendableGrid;kwargs...)=nothing
+visualize!(ctx::Nothing,grid::ExtendableGrid,func;kwargs...)=nothing
 
-gridplot!(ctx, ::Type{Nothing}, ::Type{Val{1}},grid)=nothing
-gridplot!(ctx, ::Type{Nothing}, ::Type{Val{2}},grid)=nothing
-gridplot!(ctx, ::Type{Nothing}, ::Type{Val{3}},grid)=nothing
+visualize!(ctx, ::Type{Nothing}, ::Type{Val{1}},grid)=nothing
+visualize!(ctx, ::Type{Nothing}, ::Type{Val{2}},grid)=nothing
+visualize!(ctx, ::Type{Nothing}, ::Type{Val{3}},grid)=nothing
 
-gridplot!(ctx, ::Type{Nothing}, ::Type{Val{1}},grid,func)=nothing
-gridplot!(ctx, ::Type{Nothing}, ::Type{Val{2}},grid,func)=nothing
-gridplot!(ctx, ::Type{Nothing}, ::Type{Val{3}},grid,func)=nothing
+visualize!(ctx, ::Type{Nothing}, ::Type{Val{1}},grid,func)=nothing
+visualize!(ctx, ::Type{Nothing}, ::Type{Val{2}},grid,func)=nothing
+visualize!(ctx, ::Type{Nothing}, ::Type{Val{3}},grid,func)=nothing
 
 
 displayable(ctx,Any)=nothing
@@ -392,11 +392,10 @@ include("meshcat.jl")
 include("plots.jl")
 
 
-export gridplot,gridplot!,save,reveal
+export visualize,visualize!,save,reveal
 export isplots,isvtkview,ispyplot,ismakie
-export GridPlotContext, SubPlotContext
+export GridVisualizer, SubVis
 export plottertype
-export displayable
 export PyPlotType,MakieType,PlotsType,VTKViewType 
 
 end

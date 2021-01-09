@@ -1,4 +1,4 @@
-function initialize_gridplot!(p::GridPlotContext,::Type{VTKViewType})
+function initialize!(p::GridVisualizer,::Type{VTKViewType})
     pctx=p.context
     VTKView=pctx[:Plotter]
     frame=VTKView.StaticFrame()
@@ -29,23 +29,23 @@ end
 
 
 
-function reveal(p::GridPlotContext,::Type{VTKViewType})
+function reveal(p::GridVisualizer,::Type{VTKViewType})
     VTKView=p.Plotter
     VTKView.display(p.context[:frame])
 end
 
 
 
-function reveal(ctx::SubPlotContext,TP::Type{VTKViewType})
+function reveal(ctx::SubVis,TP::Type{VTKViewType})
     if ctx[:show]||ctx[:reveal]
-        reveal(ctx[:GridPlotContext],TP)
+        reveal(ctx[:GridVisualizer],TP)
     end
 end
 
 
 
 
-function gridplot!(ctx, TP::Type{VTKViewType},grid)
+function visualize!(ctx, TP::Type{VTKViewType},grid)
     VTKView=ctx[:Plotter]
     frame=ctx[:frame]
     if !haskey(ctx,:dataset)
@@ -65,11 +65,11 @@ function gridplot!(ctx, TP::Type{VTKViewType},grid)
 end
 
 
-gridplot!(ctx, T::Type{VTKViewType}, ::Type{Val{2}},grid)=gridplot!(ctx, T,grid)
-gridplot!(ctx, T::Type{VTKViewType}, ::Type{Val{3}},grid)=gridplot!(ctx, T,grid)
+visualize!(ctx, T::Type{VTKViewType}, ::Type{Val{2}},grid)=visualize!(ctx, T,grid)
+visualize!(ctx, T::Type{VTKViewType}, ::Type{Val{3}},grid)=visualize!(ctx, T,grid)
 
 
-function gridplot!(ctx, TP::Type{VTKViewType},grid,func)
+function visualize!(ctx, TP::Type{VTKViewType},grid,func)
     VTKView=ctx[:Plotter]
     frame=ctx[:frame]
     if !haskey(ctx,:dataset)
@@ -97,11 +97,11 @@ end
 
 
 
-gridplot!(ctx, T::Type{VTKViewType}, ::Type{Val{2}},grid, func)=gridplot!(ctx, T,grid,func)
-gridplot!(ctx, T::Type{VTKViewType}, ::Type{Val{3}},grid, func)=gridplot!(ctx, T,grid,func)
-gridplot!(ctx, T::Type{VTKViewType}, ::Type{Val{1}},grid)=nothing
+visualize!(ctx, T::Type{VTKViewType}, ::Type{Val{2}},grid, func)=visualize!(ctx, T,grid,func)
+visualize!(ctx, T::Type{VTKViewType}, ::Type{Val{3}},grid, func)=visualize!(ctx, T,grid,func)
+visualize!(ctx, T::Type{VTKViewType}, ::Type{Val{1}},grid)=nothing
 
-function gridplot!(ctx, TP::Type{VTKViewType}, ::Type{Val{1}},grid, func)
+function visualize!(ctx, TP::Type{VTKViewType}, ::Type{Val{1}},grid, func)
     VTKView=ctx[:Plotter]
     frame=ctx[:frame]
     if !haskey(ctx,:plot)

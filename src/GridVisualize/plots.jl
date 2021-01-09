@@ -10,9 +10,9 @@ Das geht auch einfach in Makie
 pass=(...): kwargs für plotter
 =#
 
-initialize_gridplot!(p, ::Type{PlotsType})=nothing
+initialize!(p, ::Type{PlotsType})=nothing
 
-function reveal(p::GridPlotContext,::Type{PlotsType})
+function reveal(p::GridVisualizer,::Type{PlotsType})
     Plots=p.Plotter
     subplots=Plots.Plot[]
     
@@ -30,14 +30,14 @@ function reveal(p::GridPlotContext,::Type{PlotsType})
     p
 end
 
-function reveal(ctx::SubPlotContext,TP::Type{PlotsType})
+function reveal(ctx::SubVis,TP::Type{PlotsType})
     if ctx[:show]||ctx[:reveal]
-        reveal(ctx[:GridPlotContext],TP)
+        reveal(ctx[:GridVisualizer],TP)
     end
 end
 
 
-function gridplot!(ctx, TP::Type{PlotsType}, ::Type{Val{1}},grid)
+function visualize!(ctx, TP::Type{PlotsType}, ::Type{Val{1}},grid)
     Plots=ctx[:Plotter]
     
     if !haskey(ctx,:ax)
@@ -76,7 +76,7 @@ function gridplot!(ctx, TP::Type{PlotsType}, ::Type{Val{1}},grid)
     reveal(ctx,TP)
 end
 
-function gridplot!(ctx, TP::Type{PlotsType}, ::Type{Val{2}},grid)
+function visualize!(ctx, TP::Type{PlotsType}, ::Type{Val{2}},grid)
     Plots=ctx[:Plotter]
     if !haskey(ctx,:ax)
         ctx[:ax]=Plots.plot(title=ctx[:title])
@@ -119,7 +119,7 @@ function gridplot!(ctx, TP::Type{PlotsType}, ::Type{Val{2}},grid)
     reveal(ctx,TP)
 end
 
-function gridplot!(ctx, TP::Type{PlotsType}, ::Type{Val{1}},grid, func)
+function visualize!(ctx, TP::Type{PlotsType}, ::Type{Val{1}},grid, func)
     Plots=ctx[:Plotter]
     if !haskey(ctx,:ax)
         ctx[:ax]=Plots.plot(title=ctx[:title])
@@ -188,7 +188,7 @@ function rectdata(grid,U)
 end
 
 
-function gridplot!(ctx, TP::Type{PlotsType}, ::Type{Val{2}},grid, func)
+function visualize!(ctx, TP::Type{PlotsType}, ::Type{Val{2}},grid, func)
     rdata=rectdata(grid,func)
     if rdata==nothing
         return nothing
@@ -211,7 +211,7 @@ function gridplot!(ctx, TP::Type{PlotsType}, ::Type{Val{2}},grid, func)
 end
 
 
-function gridplot!(ctx, TP::Type{PlotsType}, ::Type{Val{3}}, grid)
+function visualize!(ctx, TP::Type{PlotsType}, ::Type{Val{3}}, grid)
     Plots=ctx[:Plotter]
     if !haskey(ctx,:ax)
         ctx[:ax]=Plots.plot(title=ctx[:title])
@@ -219,7 +219,7 @@ function gridplot!(ctx, TP::Type{PlotsType}, ::Type{Val{3}}, grid)
     reveal(ctx,TP)
 end
     
-function gridplot!(ctx, TP::Type{PlotsType}, ::Type{Val{3}}, grid,func)
+function visualize!(ctx, TP::Type{PlotsType}, ::Type{Val{3}}, grid,func)
     Plots=ctx[:Plotter]
     if !haskey(ctx,:ax)
         ctx[:ax]=Plots.plot(title=ctx[:title])

@@ -1,7 +1,7 @@
 include("flippablelayout.jl")
 using .FlippableLayout
 
-function initialize_gridplot!(p::GridPlotContext,::Type{MakieType})
+function initialize!(p::GridVisualizer,::Type{MakieType})
     Makie=p.context[:Plotter]
     if !isdefined(Makie.AbstractPlotting,:Box)
         error("Outdated version of AbstractPlotting. Please upgrade to at least 0.15.1")
@@ -23,7 +23,7 @@ end
 add_scene!(ctx,ax)=ctx[:flayout][ctx[:subplot]...]=ax
 
 
-function reveal(p::GridPlotContext,::Type{MakieType})
+function reveal(p::GridVisualizer,::Type{MakieType})
     Makie=p.context[:Plotter]
     
     for xctx in p.subplots
@@ -34,10 +34,10 @@ function reveal(p::GridPlotContext,::Type{MakieType})
     p.context[:figure]
 end
 
-function reveal(ctx::SubPlotContext,TP::Type{MakieType})
+function reveal(ctx::SubVis,TP::Type{MakieType})
     yieldwait(ctx[:flayout])
     if ctx[:show]||ctx[:reveal]
-        reveal(ctx[:GridPlotContext],TP)
+        reveal(ctx[:GridVisualizer],TP)
     end
 end
 
@@ -113,7 +113,7 @@ makestatus(grid::ExtendableGrid)="p: $(num_nodes(grid)) t: $(num_cells(grid)) b:
 
 
 #1D grid
-function gridplot!(ctx, TP::Type{MakieType}, ::Type{Val{1}}, grid)
+function visualize!(ctx, TP::Type{MakieType}, ::Type{Val{1}}, grid)
     
     Makie=ctx[:Plotter]
     nregions=num_cellregions(grid)
@@ -189,7 +189,7 @@ function gridplot!(ctx, TP::Type{MakieType}, ::Type{Val{1}}, grid)
 end
 
 # 1D function
-function gridplot!(ctx, TP::Type{MakieType}, ::Type{Val{1}}, grid,func)
+function visualize!(ctx, TP::Type{MakieType}, ::Type{Val{1}}, grid,func)
     Makie=ctx[:Plotter]
 
     if ctx[:title]==""
@@ -255,7 +255,7 @@ function gridplot!(ctx, TP::Type{MakieType}, ::Type{Val{1}}, grid,func)
 end
 
 # 2D grid
-function gridplot!(ctx, TP::Type{MakieType}, ::Type{Val{2}},grid)
+function visualize!(ctx, TP::Type{MakieType}, ::Type{Val{2}},grid)
     Makie=ctx[:Plotter]
     nregions=num_cellregions(grid)
     nbregions=num_bfaceregions(grid)
@@ -285,7 +285,7 @@ end
 
 
 # 2D function
-function gridplot!(ctx, TP::Type{MakieType}, ::Type{Val{2}},grid, func)
+function visualize!(ctx, TP::Type{MakieType}, ::Type{Val{2}},grid, func)
     Makie=ctx[:Plotter]
     
     function make_mesh(grid::ExtendableGrid,func,elevation)
@@ -352,7 +352,7 @@ Keyboard interactions:
 pgup/pgdown: coarse control control value
           h: print this message
 """
-function gridplot!(ctx, TP::Type{MakieType}, ::Type{Val{3}}, grid)
+function visualize!(ctx, TP::Type{MakieType}, ::Type{Val{3}}, grid)
 
     make_mesh(pts,fcs)=Mesh(meta(pts,normals=normals(pts, fcs)),fcs)
     
@@ -438,7 +438,7 @@ function gridplot!(ctx, TP::Type{MakieType}, ::Type{Val{3}}, grid)
     reveal(ctx,TP)
 end
 
-function gridplot!(ctx, TP::Type{MakieType}, ::Type{Val{3}}, grid , func)
+function visualize!(ctx, TP::Type{MakieType}, ::Type{Val{3}}, grid , func)
     
     make_mesh(pts,fcs)=Mesh(pts,fcs)
     
