@@ -1,5 +1,5 @@
 ENV["MPLBACKEND"]="agg"
-using Documenter, ExtendableGrids, Literate
+using Documenter, ExtendableGrids, Literate, .GridVisualize
 import PyPlot
 
 
@@ -48,7 +48,7 @@ function mkdocs()
                  "regionedit.md",
                  "simplexgrid.md",
                  "more.md",
-                 "plot.md",
+                 "visualize.md",
                  "tokenstream.md",
                  "allindex.md",
                  "Examples" => generated_examples

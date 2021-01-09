@@ -6,11 +6,11 @@ coverage:
         threshold: 5%
   
 ignore:
-  - "src/plotters/makie.jl"
-  - "src/plotters/plots.jl"
-  - "src/plotters/flippablelayout.jl"
-  - "src/plotters/vtkview.jl"
-  - "src/plotters/meshcat.jl"
+  - "src/GridVisualize/makie.jl"
+  - "src/GridVisualize/plots.jl"
+  - "src/GridVisualize/flippablelayout.jl"
+  - "src/GridVisualize/vtkview.jl"
+  - "src/GridVisualize/meshcat.jl"
 
   # - "path/to/folder"  # ignore folders and all its contents
   # - "test_*.rb"       # wildcards accepted

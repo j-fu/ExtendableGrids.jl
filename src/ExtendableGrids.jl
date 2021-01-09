@@ -14,11 +14,6 @@ using Random
 using Dates
 
 
-# for plotting
-using Colors
-using ColorSchemes
-using GeometryBasics
-using LinearAlgebra
 
 
 
@@ -77,7 +72,7 @@ export AbstractGridFloatArray1D,AbstractGridFloatArray2D
 export AbstractGridIntegerArray1D,AbstractGridIntegerArray2D
 export index_type, coord_type
 export dim_space, dim_grid
-export num_nodes, num_cells, num_bfaces
+export num_nodes, num_cells, num_bfaces, num_cellregions, num_bfaceregions
 export gridcomponents
 export seemingly_equal 
 
@@ -99,20 +94,7 @@ export writefile
 include("tokenstream.jl")
 export TokenStream, gettoken, expecttoken,trytoken
 
-include("plot.jl")
-include("plotters/common.jl")
-include("plotters/pyplot.jl")
-include("plotters/makie.jl")
-include("plotters/vtkview.jl")
-include("plotters/meshcat.jl")
-include("plotters/plots.jl")
-
-
-export gridplot,gridplot!,save,reveal
-export isplots,isvtkview,ispyplot,ismakie
-export GridPlotContext, SubPlotContext
-export plottertype
-export displayable
-export PyPlotType,MakieType,PlotsType,VTKViewType 
+include("GridVisualize/gridvisualize.jl")
+export GridVisualize
 
 end # module

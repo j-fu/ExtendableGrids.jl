@@ -1,3 +1,16 @@
+module GridVisualize
+
+using ExtendableGrids
+using DocStringExtensions
+using ElasticArrays
+using StaticArrays
+
+using Colors
+using ColorSchemes
+using GeometryBasics
+using LinearAlgebra
+
+
 """
 $(SIGNATURES)
 Heuristically check if Plotter is VTKView
@@ -367,4 +380,24 @@ gridplot!(ctx, ::Type{Nothing}, ::Type{Val{3}},grid,func)=nothing
 displayable(ctx,Any)=nothing
 reveal(p,::Type{Nothing})=nothing
 
+
+
+
+
+include("common.jl")
+include("pyplot.jl")
+include("makie.jl")
+include("vtkview.jl")
+include("meshcat.jl")
+include("plots.jl")
+
+
+export gridplot,gridplot!,save,reveal
+export isplots,isvtkview,ispyplot,ismakie
+export GridPlotContext, SubPlotContext
+export plottertype
+export displayable
+export PyPlotType,MakieType,PlotsType,VTKViewType 
+
+end
 

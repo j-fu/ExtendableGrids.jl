@@ -1,4 +1,4 @@
-using Test, ExtendableGrids
+using Test, ExtendableGrids, .GridVisualize
 import PyPlot
 
 @testset "Basic" begin
