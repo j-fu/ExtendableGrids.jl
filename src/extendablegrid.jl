@@ -504,7 +504,7 @@ function seemingly_equal(array1::AbstractArray, array2::AbstractArray)
     true
 end
 
-seemingly_equal(a1::VariableTargetAdjacency, a2::VariableTargetAdjacency)=seemingly_equal(a1.colentries,a2.colentries)&& seemingly_equal(a1.colstaert, a2.colstart)
+seemingly_equal(a1::VariableTargetAdjacency, a2::VariableTargetAdjacency)=seemingly_equal(a1.colentries,a2.colentries)&& seemingly_equal(a1.colstart, a2.colstart)
 seemingly_equal(x1::Type, x2::Type)=(x1==x2)
 seemingly_equal(x1::Number, x2::Number)=(x1≈x2)
 seemingly_equal(x1::Any, x2::Any)=(x1==x2)
