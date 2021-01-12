@@ -1,4 +1,6 @@
-using Test, ExtendableGrids, .GridVisualize
+ENV["MPLBACKEND"]="agg"
+
+using Test, ExtendableGrids, GridVisualize
 import PyPlot
 
 @testset "Basic" begin
@@ -91,7 +93,7 @@ end
 end
 
 if !Sys.isapple()
-    @testset "plotting" begin
+    @testset "plotting examples" begin
         include("../docs/makeplots.jl")
         picdir=mktempdir()
         
@@ -103,11 +105,6 @@ if !Sys.isapple()
         @test makeplot("rectangle_localref",picdir)
         @test makeplot("rectangle_multiregion",picdir)
         @test makeplot("rectangle_subgrid",picdir)
-        @test makeplot("quadrilateral",picdir)
-        
-        @test makeplot2("plotting_grid3d",picdir)
-        @test makeplot2("plotting_func3d",picdir)
-        @test makeplot2("plotting_multiscene",picdir)
-        
+        @test makeplot("quadrilateral",picdir)        
     end
 end

@@ -2,16 +2,7 @@
 function makeplot(func,picdir)
     PyPlot.clf()
     f=getfield(Main,Symbol(func))
-    visualize(f(), Plotter=PyPlot)
-    fname=joinpath(picdir,func*".svg")
-    PyPlot.savefig(fname)
-    isfile(fname)
-end
-
-function makeplot2(func,picdir)
-    PyPlot.clf()
-    f=getfield(Main,Symbol(func))
-    f(Plotter=PyPlot)
+    gridplot(f(), Plotter=PyPlot)
     fname=joinpath(picdir,func*".svg")
     PyPlot.savefig(fname)
     isfile(fname)
@@ -28,9 +19,5 @@ function makeplots(picdir)
     makeplot("rectangle_multiregion",picdir)
     makeplot("rectangle_subgrid",picdir)
     makeplot("quadrilateral",picdir)
-
-    makeplot2("plotting_grid3d",picdir)
-    makeplot2("plotting_func3d",picdir)
-    makeplot2("plotting_multiscene",picdir)
     
 end

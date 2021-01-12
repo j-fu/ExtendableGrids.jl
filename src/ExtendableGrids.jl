@@ -2,7 +2,6 @@ module ExtendableGrids
 
 using DocStringExtensions
 using ElasticArrays
-using StaticArrays
 using ExtendableSparse
 using AbstractTrees
 
@@ -93,8 +92,5 @@ export writefile
 
 include("tokenstream.jl")
 export TokenStream, gettoken, expecttoken,trytoken
-
-include("GridVisualize/gridvisualize.jl")
-export GridVisualize
 
 end # module

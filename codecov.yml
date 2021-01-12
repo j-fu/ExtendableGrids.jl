@@ -2,16 +2,10 @@ coverage:
   status:
     project:
       default:
-        target: 50%
+        target: 70%
         threshold: 5%
   
-ignore:
-  - "src/GridVisualize/makie.jl"
-  - "src/GridVisualize/plots.jl"
-  - "src/GridVisualize/flippablelayout.jl"
-  - "src/GridVisualize/vtkview.jl"
-  - "src/GridVisualize/meshcat.jl"
-
+#ignore:
   # - "path/to/folder"  # ignore folders and all its contents
   # - "test_*.rb"       # wildcards accepted
   # - "**/*.jl"   
