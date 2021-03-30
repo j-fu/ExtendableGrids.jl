@@ -9,7 +9,7 @@ using SparseArrays
 using Printf
 using Random
 using Dates
-
+using LinearAlgebra
 
 
 
@@ -77,7 +77,7 @@ include("subgrid.jl")
 export subgrid
 
 include("more.jl")
-export EdgeNodes, CellEdges,EdgeCells,BFaceCells
+export EdgeNodes, CellEdges,EdgeCells,BFaceCells,BFaceNormals
 export local_celledgenodes,num_edges
 
 include("regionedit.jl")

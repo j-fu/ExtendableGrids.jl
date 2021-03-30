@@ -27,6 +27,13 @@ Adjacency describing cells per boundary or interior face
 """
 abstract type BFaceCells <: AbstractGridAdjacency end
 
+"""
+$(TYPEDEF)
+
+Adjacency describing outer normals to boundary faces
+"""
+abstract type BFaceNormals <: AbstractGridComponent end
+
 
 
 """
@@ -134,7 +141,7 @@ ExtendableGrids.instantiate(grid, ::Type{CellEdges})=prepare_edges!(grid) && gri
 ExtendableGrids.instantiate(grid, ::Type{EdgeCells})=prepare_edges!(grid) && grid[EdgeCells]
 ExtendableGrids.instantiate(grid, ::Type{EdgeNodes})=prepare_edges!(grid) && grid[EdgeNodes]
 
-function prepare_bfnormals!(grid)
+function prepare_bfacecells!(grid)
     cn=grid[CellNodes]
     bn=grid[BFaceNodes]
     dim=dim_space(grid)
@@ -144,7 +151,75 @@ function prepare_bfnormals!(grid)
     true
 end
 
-ExtendableGrids.instantiate(grid, ::Type{BFaceCells})=prepare_bfnormals!(grid) && grid[BFaceCells]
+ExtendableGrids.instantiate(grid, ::Type{BFaceCells})=prepare_bfacecells!(grid) && grid[BFaceCells]
+
+normal!(normal,nodes,coord,::Type{Val{1}}) = normal[1]=1.0
+
+function normal!(normal,nodes,coord,::Type{Val{2}})
+    normal[1] = -(coord[2,nodes[1]]-coord[2,nodes[2]])
+    normal[2] =   coord[1,nodes[1]]-coord[1,nodes[2]]
+    d=norm(normal)
+    normal[1]/=d
+    normal[2]/=d
+end
+
+function normal!(normal,nodes,coord,::Type{Val{3}})
+    ax=coord[1,nodes[1]]-coord[1,nodes[2]]
+    ay=coord[2,nodes[1]]-coord[2,nodes[2]]
+    az=coord[3,nodes[1]]-coord[3,nodes[2]]
+    
+    bx=coord[1,nodes[1]]-coord[1,nodes[3]]
+    by=coord[2,nodes[1]]-coord[2,nodes[3]]
+    bz=coord[3,nodes[1]]-coord[3,nodes[3]]
+    
+    
+    normal[1]=(ay*bz-by*az)
+    normal[2]=(az*bx-bz*ax)
+    normal[3]=(ax*by-bx*ay)
+    
+    d=norm(normal)
+    normal[1]/=d
+    normal[2]/=d
+    normal[3]/=d
+end
+
+function midpoint!(mid,nodes,coord)
+    dim=size(coord,1)
+    nn=size(nodes,1)
+    for i=1:dim
+        mid[i]=sum(coord[i,nodes])/nn
+    end
+end
+
+function adjust!(normal,cmid,bmid)
+    d=dot(normal,bmid-cmid)
+    if d<0.0
+        normal.*= -1
+    end
+end
+
+function prepare_bfacenormals!(grid)
+    bfnodes=grid[BFaceNodes]
+    nbf=size(bfnodes,2)
+    cellnodes=grid[CellNodes]
+    dim=dim_space(grid)
+    bfcells=grid[BFaceCells]
+    bfnormals=zeros(dim,nbf)
+    coord=grid[Coordinates]
+    cmid=zeros(dim)
+    bmid=zeros(dim)
+    for ibf=1:nbf
+        icell=bfcells[1,ibf]
+        @views normal!(bfnormals[:,ibf],bfnodes[:,ibf],coord,Val{dim})
+        @views midpoint!(cmid,cellnodes[:,icell],coord)
+        @views midpoint!(bmid,bfnodes[:,ibf],coord)
+        @views adjust!(bfnormals[:,ibf],cmid,bmid)
+    end
+    grid[BFaceNormals]=bfnormals
+    true
+end
+
+ExtendableGrids.instantiate(grid, ::Type{BFaceNormals})=prepare_bfacenormals!(grid) && grid[BFaceNormals]
 
 # The following methods are uses in VoronoiFVM.
 # Do we need a more systematic approach here ?

@@ -185,6 +185,9 @@ function geomspace(a, b, ha, hb ; tol=1.0e-10)
 end
 
 
+collect_or_assign(X)=X
+collect_or_assign(X::AbstractRange)=collect(X)
+is_monotone(X)=all(X[2:end]-X[1:end-1].>0)
 
 """
 $(TYPEDSIGNATURES)
@@ -193,9 +196,13 @@ Glue together two vectors a and b resulting in a vector c. They last element
 of a shall be equal (up to tol) to the first element of b.
 The result fulfills `length(c)=length(a)+length(b)-1`
 """
-function glue(a::Vector{Tv}, b::Vector{Tv}; tol=1.0e-10) where Tv
-    #assert(is_monotone(a));
-    #assert(is_monotone(b));
+function glue(_a::AbstractVector, _b::AbstractVector; tol=1.0e-10)
+    a=collect_or_assign(_a)
+    b=collect_or_assign(_b)
+
+    is_monotone(a) || error("a not monotone")
+    is_monotone(b) || error("b not monotone")
+    Tv=promote_type(eltype(a),eltype(b))
     na=length(a)
     nb=length(b)
     
@@ -242,7 +249,9 @@ grid marking control volumes: marked by `|`.
  |--|-----|-----|-----|-----|-----|-----|-----|--|
 ```
 """
-function simplexgrid(X::AbstractArray{Tc,1}) where Tc
+function simplexgrid(_X::AbstractVector)
+    X=collect_or_assign(_X)
+#    is_monotone(X) || error("X not monotone")
     coord=reshape(X,1,length(X))
     cellnodes=zeros(Int32,2,length(X)-1)
     cellregions=zeros(Int32,length(X)-1)
@@ -283,9 +292,15 @@ Boundary region numbers count counterclockwise:
 | west      |       4 |
 
 """
-function  simplexgrid(X::AbstractArray{Tc,1},Y::AbstractArray{Tc,1}) where {Tc}
-
+function  simplexgrid(_X::AbstractVector, _Y::AbstractVector)
+    X=collect_or_assign(_X)
+    Y=collect_or_assign(_Y)
+    is_monotone(X) || error("X not monotone")
+    is_monotone(Y) || error("Y not monotone")
     
+    
+    Tc=promote_type(eltype(X),eltype(Y))
+
     function leq(x, x1, x2)
         if (x>x1)
             return false
@@ -447,7 +462,16 @@ Boundary region numbers:
 | top       |       6 |
 
 """
-function  simplexgrid(X::AbstractArray{Tc,1},Y::AbstractArray{Tc,1},Z::AbstractArray{Tc,1}) where {Tc}
+function  simplexgrid(_X::AbstractVector,_Y::AbstractVector,_Z::AbstractVector)
+    X=collect_or_assign(_X)
+    Y=collect_or_assign(_Y)
+    Z=collect_or_assign(_Z)
+
+    is_monotone(X) || error("X not monotone")
+    is_monotone(Y) || error("Y not monotone")
+    is_monotone(Z) || error("Z not monotone")
+
+    Tc=promote_type(eltype(X),eltype(Y),eltype(Z))
 
     
     leq(x, x1, x2, x3)=x≤x1 && x≤x2 && x≤x3
@@ -622,7 +646,7 @@ $(TYPEDSIGNATURES)
   
 Read grid from file. Currently for pdelib sg format only
 """
-function simplexgrid(file;format="")
+function simplexgrid(file::String;format="")
     (fbase,fext)=splitext(file)
     if format==""
         format=fext[2:end]
