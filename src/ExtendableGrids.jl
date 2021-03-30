@@ -2,9 +2,7 @@ module ExtendableGrids
 
 using DocStringExtensions
 using ElasticArrays
-using ExtendableSparse
 using AbstractTrees
-
 
 using InteractiveUtils
 using SparseArrays
@@ -19,7 +17,7 @@ using Dates
 include("adjacency.jl")
 export Adjacency,VariableTargetAdjacency,FixedTargetAdjacency
 export atranspose,num_targets,num_sources,num_links,append!, max_num_targets_per_source
-
+export asparse,tryfix,makevar
 
 
 include("vectorofconstants.jl")
@@ -79,7 +77,7 @@ include("subgrid.jl")
 export subgrid
 
 include("more.jl")
-export EdgeNodes, CellEdges,EdgeCells
+export EdgeNodes, CellEdges,EdgeCells,BFaceCells
 export local_celledgenodes,num_edges
 
 include("regionedit.jl")

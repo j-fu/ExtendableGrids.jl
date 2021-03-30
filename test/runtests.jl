@@ -84,7 +84,7 @@ end
 @testset "2D" begin
     @test testgrid(rectangle(),(441,800,80))
     @test testgrid(rectangle_localref(),(729, 1352, 104))
-    @test testgrid(rectangle_multiregion(),(441,800,80))
+    @test testgrid(rectangle_multiregion(),(441,800,100))
     @test testgrid(rectangle_subgrid(),(360, 600, 120))
 end
 

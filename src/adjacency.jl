@@ -251,3 +251,43 @@ function tryfix(a::Adjacency{T}) where T
     FixedTargetAdjacency(reshape(a.colentries,(ntargets,num_sources(a))))
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+Turn fixed target adjacency into variable target adjacency
+"""
+function makevar(a::FixedTargetAdjacency{T}) where T
+    ntargets=num_targets(a,1)
+    nsources=num_sources(a)
+    colstart=T[i*ntargets+1 for i=0:nsources]
+    VariableTargetAdjacency(vec(a),colstart)
+end
+
+
+"""
+$(TYPEDSIGNATURES)
+
+Create sparse incidence matrix from adjacency
+"""
+function asparse(a::VariableTargetAdjacency)
+    n=num_sources(a)
+    m=num_targets(a)
+    nzval=ones(Int,length(a.colentries))
+    SparseMatrixCSC(m,n,a.colstart,a.colentries,nzval)
+end
+
+
+"""
+$(TYPEDSIGNATURES)
+
+Create sparse incidence matrix from adjacency
+"""
+asparse(a::FixedTargetAdjacency)=asparse(makevar(a))
+
+
+"""
+$(TYPEDSIGNATURES)
+
+Create variable target adjacency from adjacency matrix
+"""
+VariableTargetAdjacency(m::SparseMatrixCSC{Tv,Ti}) where {Tv<:Integer, Ti<:Integer} = VariableTargetAdjacency{Ti}(m.rowval,m.colptr)

@@ -20,6 +20,13 @@ Adjacency describing nodes per grid edge
 """
 abstract type EdgeNodes <: AbstractGridAdjacency end
 
+"""
+$(TYPEDEF)
+
+Adjacency describing cells per boundary or interior face
+"""
+abstract type BFaceCells <: AbstractGridAdjacency end
+
 
 
 """
@@ -35,15 +42,7 @@ function prepare_edges!(grid::ExtendableGrid)
     cellnodes=grid[CellNodes]
     geom=grid[CellGeometries][1]
     # Create cell-node incidence matrix
-    ext_cellnode_adj=ExtendableSparseMatrix{Ti,Ti}(num_nodes(grid),num_cells(grid))
-    for icell=1:num_cells(grid)
-        for inode=1:num_nodes(geom)
-            ext_cellnode_adj[cellnodes[inode,icell],icell]=1
-        end
-    end
-    flush!(ext_cellnode_adj)
-    # Get SparseMatrixCSC from the ExtendableMatrix
-    cellnode_adj=ext_cellnode_adj.cscmatrix
+    cellnode_adj=asparse(cellnodes)
     
     # Create node-node incidence matrix for neigboring
     # nodes. 
@@ -108,17 +107,9 @@ function prepare_edges!(grid::ExtendableGrid)
         end
     end
 
-
     # Create sparse incidence matrix for the cell-edge adjacency
-    ext_celledge_adj=ExtendableSparseMatrix{Ti,Ti}(nedges,num_cells(grid))
-    for icell=1:num_cells(grid)
-        for iedge=1:num_edges(geom)
-            ext_celledge_adj[celledges[iedge,icell],icell]=1
-        end
-    end
-    flush!(ext_celledge_adj)
-    celledge_adj=ext_celledge_adj.cscmatrix
-
+    celledge_adj=asparse(celledges)
+    
     # The edge cell matrix is the transpose
     edgecell_adj=SparseMatrixCSC(transpose(celledge_adj))
 
@@ -138,10 +129,22 @@ function prepare_edges!(grid::ExtendableGrid)
     true
 end
 
+
 ExtendableGrids.instantiate(grid, ::Type{CellEdges})=prepare_edges!(grid) && grid[CellEdges]
 ExtendableGrids.instantiate(grid, ::Type{EdgeCells})=prepare_edges!(grid) && grid[EdgeCells]
 ExtendableGrids.instantiate(grid, ::Type{EdgeNodes})=prepare_edges!(grid) && grid[EdgeNodes]
 
+function prepare_bfnormals!(grid)
+    cn=grid[CellNodes]
+    bn=grid[BFaceNodes]
+    dim=dim_space(grid)
+    abc=asparse(cn)'*asparse(bn)
+    abcx=dropzeros!(SparseMatrixCSC(abc.m,abc.n, abc.colptr, abc.rowval, map( i-> i==dim,  abc.nzval)))
+    grid[BFaceCells]=VariableTargetAdjacency(abcx)
+    true
+end
+
+ExtendableGrids.instantiate(grid, ::Type{BFaceCells})=prepare_bfnormals!(grid) && grid[BFaceCells]
 
 # The following methods are uses in VoronoiFVM.
 # Do we need a more systematic approach here ?

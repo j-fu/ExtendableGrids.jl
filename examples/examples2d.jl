@@ -33,6 +33,7 @@ function rectangle_multiregion()
     cellmask!(grid,[0.0,0.0],[1.0,0.5],3)
     bfacemask!(grid,[0.0,0.0],[0.0,0.5],5)
     bfacemask!(grid,[1.0,0.0],[1.0,0.5],6)
+    bfacemask!(grid,[0.0,0.5],[1.0,0.5],7)
 end
 # ![](rectangle_multiregion.svg)
 
