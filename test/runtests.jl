@@ -45,7 +45,45 @@ import PyPlot
         
     end
     @test test_prepare_edges()
+
+
+    @test let
+        g=simplexgrid(0:10)
+        bfc=g[BFaceCells]
+        bfc[1,1]==1 && bfc[1,2]==10
+    end
+
+    @test let
+        g=simplexgrid(0:10)
+        bfn=g[BFaceNormals]
+        bfn==[-1.0 1.0]
+    end
+
+    
+    @test let
+        g=simplexgrid(0:2, 0:2)
+        bfn=g[BFaceNormals]
+        bfn==[0.0  -1.0;
+              -1.0   0.0;
+              0.0  -1.0;
+              1.0   0.0;
+              0.0   1.0;
+              -1.0   0.0;
+              1.0   0.0;
+              0.0   1.0]'
+    end
+
+    @test let
+        g=simplexgrid(0:2, 0:2)
+        bfc=g[BFaceCells]
+        tryfix(bfc)==[1  2  3  3  6  6  7  8;]
+    end
+
 end
+
+
+
+
 
 @testset "Read/Write" begin
     function testrw(grid)
@@ -84,7 +122,7 @@ end
 @testset "2D" begin
     @test testgrid(rectangle(),(441,800,80))
     @test testgrid(rectangle_localref(),(729, 1352, 104))
-    @test testgrid(rectangle_multiregion(),(441,800,80))
+    @test testgrid(rectangle_multiregion(),(441,800,100))
     @test testgrid(rectangle_subgrid(),(360, 600, 120))
 end
 
