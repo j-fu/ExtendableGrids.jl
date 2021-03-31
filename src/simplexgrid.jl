@@ -251,7 +251,7 @@ grid marking control volumes: marked by `|`.
 """
 function simplexgrid(_X::AbstractVector)
     X=collect_or_assign(_X)
-#    is_monotone(X) || error("X not monotone")
+    #    is_monotone(X) || error("X not monotone")
     coord=reshape(X,1,length(X))
     cellnodes=zeros(Int32,2,length(X)-1)
     cellregions=zeros(Int32,length(X)-1)
