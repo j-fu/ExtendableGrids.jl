@@ -312,6 +312,15 @@ Number of nodes of 0D vertex
 """
 num_nodes(::Type{Vertex0D})=1
 
+
+"""
+$(SIGNATURES)
+
+Cell-edge node numbering for 1D edge
+"""
+local_celledgenodes(::Type{Vertex0D})=[1]
+
+
 """
 $(SIGNATURES)
 
