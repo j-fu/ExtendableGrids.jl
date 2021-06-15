@@ -34,7 +34,19 @@ Adjacency describing outer normals to boundary faces
 """
 abstract type BFaceNormals <: AbstractGridComponent end
 
+"""
+$(TYPEDEF)
 
+Adjacency describing edges per boundary or interior face
+"""
+abstract type BFaceEdges <: AbstractGridAdjacency end
+
+"""
+$(TYPEDEF)
+
+Adjacency describing nodes per boundary or interior edge
+"""
+abstract type BEdgeNodes <: AbstractGridAdjacency end
 
 """
 $(SIGNATURES)
@@ -95,11 +107,11 @@ function prepare_edges!(grid::ExtendableGrid)
 
             # We need to look in nodenod_adj for upper triangular part entries
             # therefore, we need to swap accordingly before looking
-	    if (n1<n2)
-		n0=n1
-		n1=n2
-		n2=n0;
-	    end
+	       if (n1<n2)
+		      n0=n1
+		      n1=n2
+		      n2=n0;
+	       end
             
             for irow=nodenode_adj.colptr[n1]:nodenode_adj.colptr[n1+1]-1
                 if nodenode_adj.rowval[irow]==n2
@@ -142,14 +154,77 @@ ExtendableGrids.instantiate(grid, ::Type{EdgeCells})=prepare_edges!(grid) && gri
 ExtendableGrids.instantiate(grid, ::Type{EdgeNodes})=prepare_edges!(grid) && grid[EdgeNodes]
 
 function prepare_bfacecells!(grid)
-    cn=grid[CellNodes]
-    bn=grid[BFaceNodes]
-    dim=dim_space(grid)
-    abc=asparse(cn)'*asparse(bn)
-    abcx=dropzeros!(SparseMatrixCSC(abc.m,abc.n, abc.colptr, abc.rowval, map( i-> i==dim,  abc.nzval)))
-    grid[BFaceCells]=VariableTargetAdjacency(abcx)
+    cn   = grid[CellNodes]
+    bn   = grid[BFaceNodes]
+    dim  = dim_space(grid)
+    abc  = asparse(cn)'*asparse(bn)
+    abcx = dropzeros!(SparseMatrixCSC(abc.m,abc.n, abc.colptr, abc.rowval, 
+                                      map( i-> i==dim,  abc.nzval)))
+    grid[BFaceCells] = VariableTargetAdjacency(abcx)
     true
 end
+
+function prepare_bedges!(grid)
+    Ti           = eltype(grid[CellNodes])
+    bgeom        = grid[BFaceGeometries][1]
+    bfacenodes   = grid[BFaceNodes]
+    
+    # Create bface-node incidence matrix
+    bfacenode_adj = asparse(bfacenodes)  
+    nodenode_adj = bfacenode_adj*transpose(bfacenode_adj)
+
+    # To get unique edges, we set the lower triangular part
+    # including the diagonal to 0
+    for icol=1:length(nodenode_adj.colptr)-1
+        for irow=nodenode_adj.colptr[icol]:nodenode_adj.colptr[icol+1]-1
+            if nodenode_adj.rowval[irow]>=icol
+                nodenode_adj.nzval[irow]=0
+            end
+        end
+    end
+    dropzeros!(nodenode_adj)
+
+    # Now we know the number of bedges and
+    nbedges=length(nodenode_adj.nzval)
+
+    
+    bedgenodes   = zeros(Ti, 2, nbedges)
+    bfaceedges   = zeros(Ti, num_edges(bgeom), num_bfaces(grid))
+
+    cen        = local_celledgenodes(bgeom)
+    for ibface=1:num_bfaces(grid)
+        for ibedge=1:num_edges(bgeom)
+            n1 = bfacenodes[cen[1,ibedge], ibface]
+            n2 = bfacenodes[cen[2,ibedge], ibface]
+
+            # We need to look in nodenod_adj for upper triangular part entries
+            # therefore, we need to swap accordingly before looking
+           if (n1<n2)
+              n0=n1
+              n1=n2
+              n2=n0;
+           end
+
+            for irow = nodenode_adj.colptr[n1]:nodenode_adj.colptr[n1+1]-1
+                if nodenode_adj.rowval[irow]==n2
+                    # If the coresponding entry has been found, set its
+                    # value. Note that this introduces a different edge orientation
+                    # compared to the one found locally from cell data
+                    bfaceedges[ibedge, ibface] = irow
+                    bedgenodes[1, irow]=n1
+                    bedgenodes[2, irow]=n2
+                end
+            end
+        end
+
+    end
+    grid[BEdgeNodes] = bedgenodes
+    grid[BFaceEdges] = bfaceedges
+    true
+end
+
+ExtendableGrids.instantiate(grid, ::Type{BEdgeNodes})=prepare_bedges!(grid) && grid[BEdgeNodes]
+ExtendableGrids.instantiate(grid, ::Type{BFaceEdges})=prepare_bedges!(grid) && grid[BFaceEdges]
 
 ExtendableGrids.instantiate(grid, ::Type{BFaceCells})=prepare_bfacecells!(grid) && grid[BFaceCells]
 
@@ -237,6 +312,15 @@ Number of nodes of 0D vertex
 """
 num_nodes(::Type{Vertex0D})=1
 
+
+"""
+$(SIGNATURES)
+
+Cell-edge node numbering for 1D edge
+"""
+local_celledgenodes(::Type{Vertex0D})=[1]
+
+
 """
 $(SIGNATURES)
 
@@ -248,7 +332,7 @@ const cen_Edge1D=reshape([1 2],:,1)
 """
 $(SIGNATURES)
 
-Cell-edege node numbering for 1D edge
+Cell-edge node numbering for 1D edge
 """
 local_celledgenodes(::Type{Edge1D})=cen_Edge1D
 
@@ -271,7 +355,7 @@ const cen_Triangle2D=[ 2 3 1; 3 1 2]
 """
 $(SIGNATURES)
 
-Cell-edege node numbering for 2D triangle
+Cell-edge node numbering for 2D triangle
 """
 local_celledgenodes(::Type{Triangle2D})=cen_Triangle2D
 
@@ -281,7 +365,7 @@ const cen_Tetrahedron3D=[ 3 4 2  1 1 1; 4 2 3  4 3 2]
 """
 $(SIGNATURES)
 
-Cell-edege node numbering for 2D triangle
+Cell-edge node numbering for 2D triangle
 """
 local_celledgenodes(::Type{Tetrahedron3D})=cen_Tetrahedron3D
 
