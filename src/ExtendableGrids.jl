@@ -77,7 +77,7 @@ include("subgrid.jl")
 export subgrid
 
 include("more.jl")
-export EdgeNodes, CellEdges,EdgeCells,BFaceCells,BFaceNormals
+export EdgeNodes, CellEdges, EdgeCells, BFaceCells, BFaceNormals, BFaceEdges, BEdgeNodes
 export local_celledgenodes,num_edges
 
 include("regionedit.jl")
