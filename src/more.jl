@@ -235,7 +235,7 @@ $(SIGNATURES)
 
 Number of nodes of 0D vertex
 """
-num_nodes(::Type{Vertex0D})=1
+num_nodes(::Type{Vertex0D})::Int=1
 
 """
 $(SIGNATURES)
@@ -257,7 +257,7 @@ $(SIGNATURES)
 
 Number of nodes for 1D edge
 """
-num_nodes(::Type{Edge1D})=2
+num_nodes(::Type{Edge1D})::Int=2
 
 """
 $(SIGNATURES)
@@ -291,14 +291,14 @@ $(SIGNATURES)
 
 Number of nodes in 2D triangle
 """
-num_nodes(::Type{Triangle2D})=3
+num_nodes(::Type{Triangle2D})::Int=3
 
 """
 $(SIGNATURES)
 
 Number of nodes in 3D tetrahedron
 """
-num_nodes(::Type{Tetrahedron3D})=4
+num_nodes(::Type{Tetrahedron3D})::Int=4
 
 """
 $(SIGNATURES)

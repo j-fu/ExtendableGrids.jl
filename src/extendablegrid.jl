@@ -390,7 +390,7 @@ $(SIGNATURES)
 
 Number of nodes in grid
 """
-num_nodes(grid::ExtendableGrid)= size(grid[Coordinates],2)
+num_nodes(grid::ExtendableGrid)::Int= size(grid[Coordinates],2)
 
 
 """
