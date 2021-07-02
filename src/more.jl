@@ -157,7 +157,16 @@ function prepare_bfacecells!(grid)
     cn   = grid[CellNodes]
     bn   = grid[BFaceNodes]
     dim  = dim_space(grid)
-    abc  = asparse(cn)'*asparse(bn)
+
+    abn=asparse(bn)
+    # The maximum number of nodes adjacent to bfaces may
+    # be less than the number of nodes in the grid.
+    # Therefore we add a the missing number of rows.
+    if abn.m<num_nodes(grid)
+        abn=SparseMatrixCSC(num_nodes(grid), abn.n,abn.colptr,abn.rowval,abn.nzval)
+    end
+    
+    abc  = asparse(cn)'*abn
     abcx = dropzeros!(SparseMatrixCSC(abc.m,abc.n, abc.colptr, abc.rowval, 
                                       map( i-> i==dim,  abc.nzval)))
     grid[BFaceCells] = VariableTargetAdjacency(abcx)

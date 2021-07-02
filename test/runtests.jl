@@ -79,6 +79,18 @@ import PyPlot
         tryfix(bfc)==[1  2  3  3  6  6  7  8;]
     end
 
+    @test let
+        X=[0 0; 2 0 ; 1 2;  1 0.5]'
+        C=[ 1 2 4 ; 2 3 4 ; 3 1 4]'
+        CR=ones(Int,3)
+        F=[ 1 2 ; 2 3 ; 3 1]'
+        FR=[1,2,3]
+        g=simplexgrid(X,C,CR,F,FR)
+        bfc=g[BFaceCells]
+        tryfix(bfc)==[1  2  3;]
+    end
+
+    
 end
 
 

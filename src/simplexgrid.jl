@@ -44,6 +44,8 @@ function simplexgrid(coord::Array{Tc,2},
     return grid
 end
 
+simplexgrid(C,CN,CR,BFN,BFR)=simplexgrid(collect(C),collect(CN),collect(CR),collect(BFN), collect(BFR))
+
 
 """
 $(TYPEDSIGNATURES)
