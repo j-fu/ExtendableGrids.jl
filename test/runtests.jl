@@ -128,6 +128,7 @@ end
 
 @testset "3D" begin
     @test testgrid(quadrilateral(),(330,1200,440))
+    @test mask_bedges()
 end
 
 if !Sys.isapple()

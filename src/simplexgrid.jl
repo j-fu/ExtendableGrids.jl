@@ -44,6 +44,17 @@ function simplexgrid(coord::Array{Tc,2},
     return grid
 end
 
+function simplexgrid(coord::Array{Tc,2},
+                     cellnodes::Array{Ti,2},
+                     cellregions::Array{Ti,1},
+                     bfacenodes::Array{Ti,2},
+                     bfaceregions::Array{Ti,1},
+                     bedgeregions::Array{Ti,1}
+                     ) where {Tc,Ti}
+    grid = simplexgrid(coord, cellnodes, cellregions, bfacenodes, bfaceregions)
+    grid[BEdgeRegions] = bedgeregions
+    return grid
+end
 
 """
 $(TYPEDSIGNATURES)

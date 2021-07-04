@@ -122,3 +122,69 @@ function bfacemask!(grid::ExtendableGrid,
     grid[NumBFaceRegions]=max(num_bfaceregions(grid),ireg)
     return grid
 end
+
+"""
+$(TYPEDSIGNATURES)
+
+Edit region numbers of grid  boundary edges via line mask.
+This only works for 3D grids.
+"""
+function bedgemask!(grid::ExtendableGrid,
+                    xa::AbstractArray,
+                    xb::AbstractArray,
+                    ireg::Int;
+                    tol=1.0e-10)
+    # Masking of boundary edges makes only sense in 3D
+    @assert (dim_space(grid) > 2)
+
+    masked = false
+
+    nbedges        = num_bedges(grid)
+    bedgenodes     = grid[BEdgeNodes]
+    Ti             = eltype(bedgenodes)
+    dim            = dim_space(grid)
+    bedgeregions   = grid[BEdgeRegions]
+    new_bedgenodes = ElasticArray{Ti,2}(bedgenodes)
+    coord          = grid[Coordinates]
+    Tv             = eltype(coord)
+
+    # length of boundary edge region
+    distsq         = sqrt((xa[1]-xb[1])^2 + (xa[2]-xb[2])^2 + (xa[3]-xb[3])^2)
+
+    bedgenodes = grid[BEdgeNodes]
+    # loop over boundary edges
+    for ibedge = 1:size(bedgenodes, 2)
+        in_region = true
+        
+        #loop over nodes of boundary edge
+        for inode=1:num_targets(bedgenodes, ibedge)
+            ignode = bedgenodes[inode, ibedge]
+
+            # we compute the distance of the boundary edge node to the endpoints
+            # if the sum of the distances is larger (with tolerance) than the length
+            # of the boundary region, the point does not lie on the edge
+            distxa = sqrt((xa[1]-coord[1,ignode])^2 
+                     + (xa[2]-coord[2,ignode])^2 
+                     + (xa[3]-coord[3,ignode])^2)
+            distxb = sqrt((coord[1,ignode]-xb[1])^2 
+                     + (coord[2,ignode]-xb[2])^2 
+                     + (coord[3,ignode]-xb[3])^2)
+            diff   = distxa + distxb - distsq 
+            if (diff > tol)
+                in_region = false
+                continue
+            end
+        end
+        
+        if in_region
+            masked = true
+            bedgeregions[ibedge] = ireg
+        end
+    end
+    if !masked
+        @warn "Couldn't mask any boundary edges for region $(ireg)"
+    end
+
+    grid[NumBEdgeRegions]=max(num_bedgeregions(grid),ireg)
+    return grid
+end
