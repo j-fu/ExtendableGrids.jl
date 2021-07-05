@@ -143,6 +143,21 @@ Coordinate system
 """
 abstract type CoordinateSystem <: AbstractGridComponent end
 
+"""
+$(TYPEDEF)
+
+Boundary edge region number per boundary edge
+"""
+abstract type BEdgeRegions <: AbstractElementRegions end
+
+"""
+$(TYPEDEF)
+
+Number of boundary edge regions 
+"""
+abstract type NumBEdgeRegions <: AbstractGridIntegerConstant end
+
+
 ############################################################
 # Grid type
 
@@ -340,6 +355,22 @@ Instantiate number of bface regions
 instantiate(grid, ::Type{NumBFaceRegions})=maximum(grid[BFaceRegions])
 
 
+"""
+$(TYPEDSIGNATURES)
+
+Instantiate number of boundary edge regions
+"""
+instantiate(grid, ::Type{NumBEdgeRegions})=maximum(grid[BEdgeRegions])
+
+function prepare_bedgeregions!(grid::ExtendableGrid)
+    bedges             = grid[BEdgeNodes]
+    bedgeregions       = zeros(Int32, num_bedges(grid))
+    grid[BEdgeRegions] = bedgeregions
+end
+
+
+instantiate(grid, ::Type{BEdgeRegions})=prepare_bedgeregions!(grid)
+
 
 #############################################################
 # General methods
@@ -408,6 +439,14 @@ Number of boundary faces in grid.
 """
 num_bfaces(grid::ExtendableGrid)= haskey(grid,BFaceNodes) ? num_sources(grid[BFaceNodes]) : 0
 
+"""
+$(TYPEDSIGNATURES)
+
+Number of boundary edges in grid.
+"""
+num_bedges(grid::ExtendableGrid)= haskey(grid,BEdgeNodes) ? num_sources(grid[BEdgeNodes]) : 0
+
+
 
 """
 $(TYPEDSIGNATURES)
@@ -423,6 +462,17 @@ $(TYPEDSIGNATURES)
 Maximum  boundary face region numbers
 """
 num_bfaceregions(grid::ExtendableGrid)=grid[NumBFaceRegions]
+
+
+"""
+$(TYPEDSIGNATURES)
+
+Maximum boundary edge region numbers
+"""
+num_bedgeregions(grid::ExtendableGrid)=grid[NumBEdgeRegions]
+
+
+
 
 """
 $(SIGNATURES)

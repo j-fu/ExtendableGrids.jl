@@ -63,13 +63,17 @@ export ExtendableGrid
 export instantiate, veryform
 export AbstractGridComponent
 export AbstractGridAdjacency,AbstractElementGeometries,AbstractElementRegions
-export Coordinates,CellNodes,BFaceNodes,CellGeometries,BFaceGeometries,CellRegions,BFaceRegions
-export NumCellRegions,NumBFaceRegions,CoordinateSystem
+export Coordinates, CellNodes, BFaceNodes
+export CellGeometries, BFaceGeometries
+export CellRegions, BFaceRegions, BEdgeRegions
+export NumCellRegions, NumBFaceRegions, NumBEdgeRegions
+export CoordinateSystem
 export AbstractGridFloatArray1D,AbstractGridFloatArray2D
 export AbstractGridIntegerArray1D,AbstractGridIntegerArray2D
 export index_type, coord_type
 export dim_space, dim_grid
-export num_nodes, num_cells, num_bfaces, num_cellregions, num_bfaceregions
+export num_nodes, num_cells, num_bfaces, num_bedges 
+export num_cellregions, num_bfaceregions, num_bedgeregions
 export gridcomponents
 export seemingly_equal 
 
@@ -81,7 +85,7 @@ export EdgeNodes, CellEdges, EdgeCells, BFaceCells, BFaceNormals, BFaceEdges, BE
 export local_celledgenodes,num_edges
 
 include("regionedit.jl")
-export cellmask!,bfacemask!
+export cellmask!, bfacemask!, bedgemask!
 
 include("simplexgrid.jl")
 export simplexgrid, geomspace,glue
