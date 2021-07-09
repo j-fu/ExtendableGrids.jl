@@ -44,11 +44,29 @@ function simplexgrid(coord::Array{Tc,2},
     return grid
 end
 
+
+"""
+````
+function simplexgrid(coord::Array{Tc,2},
+                     cellnodes::Array{Ti,2},
+                     cellregions::Array{Ti,1},
+                     bfacenodes::Array{Ti,2},
+                     bfaceregions::Array{Ti,1}
+                     bedgenodes::Array{Ti,2},
+                     bedgeregions::Array{Ti,1}
+                     ) where {Tc,Ti}
+````
+
+    Create simplex grid from coordinates, cell-nodes-adjancency, cell-region-numbers,
+    boundary-face-nodes adjacency, boundary-face-region-numbers, boundary-edge-nodes, and
+    boundary-edge-region-numbers arrays.
+"""
 function simplexgrid(coord::Array{Tc,2},
                      cellnodes::Array{Ti,2},
                      cellregions::Array{Ti,1},
                      bfacenodes::Array{Ti,2},
                      bfaceregions::Array{Ti,1},
+                     bedgenodes::Array{Ti,2},
                      bedgeregions::Array{Ti,1}
                      ) where {Tc,Ti}
     grid = simplexgrid(coord, cellnodes, cellregions, bfacenodes, bfaceregions)
