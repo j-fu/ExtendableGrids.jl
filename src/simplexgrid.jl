@@ -70,6 +70,7 @@ function simplexgrid(coord::Array{Tc,2},
                      bedgeregions::Array{Ti,1}
                      ) where {Tc,Ti}
     grid = simplexgrid(coord, cellnodes, cellregions, bfacenodes, bfaceregions)
+    grid[BEdgeNodes]   = bedgenodes
     grid[BEdgeRegions] = bedgeregions
     return grid
 end
