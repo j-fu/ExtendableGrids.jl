@@ -3,9 +3,9 @@ $(TYPEDEF)
 
 Vector with constant value
 """
-struct VectorOfConstants{T} <: AbstractVector{T}
+struct VectorOfConstants{T,Tl} <: AbstractVector{T}
     val::T
-    len::Int64
+    len::Tl
 end
 
 Base.IndexStyle(::Type{<:VectorOfConstants}) = IndexLinear()
