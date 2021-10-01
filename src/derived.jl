@@ -471,6 +471,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeNo
     end
 
     if dim == 2
+
         # xgrid[CellEdges] = xgrid[CellFaces]
         # xgrid[EdgeCells] = xgrid[FaceCells]
         # xgrid[EdgeNodes] = xgrid[FaceNodes]
@@ -1065,6 +1066,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BFaces
 end
 
 
+
 function xinstantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BEdgeNodes}) where {Tc,Ti}
 
     dim = size(xgrid[Coordinates],1)
@@ -1079,7 +1081,6 @@ function xinstantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BEdgeNodes}) where {T
         xgrid[BEdgeNodes] = xgrid[BFaceNodes]
         return xgrid[BEdgeNodes]
     end
-
 
     xBFaces = xgrid[BFaces]
     xEdgeNodes = xgrid[EdgeNodes]
