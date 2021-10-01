@@ -80,10 +80,6 @@ export seemingly_equal
 include("subgrid.jl")
 export subgrid
 
-include("more.jl")
-# export EdgeNodes, CellEdges, EdgeCells,
-export BFaceCells, BFaceNormals, BFaceEdges, BEdgeNodes
-export local_celledgenodes,num_edges
 
 
 include("shape_specs.jl")
@@ -117,6 +113,15 @@ export ITEMTYPE_CELL, ITEMTYPE_FACE, ITEMTYPE_BFACE, ITEMTYPE_EDGE, ITEMTYPE_BED
 export PROPERTY_NODES, PROPERTY_REGION, PROPERTY_VOLUME, PROPERTY_UNIQUEGEOMETRY, PROPERTY_GEOMETRY
 export get_facegrid, get_bfacegrid, get_edgegrid
 export GridEGTypes
+
+include("more.jl")
+# export EdgeNodes, CellEdges, EdgeCells,
+# export BFaceCells,BFaceEdges, BEdgeNodes
+export BFaceNormals,BFaceCells,BFaceEdges
+export local_celledgenodes,num_edges
+
+
+
 
 include("meshrefinements.jl")
 export split_grid_into

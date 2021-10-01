@@ -3,14 +3,14 @@ $(TYPEDEF)
 
 Adjacency describing edges per grid cell
 """
-abstract type CellEdges  <: AbstractGridAdjacency end
+# abstract type CellEdges  <: AbstractGridAdjacency end
 
 """
 $(TYPEDEF)
 
 Adjacency describing cells per grid edge
 """
-abstract type EdgeCells  <: AbstractGridAdjacency end
+# abstract type EdgeCells  <: AbstractGridAdjacency end
 
 
 """
@@ -18,7 +18,7 @@ $(TYPEDEF)
 
 Adjacency describing nodes per grid edge
 """
-abstract type EdgeNodes <: AbstractGridAdjacency end
+# abstract type EdgeNodes <: AbstractGridAdjacency end
 
 """
 $(TYPEDEF)
@@ -46,7 +46,7 @@ $(TYPEDEF)
 
 Adjacency describing nodes per boundary or interior edge
 """
-abstract type BEdgeNodes <: AbstractGridAdjacency end
+# abstract type BEdgeNodes <: AbstractGridAdjacency end
 
 """
 $(SIGNATURES)
@@ -150,7 +150,7 @@ end
 
 
 #ExtendableGrids.instantiate(grid, ::Type{CellEdges})=prepare_edges!(grid) && grid[CellEdges]
-#ExtendableGrids.instantiate(grid, ::Type{EdgeCells})=prepare_edges!(grid) && grid[EdgeCells]
+ExtendableGrids.instantiate(grid, ::Type{EdgeCells})=prepare_edges!(grid) && grid[EdgeCells]
 #ExtendableGrids.instantiate(grid, ::Type{EdgeNodes})=prepare_edges!(grid) && grid[EdgeNodes]
 
 function prepare_bfacecells!(grid)
@@ -344,6 +344,7 @@ $(SIGNATURES)
 Cell-edge node numbering for 1D edge
 """
 local_celledgenodes(::Type{Edge1D})=cen_Edge1D
+#local_celledgenodes(T::Type{Edge1D})=edge_enum_rule(T)
 
 """
 $(SIGNATURES)
@@ -367,6 +368,7 @@ $(SIGNATURES)
 Cell-edge node numbering for 2D triangle
 """
 local_celledgenodes(::Type{Triangle2D})=cen_Triangle2D
+#local_celledgenodes(T::Type{Triangle2D})=edge_enum_rule(T)'
 
 
 const cen_Tetrahedron3D=[ 3 4 2  1 1 1; 4 2 3  4 3 2]
@@ -377,6 +379,7 @@ $(SIGNATURES)
 Cell-edge node numbering for 2D triangle
 """
 local_celledgenodes(::Type{Tetrahedron3D})=cen_Tetrahedron3D
+#local_celledgenodes(T::Type{Tetrahedron3D})=edge_enum_rule(T)'
 
 
 """

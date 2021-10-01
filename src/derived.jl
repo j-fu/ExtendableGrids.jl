@@ -471,10 +471,10 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeNo
     end
 
     if dim == 2
-        xgrid[CellEdges] = xgrid[CellFaces]
-        xgrid[EdgeCells] = xgrid[FaceCells]
-        xgrid[EdgeNodes] = xgrid[FaceNodes]
-        return
+        # xgrid[CellEdges] = xgrid[CellFaces]
+        # xgrid[EdgeCells] = xgrid[FaceCells]
+        # xgrid[EdgeNodes] = xgrid[FaceNodes]
+        return  prepare_edges!(xgrid) # keep compatible to VoronoiFVM
     end
 
     
@@ -1065,13 +1065,19 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BFaces
 end
 
 
-function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BEdgeNodes}) where {Tc,Ti}
+function xinstantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BEdgeNodes}) where {Tc,Ti}
 
     dim = size(xgrid[Coordinates],1)
+    if dim==1
+        xgrid[BEdges]=zeros(Ti,0)
+        xgrid[BEdgeNodes]=zeros(Ti,0,0)
+        return xgrid[BEdgeNodes]
+    end
+    
     if dim==2
         xgrid[BEdges] = xgrid[BFaces]
         xgrid[BEdgeNodes] = xgrid[BFaceNodes]
-        return
+        return xgrid[BEdgeNodes]
     end
 
 
