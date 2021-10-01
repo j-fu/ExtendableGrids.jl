@@ -38,7 +38,7 @@ refcoords_for_geometry(::Type{<:Triangle2D}) = [0 0; 1 0; 0 1]
 
 nnodes_for_geometry(::Type{<:Triangle2D}) = 3
 face_enum_rule(::Type{<:Triangle2D}) = [1 2; 2 3; 3 1]
-edge_enum_rule(::Type{<:Triangle2D}) = reshape([1; 2; 3],3,1)
+edge_enum_rule(T::Type{<:Triangle2D}) = face_enum_rule(T)
 
 # maps of reference coords on cell face to reference coords in cell
 xrefFACE2xrefCELL(::Type{<:Triangle2D}) = [ (xref4FACE) -> [xref4FACE[1],0],
@@ -64,7 +64,7 @@ refcoords_for_geometry(::Type{<:Quadrilateral2D}) = [0 0; 1 0; 1 1; 0 1]
 
 nnodes_for_geometry(::Type{<:Quadrilateral2D}) = 4
 face_enum_rule(::Type{<:Quadrilateral2D}) = [1 2; 2 3; 3 4; 4 1]
-edge_enum_rule(::Type{<:Quadrilateral2D}) = reshape([1; 2; 3; 4],4,1)
+edge_enum_rule(T::Type{<:Quadrilateral2D}) = face_enum_rule(T)
 
 # maps of reference coords on cell face to reference coords in cell
 xrefFACE2xrefCELL(::Type{<:Quadrilateral2D}) = [ (xref4FACE) -> [xref4FACE[1],0],
@@ -141,7 +141,7 @@ celledges_for_cellface(::Type{<:Hexahedron3D}) = [3 2 1 4; 1 6 9 5; 2 7 10 6; 3 
 # AbstractElementGeometry3D #    
 #############################  
 
-edgetype_of_celledge(::Type{<:AbstractElementGeometry2D}, k) = Vertex0D
+edgetype_of_celledge(::Type{<:AbstractElementGeometry2D}, k) = Edge1D
 edgetype_of_celledge(::Type{<:AbstractElementGeometry3D}, k) = Edge1D
 
 
