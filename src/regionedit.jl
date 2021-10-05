@@ -92,11 +92,11 @@ function bfacemask!(grid::ExtendableGrid,
             end
         end
     else
-        edgenodes=grid[EdgeNodes]
-        for iedge=1:size(edgenodes,2)
+        facenodes=grid[FaceNodes]
+        for iface=1:size(facenodes,2)
             in_region=true
-            for inode=1:num_targets(edgenodes,iedge)
-                ignode=edgenodes[inode,iedge]
+            for inode=1:num_targets(facenodes,iface)
+                ignode=facenodes[inode,iface]
                 for idim=1:dim_space(grid)
                     if coord[idim,ignode]<xmaskmin[idim]
                         in_region=false
@@ -106,12 +106,12 @@ function bfacemask!(grid::ExtendableGrid,
                 end
             end
             if in_region
-                ibface=isbface(edgenodes[1,iedge],edgenodes[2,iedge])
+                ibface=isbface(facenodes[1,iface],facenodes[2,iface])
                 if ibface>0
                     bfaceregions[ibface]=ireg
                 else
                     push!(bfaceregions,ireg)
-                    append!(new_bfacenodes,[edgenodes[1,iedge],edgenodes[2,iedge]])
+                    append!(new_bfacenodes,[facenodes[1,iface],facenodes[2,iface]])
                 end
             end
         end
@@ -125,7 +125,7 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+    $(TYPEDSIGNATURES)
 
 Edit region numbers of grid  boundary edges via line mask.
 This only works for 3D grids.

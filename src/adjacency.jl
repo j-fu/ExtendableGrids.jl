@@ -133,7 +133,7 @@ $(TYPEDEF)
 
 Use Matrix to store fixed target adjacency
 """
-const FixedTargetAdjacency{T} =Matrix
+const FixedTargetAdjacency{T} = Matrix{T}
 
 """
 $(TYPEDSIGNATURES)
@@ -177,6 +177,8 @@ Adjacency type as union of FixedTargetAdjacency and VariableTargetAdjacency
 """
 const Adjacency{T}=Union{FixedTargetAdjacency{T},VariableTargetAdjacency{T}}
 
+
+const GridAdjacencyTypes=Adjacency
 """
 $(TYPEDSIGNATURES)
 
