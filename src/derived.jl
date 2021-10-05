@@ -408,14 +408,14 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceNo
     end
 
     if singleFEG
-        xFaceNodes = reshape(xFaceNodes,nodes_per_cellface,Ti(length(xFaceNodes)/nodes_per_cellface))
+        xFaceNodes = reshape(xFaceNodes,(nodes_per_cellface,Ti(length(xFaceNodes)/nodes_per_cellface)))
         xgrid[FaceGeometries] = VectorOfConstants(facetype_of_cellface(EG[1], 1), face)
     else
         xgrid[FaceGeometries] = xFaceGeometries
     end
     xgrid[CellFaces] = xCellFaces
     xgrid[CellFaceSigns] = xCellFaceSigns
-    xgrid[FaceCells] = reshape(xFaceCells,2,face)
+    xgrid[FaceCells] = reshape(xFaceCells,(2,face))
     xFaceNodes
 end
 
@@ -670,7 +670,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeNo
     xgrid[CellEdgeSigns] = xCellEdgeSigns
     if singleEEG
         xgrid[EdgeGeometries] = VectorOfConstants(edgetype_of_celledge(EG[1],1),edge)
-        reshape(xEdgeNodes,nnodes_for_geometry(edgetype_of_celledge(EG[1],1)),edge)
+        reshape(xEdgeNodes,(nnodes_for_geometry(edgetype_of_celledge(EG[1],1)),edge))
     else
         xgrid[EdgeGeometries] = xEdgeGeometries
         xEdgeNodes
