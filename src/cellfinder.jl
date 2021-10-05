@@ -1,13 +1,13 @@
 
 struct CellFinder{Tv,Ti}
     xgrid::ExtendableGrid{Tv,Ti}
-    xCellFaces::GridAdjacencyTypes
-    xFaceCells::GridAdjacencyTypes
+    xCellFaces::GridAdjacencyTypes{Int32}
+    xFaceCells::GridAdjacencyTypes{Int32}
     xCellGeometries::GridEGTypes
-    node2oppositeface4EG::Array{Array{Ti,1},1}
+    facetogo::Array{Array{Ti,1},1}
     previous_cells::Array{Ti,1}
     EG::Array{Type{<:AbstractElementGeometry},1}
-    L2G4EG::Vector{L2GTransformer{Tv,EG,CS} where {EG<:AbstractElementGeometry,CS<:AbstractCoordinateSystem}} # each Geometry has its own L2GTransformer
+    L2G4EG::Vector{L2GTransformer{Tv,Ti,EG,CS} where {EG<:AbstractElementGeometry,CS<:AbstractCoordinateSystem}} # each Geometry has its own L2GTransformer
     invA::Matrix{Tv}
     xreftest::Array{Tv,1}
     cx::Vector{Tv}
@@ -42,25 +42,25 @@ end
 function CellFinder(xgrid::ExtendableGrid{Tv,Ti}) where {Tv,Ti}
     CS = xgrid[CoordinateSystem]
     EG = xgrid[UniqueCellGeometries]
-    L2G4EG = Vector{L2GTransformer{Tv,EG,CS} where {EG<:AbstractElementGeometry,CS<:AbstractCoordinateSystem}}(undef,length(EG))
-    node2oppositeface4EG = Array{Array{Ti,1},1}(undef,length(EG))
+    L2G4EG = Vector{L2GTransformer{Tv,Ti,EG,CS} where {EG<:AbstractElementGeometry,CS<:AbstractCoordinateSystem}}(undef,length(EG))
+    facetogo = Array{Array{Ti,1},1}(undef,length(EG))
     xreftestlength::Int = 0
     for j = 1 : length(EG)
-        L2G4EG[j] = L2GTransformer{Tv,EG[j],CS}(xgrid, ON_CELLS)
+        L2G4EG[j] = L2GTransformer(EG[j], xgrid, ON_CELLS)
         if EG[j] <: AbstractElementGeometry1D
-            node2oppositeface4EG[j] = [1, 2]
+            facetogo[j] = [1, 2]
             xreftestlength = max(xreftestlength,2)
         elseif EG[j] <: Triangle2D
-            node2oppositeface4EG[j] = [3, 1, 2]
+            facetogo[j] = [3, 1, 2]
             xreftestlength = max(xreftestlength,3)
         elseif EG[j] <: Tetrahedron3D
-            node2oppositeface4EG[j] = [4, 2, 1, 3]
+            facetogo[j] = [4, 2, 1, 3]
             xreftestlength = max(xreftestlength,4)
         elseif EG[j] <: Parallelogram2D
-            node2oppositeface4EG[j] = [4, 1, 2, 3]
+            facetogo[j] = [4, 1, 2, 3]
             xreftestlength = max(xreftestlength,4)
         elseif EG[j] <: Parallelepiped3D
-            node2oppositeface4EG[j] = [5, 2, 1, 3, 4, 6]
+            facetogo[j] = [5, 2, 1, 3, 4, 6]
             xreftestlength = max(xreftestlength,6)
         else
             @error "ElementGeometry not supported by CellFinder"
@@ -70,7 +70,7 @@ function CellFinder(xgrid::ExtendableGrid{Tv,Ti}) where {Tv,Ti}
     edim = dim_element(EG[1])
     A = zeros(Tv,edim,edim)
     xreftest = zeros(Tv,xreftestlength)
-    return CellFinder{Tv,Ti}(xgrid, xgrid[CellFaces], xgrid[FaceCells], xgrid[CellGeometries], node2oppositeface4EG, zeros(Ti,3), EG, L2G4EG, A, xreftest, zeros(Tv,edim))
+    return CellFinder{Tv,Ti}(xgrid, xgrid[CellFaces], xgrid[FaceCells], xgrid[CellGeometries], facetogo, zeros(Ti,3), EG, L2G4EG, A, xreftest, zeros(Tv,edim))
 end
 
 
@@ -78,18 +78,18 @@ end
 function gFindLocal!(xref, CF::CellFinder{Tv,Ti}, x; icellstart::Int = 1, eps = 1e-14) where{Tv,Ti}
 
     # works for convex domainsand simplices only !
-    xCellFaces::GridAdjacencyTypes = CF.xCellFaces
-    xFaceCells::GridAdjacencyTypes = CF.xFaceCells
+    xCellFaces::GridAdjacencyTypes{Int32} = CF.xCellFaces
+    xFaceCells::GridAdjacencyTypes{Int32} = CF.xFaceCells
     xCellGeometries::GridEGTypes = CF.xCellGeometries
     EG::GridEGTypes = CF.EG
     cx::Vector{Tv} = CF.cx
     cEG::Int = 0
-    node2oppositeface4EG::Array{Array{Ti,1},1} = CF.node2oppositeface4EG
+    facetogo::Array{Array{Ti,1},1} = CF.facetogo
     icell::Int = icellstart
     previous_cells::Array{Ti,1} = CF.previous_cells
     fill!(previous_cells,0)
     xreftest::Array{Tv,1} = CF.xreftest
-    L2G::L2GTransformer{Tv} = CF.L2G4EG[1]
+    L2G::L2GTransformer{Tv,Ti} = CF.L2G4EG[1]
     L2Gb::Vector{Tv} = L2G.b
 
     invA::Matrix{Tv} = CF.invA
@@ -104,7 +104,7 @@ function gFindLocal!(xref, CF::CellFinder{Tv,Ti}, x; icellstart::Int = 1, eps = 
 
         # update local 2 global map
         L2G = CF.L2G4EG[cEG]
-        update!(L2G, icell)
+        update_trafo!(L2G, icell)
         L2Gb = L2G.b
 
         # compute barycentric coordinates of node
@@ -120,7 +120,7 @@ function gFindLocal!(xref, CF::CellFinder{Tv,Ti}, x; icellstart::Int = 1, eps = 
 
         # find minimal barycentric coordinate with
         imin = 1
-        for i = 2 : length(node2oppositeface4EG[cEG])
+        for i = 2 : length(facetogo[cEG])
             if xreftest[imin] >= xreftest[i]
                 imin = i
             end
@@ -137,9 +137,9 @@ function gFindLocal!(xref, CF::CellFinder{Tv,Ti}, x; icellstart::Int = 1, eps = 
             previous_cells[j] = previous_cells[j+1]
         end
         previous_cells[end] = icell
-        icell = xFaceCells[1,xCellFaces[node2oppositeface4EG[cEG][imin],icell]]
+        icell = xFaceCells[1,xCellFaces[facetogo[cEG][imin],icell]]
         if icell == previous_cells[end]
-            icell = xFaceCells[2,xCellFaces[node2oppositeface4EG[cEG][imin],icell]]
+            icell = xFaceCells[2,xCellFaces[facetogo[cEG][imin],icell]]
             if icell == 0
                 @debug  "could not find point in any cell and ended up at boundary of domain (maybe x lies outside of the domain ?)"
                 return 0
@@ -162,7 +162,7 @@ function gFindBruteForce!(xref, CF::CellFinder{Tv,Ti}, x; eps = 1e-14) where {Tv
     EG::GridEGTypes = CF.EG
     xreftest::Array{Tv,1} = CF.xreftest
     xCellGeometries::GridEGTypes = CF.xCellGeometries
-    node2oppositeface4EG::Array{Array{Ti,1},1} = CF.node2oppositeface4EG
+    facetogo::Array{Array{Ti,1},1} = CF.facetogo
     L2Gb::Vector{Tv} = CF.L2G4EG[1].b
     invA::Matrix{Tv} = CF.invA
     imin::Int = 0
@@ -177,7 +177,7 @@ function gFindBruteForce!(xref, CF::CellFinder{Tv,Ti}, x; eps = 1e-14) where {Tv
 
         # update local 2 global map
         L2G = CF.L2G4EG[cEG]
-        update!(L2G, icell)
+        update_trafo!(L2G, icell)
         L2Gb = L2G.b
 
         # compute barycentric coordinates of node
@@ -193,7 +193,7 @@ function gFindBruteForce!(xref, CF::CellFinder{Tv,Ti}, x; eps = 1e-14) where {Tv
 
         # find minimal barycentric coordinate with
         imin = 1
-        for i = 2 : length(node2oppositeface4EG[cEG])
+        for i = 2 : length(facetogo[cEG])
             if xreftest[imin] >= xreftest[i]
                 imin = i
             end

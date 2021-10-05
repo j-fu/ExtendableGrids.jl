@@ -11,7 +11,7 @@ Generates an ExtendableGrid{T,Int32} for the reference domain of the specified E
 """
 function reference_domain(EG::Type{<:AbstractElementGeometry}, T::Type{<:Real} = Float64; scale = [1,1,1], shift = [0,0,0])
     xgrid=ExtendableGrid{T,Int32}()
-    xCoordinates=Array{T,2}(refcoords_for_geometry(EG)')
+    xCoordinates=Array{T,2}(refcoords_for_geometry(EG))
     for j = 1 : size(xCoordinates,1)
         xCoordinates[j,:] .+= shift[j]
         xCoordinates[j,:] .*= scale[j]
@@ -23,7 +23,7 @@ function reference_domain(EG::Type{<:AbstractElementGeometry}, T::Type{<:Real} =
     xgrid[CellGeometries] = VectorOfConstants(EG,1);
     xgrid[CellRegions]=ones(Int32,1)
     xgrid[BFaceRegions]=Array{Int32,1}(1:nfaces_for_geometry(EG))
-    xgrid[BFaceNodes]=Array{Int32,2}(face_enum_rule(EG)')
+    xgrid[BFaceNodes]=Array{Int32,2}(face_enum_rule(EG))
     xgrid[BFaceGeometries]=VectorOfConstants(facetype_of_cellface(EG, 1), nfaces_for_geometry(EG))
     if dim_element(EG) == 0
         xgrid[CoordinateSystem]=Cartesian0D
@@ -154,3 +154,4 @@ function grid_unitsquare_mixedgeometries()
 
     return xgrid
 end
+

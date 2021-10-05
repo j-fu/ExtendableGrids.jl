@@ -150,7 +150,7 @@ end
 
 
 #ExtendableGrids.instantiate(grid, ::Type{CellEdges})=prepare_edges!(grid) && grid[CellEdges]
-ExtendableGrids.instantiate(grid, ::Type{EdgeCells})=prepare_edges!(grid) && grid[EdgeCells]
+#ExtendableGrids.instantiate(grid, ::Type{EdgeCells})=prepare_edges!(grid) && grid[EdgeCells]
 #ExtendableGrids.instantiate(grid, ::Type{EdgeNodes})=prepare_edges!(grid) && grid[EdgeNodes]
 
 function prepare_bfacecells!(grid)
@@ -232,9 +232,8 @@ function prepare_bedges!(grid)
     true
 end
 
-ExtendableGrids.instantiate(grid, ::Type{BEdgeNodes})=prepare_bedges!(grid) && grid[BEdgeNodes]
+#ExtendableGrids.instantiate(grid, ::Type{BEdgeNodes})=prepare_bedges!(grid) && grid[BEdgeNodes]
 ExtendableGrids.instantiate(grid, ::Type{BFaceEdges})=prepare_bedges!(grid) && grid[BFaceEdges]
-
 ExtendableGrids.instantiate(grid, ::Type{BFaceCells})=prepare_bfacecells!(grid) && grid[BFaceCells]
 
 normal!(normal,nodes,coord,::Type{Val{1}}) = normal[1]=1.0
@@ -343,8 +342,8 @@ $(SIGNATURES)
 
 Cell-edge node numbering for 1D edge
 """
-local_celledgenodes(::Type{Edge1D})=cen_Edge1D
-#local_celledgenodes(T::Type{Edge1D})=edge_enum_rule(T)
+#local_celledgenodes(::Type{Edge1D})=cen_Edge1D
+local_celledgenodes(T::Type{Edge1D})=edge_enum_rule(T)
 
 """
 $(SIGNATURES)
@@ -360,26 +359,28 @@ Number of edges of 1D edge
 """
 num_edges(::Type{Edge1D})=1
 
-const cen_Triangle2D=[ 2 3 1; 3 1 2]
+const cen_Triangle2D=[ 2 3 1;
+                       3 1 2]
 
 """
 $(SIGNATURES)
 
 Cell-edge node numbering for 2D triangle
 """
-local_celledgenodes(::Type{Triangle2D})=cen_Triangle2D
-#local_celledgenodes(T::Type{Triangle2D})=edge_enum_rule(T)'
+#local_celledgenodes(::Type{Triangle2D})=cen_Triangle2D
+local_celledgenodes(T::Type{Triangle2D})=edge_enum_rule(T)
 
 
-const cen_Tetrahedron3D=[ 3 4 2  1 1 1; 4 2 3  4 3 2]
+const cen_Tetrahedron3D=[ 3 4 2  1 1 1;
+                          4 2 3  4 3 2]
 
 """
 $(SIGNATURES)
 
 Cell-edge node numbering for 2D triangle
 """
-local_celledgenodes(::Type{Tetrahedron3D})=cen_Tetrahedron3D
-#local_celledgenodes(T::Type{Tetrahedron3D})=edge_enum_rule(T)'
+#local_celledgenodes(::Type{Tetrahedron3D})=cen_Tetrahedron3D
+local_celledgenodes(T::Type{Tetrahedron3D})=edge_enum_rule(T)
 
 
 """

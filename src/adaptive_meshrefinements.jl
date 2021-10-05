@@ -106,7 +106,7 @@ function RGB_refine(source_grid::ExtendableGrid{T,K}, facemarkers::Array{Bool,1}
     nrefcounts = [0,0,0,0,0]
 
     # closuring
-##LOG    @logmsg MoreInfo "RGB refinement with $(sum(facemarkers)) marked faces"
+    # @logmsg MoreInfo "RGB refinement with $(sum(facemarkers)) marked faces"
     is_refined = true
     closure_finished = false
     while closure_finished == false
@@ -126,7 +126,7 @@ function RGB_refine(source_grid::ExtendableGrid{T,K}, facemarkers::Array{Bool,1}
             end
         end
     end
-##LOG    @logmsg DeepInfo "marked faces after closure = $(sum(facemarkers))"
+    # @logmsg DeepInfo "marked faces after closure = $(sum(facemarkers))"
 
 
     # determine number of new vertices
@@ -193,7 +193,7 @@ function RGB_refine(source_grid::ExtendableGrid{T,K}, facemarkers::Array{Bool,1}
         ncells += size(refine_rule,1)
     end
 
-##LOG    @logmsg DeepInfo "\tred/blueR/blueL/green/unrefined = $nrefcounts"
+    # @logmsg DeepInfo "\tred/blueR/blueL/green/unrefined = $nrefcounts"
 
     # assign new cells to grid
     xgrid[Coordinates] = xCoordinates

@@ -189,7 +189,7 @@ if all refinement rules refine faces and edges (in 3D) equally
 (so no hanging nodes are created)
 """
 function uniform_refine(source_grid::ExtendableGrid{T,K}; store_parents = false) where {T,K}
-    #LOG    @logmsg MoreInfo "Uniform refinement of $(num_sources(source_grid[CellNodes])) cells"
+    # @logmsg MoreInfo "Uniform refinement of $(num_sources(source_grid[CellNodes])) cells"
     
     xgrid = ExtendableGrid{T,K}()
     xgrid[CoordinateSystem]=source_grid[CoordinateSystem]
@@ -428,7 +428,7 @@ function uniform_refine(source_grid::ExtendableGrid{T,K}; store_parents = false)
                         elseif m <= nnodes4item + nfaces4item
                             edge = m-nnodes4item # local number
                             # find global edge number
-                            edge = intersect(xNodeEdges[:,oldBFaceNodes[bface_enum_rule[edge,1],bface]],xNodeEdges[:,oldBFaceNodes[bface_enum_rule[edge,2],bface]])[1]
+                            edge = intersect(xNodeEdges[:,oldBFaceNodes[bface_enum_rule[1,edge],bface]],xNodeEdges[:,oldBFaceNodes[bface_enum_rule[2,edge],bface]])[1]
                             subitemnodes[k] = oldvertices + edge
                         else
                             subitemnodes[k] = oldvertices + nedges + face
@@ -490,7 +490,7 @@ barycentric refinement is available for these ElementGeometries
 - Triangle2D
 """
 function barycentric_refine(source_grid::ExtendableGrid{T,K}) where {T,K}
-    ##LOG @logmsg MoreInfo "Barycentric refinement of $(num_sources(source_grid[CellNodes])) cells"
+    # @logmsg MoreInfo "Barycentric refinement of $(num_sources(source_grid[CellNodes])) cells"
     
     # split first into triangles
     source_grid = split_grid_into(source_grid,Triangle2D)

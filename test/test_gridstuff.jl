@@ -1,3 +1,7 @@
+
+# using ExtendableSparse
+# using ExtendableGrids
+
 function get_testgrid(::Type{<:Edge1D})
     X=collect(0:0.05:1)
     simplexgrid(X)
@@ -42,8 +46,8 @@ function check_enumeration_consistency(G::Type{<:AbstractElementGeometry}, CellI
     nnodes_per_item = max_num_targets_per_source(xItemNodes)
     ncells = num_sources(xCellNodes)
 
-    @assert nitems_per_cell == size(item_rule,1)
-    @assert nnodes_per_item == size(item_rule,2)
+    @assert nitems_per_cell == size(item_rule,2)
+    @assert nnodes_per_item == size(item_rule,1)
 
     item::Int = 0
     everything_is_consistent = true
@@ -54,7 +58,7 @@ function check_enumeration_consistency(G::Type{<:AbstractElementGeometry}, CellI
             fill!(itemnodes_found,false)
             for n = 1 : nnodes_per_item
                 for k = 1 : nnodes_per_item
-                    if xItemNodes[n,item] == xCellNodes[item_rule[i,k],cell]
+                    if xItemNodes[n,item] == xCellNodes[item_rule[k,i],cell]
                         itemnodes_found[n] = true
                         break
                     end
@@ -92,9 +96,9 @@ function check_cellfinder(xgrid)
 
     # check xref
     x = zeros(Float64,edim)
-    L2G = L2GTransformer{Float64,xgrid[CellGeometries][cell],xgrid[CoordinateSystem]}(xgrid, ON_CELLS)
-    update!(L2G,cell)
-    eval!(x,L2G,xref)
+    L2G = L2GTransformer(xgrid[CellGeometries][cell], xgrid, ON_CELLS)
+    GradientRobustMultiPhysics.update_trafo!(L2G,cell)
+    eval_trafo!(x,L2G,xref)
     
     @info "... found x=$x in cell = $cell by local search (and had to find x=$x_source in cell=$cell_to_find)"
 
@@ -105,9 +109,8 @@ function check_cellfinder(xgrid)
 
     # check xref
     x = zeros(Float64,edim)
-    L2G = L2GTransformer{Float64,xgrid[CellGeometries][cell],xgrid[CoordinateSystem]}(xgrid, ON_CELLS)
-    update!(L2G,cell)
-    eval!(x,L2G,xref)
+    GradientRobustMultiPhysics.update_trafo!(L2G,cell)
+    eval_trafo!(x,L2G,xref)
     
     @info "... found x=$x in cell = $cell by brute force (and had to find  x=$x_source in cell=$cell_to_find)"
 
@@ -138,5 +141,4 @@ function run_grid_tests()
     # @test check_cellfinder(get_testgrid(Tetrahedron3D))
     # @test check_cellfinder(get_testgrid(Parallelepiped3D))
     # @test check_cellfinder(get_testgrid(Triangle2D))
-
 end
