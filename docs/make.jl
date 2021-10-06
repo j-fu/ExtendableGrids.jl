@@ -27,9 +27,9 @@ function mkdocs()
     makeplots(example_md_dir)
     
     makedocs(sitename="ExtendableGrids.jl",
-    modules = [ExtendableGrids],
-    doctest = false,
-    clean = true,
+             modules = [ExtendableGrids],
+             clean = false, 
+             doctest = false,
              authors = "J. Fuhrmann, Ch. Merdon",
              repo="https://github.com/j-fu/ExtendableGrids.jl",
              pages=[
@@ -38,12 +38,16 @@ function mkdocs()
                  "vectorofconstants.md",
                  "typehierarchy.md",
                  "elementgeometry.md",
+                 "shape_specs.md",
                  "coordinatesystem.md",
                  "extendablegrid.md",
                  "subgrid.md",
-                 "regionedit.md",
-                 "simplexgrid.md",
                  "more.md",
+                 "assembly.md",
+                 "cellfinder.md",
+                 "gridconstructors.md",
+                 "refinement.md",
+                 "regionedit.md",
                  "tokenstream.md",
                  "allindex.md",
                  "Examples" => generated_examples

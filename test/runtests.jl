@@ -132,8 +132,6 @@ examples2d=joinpath(@__DIR__,"..","examples","examples2d.jl")
 include(examples2d)
 examples3d=joinpath(@__DIR__,"..","examples","examples3d.jl")
 include(examples3d)
-plotting=joinpath(@__DIR__,"..","examples","plotting.jl")
-include(plotting)
 
 
 @testset "1D" begin

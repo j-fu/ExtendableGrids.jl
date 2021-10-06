@@ -19,6 +19,9 @@ export Adjacency,VariableTargetAdjacency,FixedTargetAdjacency, GridAdjacencyType
 export atranspose,num_targets,num_sources,num_links,append!, max_num_targets_per_source
 export asparse,tryfix,makevar
 
+include("serialadjacency.jl")
+export SerialVariableTargetAdjacency
+
 include("vectorofconstants.jl")
 export VectorOfConstants
 
@@ -127,8 +130,6 @@ include("adaptive_meshrefinements.jl")
 export bulk_mark
 export RGB_refine
 
-include("serialadjacency.jl")
-export SerialVariableTargetAdjacency
 
 
 include("assemblytypes.jl");
