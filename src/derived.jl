@@ -468,6 +468,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeNo
     dim::Ti = dim_element(xCellGeometries[1])
     if dim == 1
         xgrid[EdgeNodes] = xgrid[CellNodes]
+        xgrid[EdgeGeometries] = xgrid[CellGeometries]
         xgrid[CellEdges] = reshape(collect(Ti,1:size(xCellNodes,2)), (1,size(xCellNodes,2)))
         xgrid[EdgeCells] = xgrid[CellEdges]
         return xgrid[EdgeNodes]
@@ -477,6 +478,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeNo
         xgrid[CellEdges] = xgrid[CellFaces]
         xgrid[EdgeCells] = xgrid[FaceCells]
         xgrid[EdgeNodes] = xgrid[FaceNodes]
+        xgrid[EdgeGeometries] = xgrid[FaceGeometries]
         return xgrid[EdgeNodes]
 #        return  prepare_edges!(xgrid) # keep compatible to VoronoiFVM
     end
