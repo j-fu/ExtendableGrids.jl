@@ -43,5 +43,5 @@ Further API ideas:
 
 ```@autodocs
 Modules = [ExtendableGrids]
-Pages = ["adjacency.jl"]
+Pages = ["adjacency.jl","serialadjacency.jl"]
 ```

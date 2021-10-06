@@ -1,8 +1,8 @@
-#  More adjacencies
+#  Derived adjacencies
 
 ## API
 ```@autodocs
 Modules = [ExtendableGrids]
-Pages = ["more.jl"]
+Pages = ["derived.jl","more.jl"]
 ```
 
