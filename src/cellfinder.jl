@@ -1,8 +1,8 @@
 
 struct CellFinder{Tv,Ti}
     xgrid::ExtendableGrid{Tv,Ti}
-    xCellFaces::GridAdjacencyTypes{Int32}
-    xFaceCells::GridAdjacencyTypes{Int32}
+    xCellFaces::GridAdjacencyTypes{Ti}
+    xFaceCells::GridAdjacencyTypes{Ti}
     xCellGeometries::GridEGTypes
     facetogo::Array{Array{Ti,1},1}
     previous_cells::Array{Ti,1}
@@ -78,8 +78,8 @@ end
 function gFindLocal!(xref, CF::CellFinder{Tv,Ti}, x; icellstart::Int = 1, eps = 1e-14) where{Tv,Ti}
 
     # works for convex domainsand simplices only !
-    xCellFaces::GridAdjacencyTypes{Int32} = CF.xCellFaces
-    xFaceCells::GridAdjacencyTypes{Int32} = CF.xFaceCells
+    xCellFaces::GridAdjacencyTypes{Ti} = CF.xCellFaces
+    xFaceCells::GridAdjacencyTypes{Ti} = CF.xFaceCells
     xCellGeometries::GridEGTypes = CF.xCellGeometries
     EG::GridEGTypes = CF.EG
     cx::Vector{Tv} = CF.cx

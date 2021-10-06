@@ -97,7 +97,7 @@ function check_cellfinder(xgrid)
     # check xref
     x = zeros(Float64,edim)
     L2G = L2GTransformer(xgrid[CellGeometries][cell], xgrid, ON_CELLS)
-    GradientRobustMultiPhysics.update_trafo!(L2G,cell)
+    update_trafo!(L2G,cell)
     eval_trafo!(x,L2G,xref)
     
     @info "... found x=$x in cell = $cell by local search (and had to find x=$x_source in cell=$cell_to_find)"
@@ -109,7 +109,7 @@ function check_cellfinder(xgrid)
 
     # check xref
     x = zeros(Float64,edim)
-    GradientRobustMultiPhysics.update_trafo!(L2G,cell)
+    update_trafo!(L2G,cell)
     eval_trafo!(x,L2G,xref)
     
     @info "... found x=$x in cell = $cell by brute force (and had to find  x=$x_source in cell=$cell_to_find)"
@@ -135,12 +135,11 @@ function run_grid_tests()
     # todo: check FaceEdges, CellFaceSigns, CellFaceOrientations
     # todo: FaceCells, EdgeCells
 
-
-    # @test check_cellfinder(get_testgrid(Edge1D))
-    # @test check_cellfinder(get_testgrid(Triangle2D))
-    # @test check_cellfinder(get_testgrid(Parallelogram2D))
-    # @test check_cellfinder(get_testgrid(Triangle2D,Parallelogram2D))
-    # @test check_cellfinder(get_testgrid(Tetrahedron3D))
-    # @test check_cellfinder(get_testgrid(Parallelepiped3D))
-    # @test check_cellfinder(get_testgrid(Triangle2D))
+    # test CellFinder
+    @test check_cellfinder(get_testgrid(Edge1D))
+    @test check_cellfinder(get_testgrid(Triangle2D))
+    @test check_cellfinder(get_testgrid(Parallelogram2D))
+    @test check_cellfinder(get_testgrid(Triangle2D,Parallelogram2D))
+    @test check_cellfinder(get_testgrid(Tetrahedron3D))
+    @test check_cellfinder(get_testgrid(Parallelepiped3D))
 end

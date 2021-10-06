@@ -5,7 +5,7 @@
 # maps points of reference geometries to global world
 # and is e.g. used by FEBasisEvaluator or CellFinder
 #
-# needs call of update! on entry of a new cell (to update the trafo matrix and the determinant det)
+# needs call of update_trafo! on entry of a new cell (to update the trafo matrix and the determinant det)
 # 
 # eval_data! maps local xref on cell to global x (e.g. for evaluation of data functions)
 # mapderiv! gives the derivative of the mapping (for computation of derivatives of basis functions)

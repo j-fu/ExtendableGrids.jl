@@ -67,12 +67,12 @@ function split_grid_into(source_grid::ExtendableGrid{T,K}, targetgeometry::Type{
     end
 
     # find new boundary faces (easy in 2D, not so easy in 3D)
-    if dim_element(targetgeometry) == 2 # BFaces are Edge1D wich stay the same
+    if dim_element(targetgeometry) == 2 # BFaceFaces are Edge1D wich stay the same
         xgrid[BFaceNodes]=source_grid[BFaceNodes]
         xgrid[BFaceRegions]=source_grid[BFaceRegions]
         xgrid[BFaceGeometries]=VectorOfConstants(facetype_of_cellface(targetgeometry,1),num_sources(xgrid[BFaceNodes]))
     elseif dim_element(targetgeometry) == 3 
-        # BFaces may be split into different shapes, e.g. from Quadrilateral2D to two Triangle2D
+        # BFaceFaces may be split into different shapes, e.g. from Quadrilateral2D to two Triangle2D
         # and it is hard to predict how they are splitted
         # so we do something lazy here and search for new faces that lie in old bfaces
         oldBFaceNodes = source_grid[BFaceNodes]
@@ -368,10 +368,10 @@ function uniform_refine(source_grid::ExtendableGrid{T,K}; store_parents = false)
 
     # determine new boundary faces
     oldBFaceNodes = source_grid[BFaceNodes]
-    oldBFaces = source_grid[BFaces]
+    oldBFaceFaces = source_grid[BFaceFaces]
     oldBFaceRegions = source_grid[BFaceRegions]
     oldBFaceGeometries = source_grid[BFaceGeometries]
-    oldBFacesCellPos = source_grid[BFaceCellPos]
+    oldBFaceFacesCellPos = source_grid[BFaceCellPos]
     oldFaceCells = source_grid[FaceCells]
     
     if dim == 1
@@ -406,7 +406,7 @@ function uniform_refine(source_grid::ExtendableGrid{T,K}; store_parents = false)
         edge = 0
         newnbfaces = 0
         for bface = 1 : nbfaces
-            face = oldBFaces[bface]
+            face = oldBFaceFaces[bface]
             itemEG = oldBFaceGeometries[bface]
             nnodes4item = num_nodes(itemEG)
             nfaces4item = num_faces(itemEG)

@@ -98,12 +98,12 @@ export xrefFACE2xrefOFACE
 
 include("derived.jl")
 export Coordinates
-export CellNodes, CellGeometries, CellVolumes, CellRegions, CellFaces, CellEdges, CellFaceSigns, CellFaceOrientations, CellEdgeSigns
+export CellVolumes, CellFaces, CellEdges, CellFaceSigns, CellFaceOrientations, CellEdgeSigns
 export FaceNodes, FaceGeometries, FaceVolumes, FaceRegions, FaceCells, FaceEdges, FaceNormals
 export EdgeNodes, EdgeGeometries, EdgeVolumes, EdgeRegions, EdgeCells, EdgeTangents
+export BFaceFaces, BFaceCellPos, BFaceVolumes
+export BEdgeNodes, BEdgeEdges, BEdgeVolumes, BEdgeGeometries
 export NodePatchGroups
-export BFaces, BFaceCellPos, BFaceVolumes
-export BEdgeNodes, BEdges, BEdgeVolumes, BEdgeGeometries
 export unique, UniqueCellGeometries, UniqueFaceGeometries, UniqueBFaceGeometries, UniqueEdgeGeometries, UniqueBEdgeGeometries
 export GridComponent4TypeProperty
 export ITEMTYPE_CELL, ITEMTYPE_FACE, ITEMTYPE_BFACE, ITEMTYPE_EDGE, ITEMTYPE_BEDGE
@@ -131,23 +131,22 @@ include("serialadjacency.jl")
 export SerialVariableTargetAdjacency
 
 
+include("assemblytypes.jl");
+export AssemblyType
+export AT_NODES, ON_CELLS, ON_FACES, ON_IFACES, ON_BFACES, ON_EDGES, ON_BEDGES
+export ItemType4AssemblyType
+export GridComponentNodes4AssemblyType
+export GridComponentVolumes4AssemblyType
+export GridComponentGeometries4AssemblyType
+export GridComponentRegions4AssemblyType
+export GridComponentUniqueGeometries4AssemblyType
 
-# include("assemblytypes.jl");
-# export AbstractAssemblyType
-# export AT_NODES, ON_CELLS, ON_FACES, ON_IFACES, ON_BFACES, ON_EDGES, ON_BEDGES
-# export ItemType4AssemblyType
-# export GridComponentNodes4AssemblyType
-# export GridComponentVolumes4AssemblyType
-# export GridComponentGeometries4AssemblyType
-# export GridComponentRegions4AssemblyType
-# export GridComponentUniqueGeometries4AssemblyType
+include("l2gtransformations.jl");
+export L2GTransformer, update_trafo!, eval_trafo!, mapderiv!
 
-# include("l2gtransformations.jl");
-# export L2GTransformer, update!, eval!, mapderiv!, piola!
-
-# include("cellfinder.jl")
-# export CellFinder
-# export gFindLocal!, gFindBruteForce!
+include("cellfinder.jl")
+export CellFinder
+export gFindLocal!, gFindBruteForce!
 
 
 include("commongrids.jl")

@@ -44,7 +44,7 @@ abstract type FaceGeometries <: AbstractElementGeometries end
 abstract type FaceRegions <: AbstractElementRegions end
 abstract type UniqueFaceGeometries <: AbstractElementGeometries end
 
-abstract type BFaces <: AbstractGridIntegerArray1D end
+abstract type BFaceFaces <: AbstractGridIntegerArray1D end
 abstract type BFaceCellPos <: AbstractGridIntegerArray1D end # position of bface in adjacent cell
 abstract type BFaceVolumes <: AbstractGridFloatArray1D end
 abstract type UniqueBFaceGeometries <: AbstractElementGeometries end
@@ -58,7 +58,7 @@ abstract type EdgeGeometries <: AbstractElementGeometries end
 abstract type UniqueEdgeGeometries <: AbstractElementGeometries end
 
 abstract type BEdgeNodes <: AbstractGridAdjacency end
-abstract type BEdges <: AbstractGridIntegerArray1D end
+abstract type BEdgeEdges <: AbstractGridIntegerArray1D end
 #abstract type BEdgeCellPos <: AbstractGridIntegerArray1D end # position of bface in adjacent cell
 abstract type BEdgeVolumes <: AbstractGridFloatArray1D end
 abstract type BEdgeRegions <: AbstractElementRegions end
@@ -962,7 +962,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BEdgeV
 end
 
 
-function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BFaces}) where {Tc,Ti}
+function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BFaceFaces}) where {Tc,Ti}
     # get links to other stuff
     xCoordinates = xgrid[Coordinates]
     xFaceNodes = xgrid[FaceNodes]
@@ -970,8 +970,8 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BFaces
     nnodes::Ti = num_sources(xCoordinates)
     nbfaces::Ti = num_sources(xBFaceNodes)
 
-    # init BFaces
-    xBFaces::Array{Ti,1} = zeros(Ti,nbfaces)
+    # init BFaceFaces
+    xBFaceFaces::Array{Ti,1} = zeros(Ti,nbfaces)
     #xBFaceGeometries = xgrid[BFaceGeometries]
     #if typeof(xBFaceGeometries) == VectorOfConstants{DataType}
     #    EG = xBFaceGeometries[1]
@@ -1013,13 +1013,13 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BFaces
                 end
             end          
             if common_nodes == nodes_per_face
-                xBFaces[bface] = face
+                xBFaceFaces[bface] = face
                 break
             end
         end
 
-        if xBFaces[bface] == 0
-            println("WARNING(BFaces): found no matching face for bface $bface with nodes $(xBFaceNodes[:,bface])")
+        if xBFaceFaces[bface] == 0
+            println("WARNING(BFaceFaces): found no matching face for bface $bface with nodes $(xBFaceNodes[:,bface])")
         end
 
         for j = 1 : nodes_per_bface
@@ -1033,16 +1033,16 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BFaces
         nodes_per_face = num_targets(xBFaceNodes,bface)
         for j = 1 : nodes_per_bface
             if typeof(xBFaceNodes) <: VariableTargetAdjacency
-                newBFaceNodes.colentries[newBFaceNodes.colstart[bface]+j-1] = xFaceNodes[j,xBFaces[bface]]
+                newBFaceNodes.colentries[newBFaceNodes.colstart[bface]+j-1] = xFaceNodes[j,xBFaceFaces[bface]]
             else
-                newBFaceNodes[j,bface] = xFaceNodes[j,xBFaces[bface]]
+                newBFaceNodes[j,bface] = xFaceNodes[j,xBFaceFaces[bface]]
             end
         end
     end
     xgrid[BFaceNodes] = newBFaceNodes
 
    # xgrid[BFaceGeometries] = xBFaceGeometries
-    xBFaces
+    xBFaceFaces
 end
 
 
@@ -1051,23 +1051,23 @@ function instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BEdgeNodes}) where {Tc
 
     dim = size(xgrid[Coordinates],1)
     if dim==1
-        xgrid[BEdges]=zeros(Ti,0)
+        xgrid[BEdgeEdges]=zeros(Ti,0)
         xgrid[BEdgeNodes]=zeros(Ti,0,0)
         return xgrid[BEdgeNodes]
     end
     
     if dim==2
-        xgrid[BEdges] = xgrid[BFaces]
+        xgrid[BEdgeEdges] = xgrid[BFaceFaces]
         xgrid[BEdgeNodes] = xgrid[BFaceNodes]
         return xgrid[BEdgeNodes]
     end
 
-    xBFaces = xgrid[BFaces]
+    xBFaceFaces = xgrid[BFaceFaces]
     xEdgeNodes = xgrid[EdgeNodes]
     xFaceEdges = xgrid[FaceEdges]
     xBFaceGeometries = xgrid[BFaceGeometries]
-    nbfaces = length(xBFaces)
-    xBEdges = zeros(Ti,0)
+    nbfaces = length(xBFaceFaces)
+    xBEdgeEdges = zeros(Ti,0)
 
     EG = Triangle2D
     edge::Ti = 0
@@ -1077,30 +1077,30 @@ function instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BEdgeNodes}) where {Tc
     for bface = 1 : nbfaces
         EG = xBFaceGeometries[bface]
         nfaceedges = num_edges(EG)
-        face = xBFaces[bface]
+        face = xBFaceFaces[bface]
         for k = 1 : nfaceedges
             edge = xFaceEdges[k,face]
-            if !(edge in xBEdges)
-                push!(xBEdges, edge)
+            if !(edge in xBEdgeEdges)
+                push!(xBEdgeEdges, edge)
             end
 
         end
     end
 
-    nbedges = length(xBEdges)
+    nbedges = length(xBEdgeEdges)
     xBEdgeNodes = zeros(Ti,2,nbedges)
     for bedge = 1 : nbedges, k = 1 : 2
-        xBEdgeNodes[k,bedge] = xEdgeNodes[k,xBEdges[bedge]]
+        xBEdgeNodes[k,bedge] = xEdgeNodes[k,xBEdgeEdges[bedge]]
     end
 
-    xgrid[BEdges] = xBEdges
+    xgrid[BEdgeEdges] = xBEdgeEdges
     xBEdgeNodes
 end
 
 
-function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BEdges}) where {Tc,Ti}
+function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BEdgeEdges}) where {Tc,Ti}
     ExtendableGrids.instantiate(xgrid, BEdgeNodes)
-    xgrid[BEdges]
+    xgrid[BEdgeEdges]
 end
 
 
@@ -1111,11 +1111,11 @@ end
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceRegions}) where {Tc,Ti}
     # interior faces get region number 0, boundary faces get their boundary region
-    xBFaces = xgrid[BFaces]
+    xBFaceFaces = xgrid[BFaceFaces]
     xBFaceRegions = xgrid[BFaceRegions]
     xFaceRegions = zeros(Ti,num_sources(xgrid[FaceNodes]))
-    for j = 1 : length(xBFaces)
-        xFaceRegions[xBFaces[j]] = xBFaceRegions[j]
+    for j = 1 : length(xBFaceFaces)
+        xFaceRegions[xBFaceFaces[j]] = xBFaceRegions[j]
     end
     xFaceRegions
 end
@@ -1144,17 +1144,17 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BFaceC
     xCoordinates = xgrid[Coordinates]
     xCellFaces = xgrid[CellFaces]
     xFaceCells = xgrid[FaceCells]
-    xBFaces = xgrid[BFaces]
-    nbfaces = length(xBFaces)
+    xBFaceFaces = xgrid[BFaceFaces]
+    nbfaces = length(xBFaceFaces)
 
-    # init BFaces
+    # init BFaceFaces
     xBFaceCellPos = zeros(Ti,nbfaces)
 
     cface = 0
     cell = 0
     nfaces4cell = 0
     for bface = 1 : nbfaces
-        cface = xBFaces[bface]
+        cface = xBFaceFaces[bface]
         cell = xFaceCells[1,cface]
         nfaces4cell = num_targets(xCellFaces,cell)
         for face = 1 : nfaces4cell
