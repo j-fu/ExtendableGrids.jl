@@ -57,7 +57,7 @@ function split_grid_into(source_grid::ExtendableGrid{T,K}, targetgeometry::Type{
         end
         ncells += size(split_rules[iEG],1)
     end
-    xCellNodes = reshape(xCellNodes,nnodes_for_geometry(targetgeometry),ncells)
+    xCellNodes = reshape(xCellNodes,num_nodes(targetgeometry),ncells)
     xgrid[CellNodes] = Array{Int32,2}(xCellNodes)
     xgrid[CellGeometries] = VectorOfConstants(targetgeometry,ncells)
     if typeof(oldCellRegions) <: VectorOfConstants
@@ -120,7 +120,7 @@ function split_grid_into(source_grid::ExtendableGrid{T,K}, targetgeometry::Type{
             end    
         end
 
-        newBFaceNodes = reshape(newBFaceNodes,nnodes_for_geometry(facetype_of_cellface(targetgeometry,1)),newnbfaces)
+        newBFaceNodes = reshape(newBFaceNodes,num_nodes(facetype_of_cellface(targetgeometry,1)),newnbfaces)
         xgrid[BFaceNodes]=Array{Int32,2}(newBFaceNodes)
         xgrid[BFaceRegions]=Array{Int32,1}(newBFaceRegions)
         xgrid[BFaceGeometries]=VectorOfConstants(facetype_of_cellface(targetgeometry,1),newnbfaces)
@@ -295,9 +295,9 @@ function uniform_refine(source_grid::ExtendableGrid{T,K}; store_parents = false)
     xCellParents = zeros(Int32,0)
     for cell = 1 : num_sources(oldCellNodes)
         itemEG = oldCellGeometries[cell]
-        nnodes4item = nnodes_for_geometry(itemEG)
-        nfaces4item = nfaces_for_geometry(itemEG)
-        nedges4item = nedges_for_geometry(itemEG)
+        nnodes4item = num_nodes(itemEG)
+        nfaces4item = num_faces(itemEG)
+        nedges4item = num_edges(itemEG)
         iEG = findfirst(isequal(itemEG), EG)
         if uniform_refine_needcellmidpoints(itemEG) == true
             # add cell midpoint to Coordinates
@@ -408,10 +408,10 @@ function uniform_refine(source_grid::ExtendableGrid{T,K}; store_parents = false)
         for bface = 1 : nbfaces
             face = oldBFaces[bface]
             itemEG = oldBFaceGeometries[bface]
-            nnodes4item = nnodes_for_geometry(itemEG)
-            nfaces4item = nfaces_for_geometry(itemEG)
+            nnodes4item = num_nodes(itemEG)
+            nfaces4item = num_faces(itemEG)
             iEG = findfirst(isequal(itemEG), EG)
-            bface_enum_rule = face_enum_rule(itemEG)
+            bface_enum_rule = local_cellfacenodes(itemEG)
 
             for j = 1 : size(refine_rules[iEG],1)
                 for k = 1 : size(refine_rules[iEG],2)

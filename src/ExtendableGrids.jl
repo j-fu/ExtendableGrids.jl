@@ -19,8 +19,6 @@ export Adjacency,VariableTargetAdjacency,FixedTargetAdjacency, GridAdjacencyType
 export atranspose,num_targets,num_sources,num_links,append!, max_num_targets_per_source
 export asparse,tryfix,makevar
 
-export GridAdjacencyTypes
-
 include("vectorofconstants.jl")
 export VectorOfConstants
 
@@ -85,14 +83,12 @@ export subgrid
 
 include("shape_specs.jl")
 export refcoords_for_geometry
-export nnodes_for_geometry
-export nfaces_for_geometry
-export nedges_for_geometry
-export face_enum_rule
-export edge_enum_rule
+export num_nodes
+export num_faces
+export num_edges
+export local_cellfacenodes
+export local_celledgenodes
 export facetype_of_cellface
-export edgetype_of_celledge
-export celledges_for_cellface
 export Volume4ElemType
 export Normal4ElemType!
 export Tangent4ElemType!
@@ -119,7 +115,6 @@ export GridRegionTypes
 include("more.jl")
 # export EdgeNodes, CellEdges, EdgeCells,
 export BFaceCells, BFaceNormals, BFaceEdges, BEdgeNodes
-export local_celledgenodes,num_edges
 
 
 include("meshrefinements.jl")

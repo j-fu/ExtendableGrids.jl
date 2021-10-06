@@ -122,13 +122,15 @@ end
 
 function run_grid_tests()
     # test FACE enumerations
-    @test check_enumeration_consistency(Edge1D, CellFaces, FaceNodes, face_enum_rule)
-    @test check_enumeration_consistency(Triangle2D, CellFaces, FaceNodes, face_enum_rule)
-    @test check_enumeration_consistency(Parallelogram2D, CellFaces, FaceNodes, face_enum_rule)
-    @test check_enumeration_consistency(Tetrahedron3D, CellFaces, FaceNodes, face_enum_rule)
+    @test check_enumeration_consistency(Edge1D, CellFaces, FaceNodes, local_cellfacenodes)
+    @test check_enumeration_consistency(Triangle2D, CellFaces, FaceNodes, local_cellfacenodes)
+    @test check_enumeration_consistency(Parallelogram2D, CellFaces, FaceNodes, local_cellfacenodes)
+    @test check_enumeration_consistency(Tetrahedron3D, CellFaces, FaceNodes, local_cellfacenodes)
+    @test check_enumeration_consistency(Parallelepiped3D, CellFaces, FaceNodes, local_cellfacenodes)
     
     # test EDGE enumerations
-    @test check_enumeration_consistency(Tetrahedron3D, CellEdges, EdgeNodes, edge_enum_rule)
+    @test check_enumeration_consistency(Tetrahedron3D, CellEdges, EdgeNodes, local_celledgenodes)
+    @test check_enumeration_consistency(Parallelepiped3D, CellEdges, EdgeNodes, local_celledgenodes)
 
     # todo: check FaceEdges, CellFaceSigns, CellFaceOrientations
     # todo: FaceCells, EdgeCells

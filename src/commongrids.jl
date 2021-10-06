@@ -17,14 +17,14 @@ function reference_domain(EG::Type{<:AbstractElementGeometry}, T::Type{<:Real} =
         xCoordinates[j,:] .*= scale[j]
     end
     xgrid[Coordinates] = xCoordinates
-    xCellNodes = zeros(Int32,nnodes_for_geometry(EG),1)
-    xCellNodes[:] = 1:nnodes_for_geometry(EG)
+    xCellNodes = zeros(Int32,num_nodes(EG),1)
+    xCellNodes[:] = 1:num_nodes(EG)
     xgrid[CellNodes] = xCellNodes
     xgrid[CellGeometries] = VectorOfConstants(EG,1);
     xgrid[CellRegions]=ones(Int32,1)
-    xgrid[BFaceRegions]=Array{Int32,1}(1:nfaces_for_geometry(EG))
-    xgrid[BFaceNodes]=Array{Int32,2}(face_enum_rule(EG))
-    xgrid[BFaceGeometries]=VectorOfConstants(facetype_of_cellface(EG, 1), nfaces_for_geometry(EG))
+    xgrid[BFaceRegions]=Array{Int32,1}(1:num_faces(EG))
+    xgrid[BFaceNodes]=Array{Int32,2}(local_cellfacenodes(EG))
+    xgrid[BFaceGeometries]=VectorOfConstants(facetype_of_cellface(EG, 1), num_faces(EG))
     if dim_element(EG) == 0
         xgrid[CoordinateSystem]=Cartesian0D
     elseif dim_element(EG) == 1

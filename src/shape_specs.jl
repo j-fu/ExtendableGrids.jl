@@ -1,33 +1,126 @@
+# The following methods are uses in VoronoiFVM.
+# Do we need a more systematic approach here ?
+"""
+$(SIGNATURES)
+
+Number of edges in grid.
+"""
+num_edges(grid::ExtendableGrid)=haskey(grid,EdgeNodes) ?  num_sources(grid[EdgeNodes]) : 0
+
 #########################################
 # VERTEX0D <: AbstractElementGeometry0D #       [1]
 #########################################
 
-refcoords_for_geometry(::Type{<:AbstractElementGeometry0D}) = [0]'
-nnodes_for_geometry(::Type{<:AbstractElementGeometry0D}) = 1
-nfaces_for_geometry(::Type{<:AbstractElementGeometry0D}) = 0
-nedges_for_geometry(::Type{<:AbstractElementGeometry0D}) = 0
+const _refcoords_for_geometry_Vertex0D = reshape([0],1,1)
+const _local_celledgenodes_Vertex0D = reshape([1],1,1)
+
+"""
+$(SIGNATURES)
+
+Coordinates of reference geometry of 0D vertex
+"""
+refcoords_for_geometry(::Type{<:AbstractElementGeometry0D}) = _refcoords_for_geometry_Vertex0D
+
+"""
+$(SIGNATURES)
+
+Number of nodes of 0D vertex
+"""
+num_nodes(::Type{<:AbstractElementGeometry0D}) = 1
+
+"""
+$(SIGNATURES)
+
+Number of faces of 0D vertex
+"""
+num_faces(::Type{<:AbstractElementGeometry0D}) = 0
+
+"""
+$(SIGNATURES)
+
+Number of edges of 0D vertex
+"""
+num_edges(::Type{<:AbstractElementGeometry0D}) = 0
+
+"""
+$(SIGNATURES)
+
+Cell-edge node numbering for 1D edge
+"""
+local_celledgenodes(::Type{Vertex0D}) = _local_celledgenodes_Vertex0D 
+
 
 
 #######################################      
 # EDGE1D <: AbstractElementGeometry1D #     [1]-----[2]        [1] = 0, [2] = 1
 #######################################      
 
-refcoords_for_geometry(::Type{<:AbstractElementGeometry1D}) = [0; 1]'
+const _refcoords_for_geometry_Edge1D = reshape([0; 1]',1,2)
+const _local_cellfacenodes_Edge1D = reshape([1; 2],1,2)
+const _local_celledgenodes_Edge1D = reshape([1; 2],2,1)
 
-nnodes_for_geometry(::Type{<:AbstractElementGeometry1D}) = 2
-nfaces_for_geometry(::Type{<:AbstractElementGeometry1D}) = 2
-nedges_for_geometry(::Type{<:AbstractElementGeometry1D}) = 0
+"""
+$(SIGNATURES)
 
-face_enum_rule(::Type{<:AbstractElementGeometry1D}) = reshape([1; 2],1,2)
-edge_enum_rule(T::Type{<:AbstractElementGeometry1D}) = face_enum_rule(T)'
+Coordinates of reference geometry of 1D edge
+"""
+refcoords_for_geometry(::Type{<:AbstractElementGeometry1D}) = _refcoords_for_geometry_Edge1D
 
-facetype_of_cellface(P1::Type{<:AbstractElementGeometry1D},P2::Type{<:AbstractElementGeometry1D}, k) = Vertex0D
+"""
+$(SIGNATURES)
+
+Number of nodes for 1D edge
+"""
+num_nodes(::Type{<:AbstractElementGeometry1D}) = 2
+
+"""
+$(SIGNATURES)
+
+Number of faces for 1D edge
+"""
+num_faces(::Type{<:AbstractElementGeometry1D}) = 2
+
+"""
+$(SIGNATURES)
+
+Number of edges for 1D edge
+"""
+num_edges(::Type{<:AbstractElementGeometry1D}) = 0
+
+"""
+$(SIGNATURES)
+
+Cell-face node numbering for 1D edge
+"""
+local_cellfacenodes(::Type{<:AbstractElementGeometry1D}) = _local_cellfacenodes_Edge1D
+
+"""
+$(SIGNATURES)
+
+Cell-edge node numbering for 1D edge
+"""
+local_celledgenodes(::Type{<:AbstractElementGeometry1D}) = _local_celledgenodes_Edge1D
+
+"""
+$(SIGNATURES)
+
+Number of edges of 1D edge
+"""
+num_edges(::Type{Edge1D})=1
+
+"""
+$(SIGNATURES)
+
+Geometries of faces of 1D edge
+"""
 facetype_of_cellface(::Type{<:AbstractElementGeometry1D}, k) = Vertex0D
+
 
 xrefFACE2xrefCELL(::Type{<:AbstractElementGeometry1D}) = [ [(xref4FACE) -> [1]],
                                                            [(xref4FACE) -> [1]] ]
 
 xrefFACE2xrefOFACE(::Type{<:AbstractElementGeometry1D}) = [(xref4FACE) -> xref4FACE, (xref4FACE) -> 1 .- xref4FACE]
+
 
 #                   [3]                 
 #                    | \   
@@ -37,11 +130,58 @@ xrefFACE2xrefOFACE(::Type{<:AbstractElementGeometry1D}) = [(xref4FACE) -> xref4F
 #                    |         \ 
 #                   [1]--------[2]
 
-refcoords_for_geometry(::Type{<:Triangle2D}) = [0 0; 1 0; 0 1]'
 
-nnodes_for_geometry(::Type{<:Triangle2D}) = 3
-face_enum_rule(::Type{<:Triangle2D}) = [1 2; 2 3; 3 1]'
-edge_enum_rule(T::Type{<:Triangle2D}) = face_enum_rule(T)
+const _refcoords_for_geometry_Triangle2D = [0 0; 1 0; 0 1]'
+const _local_cellfacenodes_Triangle2D = [1 2; 2 3; 3 1]' # local edgenodes are the same
+
+"""
+$(SIGNATURES)
+
+Coordinates of reference geometry of 2D triangle
+"""
+refcoords_for_geometry(::Type{<:Triangle2D}) = _refcoords_for_geometry_Triangle2D
+
+"""
+$(SIGNATURES)
+
+Number of nodes in 2D triangle
+"""
+num_nodes(::Type{<:Triangle2D}) = 3
+
+"""
+$(SIGNATURES)
+
+Number of faces in 2D triangle
+"""
+num_faces(::Type{<:Triangle2D}) = 3
+
+"""
+$(SIGNATURES)
+
+Number of edges in 2D triangle
+"""
+num_edges(::Type{<:Triangle2D}) = 3
+
+"""
+$(SIGNATURES)
+
+Cell-face node numbering for 2D triangle
+"""
+local_cellfacenodes(::Type{<:Triangle2D}) = _local_cellfacenodes_Triangle2D
+
+"""
+$(SIGNATURES)
+
+Cell-edge node numbering for 2D triangle
+"""
+local_celledgenodes(::Type{<:Triangle2D}) = _local_cellfacenodes_Triangle2D
+
+"""
+$(SIGNATURES)
+
+Geometries of faces of 2D triangle
+"""
+facetype_of_cellface(::Type{<:Triangle2D}, k) = Edge1D
 
 # maps of reference coords on cell face to reference coords in cell
 xrefFACE2xrefCELL(::Type{<:Triangle2D}) = [ (xref4FACE) -> [xref4FACE[1],0],
@@ -56,6 +196,7 @@ xrefFACE2xrefOFACE(::Type{<:Triangle2D}) = [(xref4FACE) -> xref4FACE,           
                                             (xref4FACE) -> [xref4FACE[2],xref4FACE[1]]                   # orientation 4 = [2,1,3]
                                             ]   
 
+
 #                        [4]--------[3]               
 #                         |          |             [1] = (0,0)
 ###################       |          |             [2] = (1,0)
@@ -63,11 +204,58 @@ xrefFACE2xrefOFACE(::Type{<:Triangle2D}) = [(xref4FACE) -> xref4FACE,           
 ###################       |          |             [4] = (0,1)
 #                        [1]--------[2]
 
-refcoords_for_geometry(::Type{<:Quadrilateral2D}) = [0 0; 1 0; 1 1; 0 1]'
 
-nnodes_for_geometry(::Type{<:Quadrilateral2D}) = 4
-face_enum_rule(::Type{<:Quadrilateral2D}) = [1 2; 2 3; 3 4; 4 1]'
-edge_enum_rule(::Type{<:Quadrilateral2D}) = reshape([1; 2; 3; 4],1,4)
+const _refcoords_for_geometry_Quadrilateral2D = [0 0; 1 0; 1 1; 0 1]'
+const _local_cellfacenodes_Quadrilateral2D = [1 2; 2 3; 3 4; 4 1]' # local edgenodes are the same
+
+"""
+$(SIGNATURES)
+
+Coordinates of reference geometry of 2D quadrilateral
+"""
+refcoords_for_geometry(::Type{<:Quadrilateral2D}) = _refcoords_for_geometry_Quadrilateral2D 
+
+"""
+$(SIGNATURES)
+
+Number of nodes in 2D quadrilateral
+"""
+num_nodes(::Type{<:Quadrilateral2D}) = 4
+
+"""
+$(SIGNATURES)
+
+Number of faces in 2D quadrilateral
+"""
+num_faces(::Type{<:Quadrilateral2D}) = 4
+
+"""
+$(SIGNATURES)
+
+Number of edges in 2D quadrilateral
+"""
+num_edges(::Type{<:Quadrilateral2D}) = 4
+
+"""
+$(SIGNATURES)
+
+Cell-face node numbering for 2D quadrilateral
+"""
+local_cellfacenodes(::Type{<:Quadrilateral2D}) = _local_cellfacenodes_Quadrilateral2D
+
+"""
+$(SIGNATURES)
+
+Cell-edge node numbering for 2D quadrilateral
+"""
+local_celledgenodes(::Type{<:Quadrilateral2D}) = _local_cellfacenodes_Quadrilateral2D
+
+"""
+$(SIGNATURES)
+
+Geometries of faces of 2D quadrilateral
+"""
+facetype_of_cellface(::Type{<:Quadrilateral2D}, k) = Edge1D
 
 # maps of reference coords on cell face to reference coords in cell
 xrefFACE2xrefCELL(::Type{<:Quadrilateral2D}) = [ (xref4FACE) -> [xref4FACE[1],0],
@@ -75,17 +263,6 @@ xrefFACE2xrefCELL(::Type{<:Quadrilateral2D}) = [ (xref4FACE) -> [xref4FACE[1],0]
                                                  (xref4FACE) -> [1-xref4FACE[1],1],
                                                  (xref4FACE) -> [0,1-xref4FACE[1]]
                                                  ]
-
-
-#############################      
-# AbstractElementGeometry2D #    
-#############################   
-
-facetype_of_cellface(P1::Type{<:AbstractElementGeometry2D}, k) = Edge1D
-facetype_of_cellface(P1::Type{<:AbstractElementGeometry2D},P2::Type{<:AbstractElementGeometry2D}, k) = Edge1D
-nfaces_for_geometry(EG::Type{<:AbstractElementGeometry2D}) = nnodes_for_geometry(EG)
-nedges_for_geometry(EG::Type{<:AbstractElementGeometry2D}) = nnodes_for_geometry(EG)
-
 
 
 #                      [4]                 
@@ -96,16 +273,60 @@ nedges_for_geometry(EG::Type{<:AbstractElementGeometry2D}) = nnodes_for_geometry
 #                       | _-[3]-_ \              [4] = (0,0,1)
 #                      [1]--------[2]
 
-refcoords_for_geometry(::Type{<:Tetrahedron3D}) = [0 0 0; 1 0 0; 0 1 0; 0 0 1]'
 
-nfaces_for_geometry(::Type{<:Tetrahedron3D}) = 4
-nnodes_for_geometry(::Type{<:Tetrahedron3D}) = 4
-nedges_for_geometry(::Type{<:Tetrahedron3D}) = 6
-face_enum_rule(::Type{<:Tetrahedron3D}) = [1 3 2; 1 2 4; 2 3 4; 1 4 3]'
-facetype_of_cellface(P1::Type{<:Tetrahedron3D},P2::Type{<:Tetrahedron3D}, k) = Triangle2D
+const _refcoords_for_geometry_Tetrahedron3D = [0 0 0; 1 0 0; 0 1 0; 0 0 1]'
+const _local_cellfacenodes_Tetrahedron3D = [1 3 2; 1 2 4; 2 3 4; 1 4 3]'
+const _local_celledgenodes_Tetrahedron3D = [1 2; 1 3; 1 4; 2 3; 2 4; 3 4]'
+
+"""
+$(SIGNATURES)
+
+Coordinates of reference geometry of 3D tetrahedron
+"""
+refcoords_for_geometry(::Type{<:Tetrahedron3D}) = _refcoords_for_geometry_Tetrahedron3D
+
+"""
+$(SIGNATURES)
+
+Number of nodes in 3D tetrahedron
+"""
+num_nodes(::Type{<:Tetrahedron3D}) = 4
+
+"""
+$(SIGNATURES)
+
+Number of faces in 3D tetrahedron
+"""
+num_faces(::Type{<:Tetrahedron3D}) = 4
+
+"""
+$(SIGNATURES)
+
+Number of edges in 3D tetrahedron
+"""
+num_edges(::Type{<:Tetrahedron3D}) = 6
+
+
+"""
+$(SIGNATURES)
+
+Cell-face node numbering for 3D tetrahedron
+"""
+local_cellfacenodes(::Type{<:Tetrahedron3D}) = _local_cellfacenodes_Tetrahedron3D
+
+"""
+$(SIGNATURES)
+
+Geometries of faces of 3D tetrahedron
+"""
 facetype_of_cellface(::Type{<:Tetrahedron3D}, k) = Triangle2D
-edge_enum_rule(::Type{<:Tetrahedron3D}) = [1 2; 1 3; 1 4; 2 3; 2 4; 3 4]'
-#celledges_for_cellface(::Type{<:Tetrahedron3D}) = [2 4 1; 1 5 3; 4 6 5; 3 6 2]'
+
+"""
+$(SIGNATURES)
+
+Cell-edge node numbering for 3D tetrahedron
+"""
+local_celledgenodes(::Type{<:Tetrahedron3D}) = _local_celledgenodes_Tetrahedron3D
 
 # maps of reference coords on cell face to reference coords in cell
 xrefFACE2xrefCELL(::Type{<:Tetrahedron3D}) = [ (xref4FACE) -> [xref4FACE[2],xref4FACE[1],0],
@@ -126,27 +347,55 @@ xrefFACE2xrefCELL(::Type{<:Tetrahedron3D}) = [ (xref4FACE) -> [xref4FACE[2],xref
 #                      | /        | /            [7] = (1,1,1)
 #                     [1]--------[2]             [8] = (0,1,1)
 
-refcoords_for_geometry(::Type{<:Hexahedron3D}) = [0 0 0; 1 0 0; 1 1 0; 0 1 0; 0 0 1; 1 0 1; 1 1 1; 0 1 1]'
 
-nnodes_for_geometry(::Type{<:Hexahedron3D}) = 8
-nfaces_for_geometry(::Type{<:Hexahedron3D}) = 6
-nedges_for_geometry(::Type{<:Hexahedron3D}) = 12
-face_enum_rule(::Type{<:Hexahedron3D}) = [4 3 2 1; 1 2 6 5; 2 3 7 6; 3 4 8 7; 4 1 5 8; 5 6 7 8]'
-facetype_of_cellface(P1::Type{<:Hexahedron3D},P2::Type{<:Hexahedron3D}, k) = Quadrilateral2D
-facetype_of_cellface(P1::Type{<:Parallelepiped3D},P2::Type{<:Hexahedron3D}, k) = Parallelogram2D
+const _refcoords_for_geometry_Hexahedron3D = [0 0 0; 1 0 0; 1 1 0; 0 1 0; 0 0 1; 1 0 1; 1 1 1; 0 1 1]'
+const _local_cellfacenodes_Hexahedron3D = [4 3 2 1; 1 2 6 5; 2 3 7 6; 3 4 8 7; 4 1 5 8; 5 6 7 8]'
+const _local_celledgenodes_Hexahedron3D = [1 2; 2 3; 3 4; 4 1; 1 5; 2 6; 3 7; 4 8; 5 6; 6 7; 7 8; 8 5]'
+
+"""
+$(SIGNATURES)
+
+Coordinates of reference geometry of 3D hexahedron
+"""
+refcoords_for_geometry(::Type{<:Hexahedron3D}) = _refcoords_for_geometry_Hexahedron3D
+
+"""
+$(SIGNATURES)
+
+Number of nodes in 3D hexahedron
+"""
+num_nodes(::Type{<:Hexahedron3D}) = 8
+num_faces(::Type{<:Hexahedron3D}) = 6
+num_edges(::Type{<:Hexahedron3D}) = 12
+
+
+"""
+$(SIGNATURES)
+
+Cell-face node numbering for 3D hexahedron
+"""
+local_cellfacenodes(::Type{<:Hexahedron3D}) = _local_cellfacenodes_Hexahedron3D
+
+"""
+$(SIGNATURES)
+
+Geometries of faces of 3D hexahedron
+"""
 facetype_of_cellface(::Type{<:Hexahedron3D}, k) = Quadrilateral2D
+
+"""
+$(SIGNATURES)
+
+Geometries of faces of 3D parallelepiped
+"""
 facetype_of_cellface(::Type{<:Parallelepiped3D}, k) = Parallelogram2D
-edge_enum_rule(::Type{<:Hexahedron3D}) = [1 2; 2 3; 3 4; 4 1; 1 5; 2 6; 3 7; 4 8; 5 6; 6 7; 7 8; 8 5]'
-#celledges_for_cellface(::Type{<:Hexahedron3D}) = [3 2 1 4; 1 6 9 5; 2 7 10 6; 3 8 11 7; 4 5 12 8; 9 10 11 12]'
 
+"""
+$(SIGNATURES)
 
-#############################      
-# AbstractElementGeometry3D #    
-#############################  
-
-edgetype_of_celledge(::Type{<:AbstractElementGeometry2D}, k) = Vertex0D
-edgetype_of_celledge(::Type{<:AbstractElementGeometry3D}, k) = Edge1D
-
+Cell-edge node numbering for 3D hexahedron
+"""
+local_celledgenodes(::Type{<:Hexahedron3D}) = _local_celledgenodes_Hexahedron3D
 
 
 

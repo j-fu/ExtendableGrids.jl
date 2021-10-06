@@ -167,7 +167,7 @@ function showmore(io::IO, xgrid::ExtendableGrid{Tc,Ti}) where {Tc,Ti}
         println("nfaces: (FaceNodes not instantiated)")
     end
     if haskey(xgrid.components,EdgeNodes)
-        nfaces = num_sources(xgrid[FaceNodes])
+        nedges = num_sources(xgrid[EdgeNodes])
         println("nedges: $(nedges)")
     else
         println("nedges: (EdgeNodes not instantiated)")
@@ -204,9 +204,9 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceNo
     maxfacenodes::Ti = 0
     FEG = []
     for j = 1 : length(EG)
-        face_rules[j] = face_enum_rule(EG[j])
+        face_rules[j] = local_cellfacenodes(EG[j])
         maxfacenodes = max(size(face_rules[j],2),maxfacenodes)
-        for k = 1 : nfaces_for_geometry(EG[j])
+        for k = 1 : num_faces(EG[j])
             append!(FEG,[facetype_of_cellface(EG[j],j)])
         end
     end
@@ -233,8 +233,8 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceNo
     end
     if singleEG == true && singleFEG == true
         # only one geometry type allows for much faster code
-        xCellFaces = zeros(Ti,nfaces_for_geometry(EG[1]),ncells)
-        xCellFaceSigns = zeros(Ti,nfaces_for_geometry(EG[1]),ncells)
+        xCellFaces = zeros(Ti,num_faces(EG[1]),ncells)
+        xCellFaceSigns = zeros(Ti,num_faces(EG[1]),ncells)
     else
         xCellFaces = VariableTargetAdjacency(Ti)
         xCellFaceSigns = VariableTargetAdjacency(Ti)
@@ -242,8 +242,8 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceNo
         cellEG = xCellGeometries[1]
         for cell = 1 : ncells
             cellEG = xCellGeometries[cell]
-            append!(xCellFaces,zeros(Ti,nfaces_for_geometry(cellEG)))
-            append!(xCellFaceSigns,zeros(Ti,nfaces_for_geometry(cellEG)))
+            append!(xCellFaces,zeros(Ti,num_faces(cellEG)))
+            append!(xCellFaceSigns,zeros(Ti,num_faces(cellEG)))
         end   
     end
 
@@ -261,9 +261,9 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceNo
     face_rule2::Array{Ti,2} = face_rules[1]
     iEG::Ti = 1
     nneighbours::Ti = 0
-    faces_per_cell::Ti = nfaces_for_geometry(cellEG)
-    faces_per_cell2::Ti = nfaces_for_geometry(cellEG)
-    nodes_per_cellface::Ti = nnodes_for_geometry(faceEG)
+    faces_per_cell::Ti = num_faces(cellEG)
+    faces_per_cell2::Ti = num_faces(cellEG)
+    nodes_per_cellface::Ti = num_nodes(faceEG)
     current_item::Array{Ti,1} = zeros(Ti,maxfacenodes) # should be large enough to store largest nnodes per cellface
     flag4item::Array{Bool,1} = zeros(Bool,nnodes)
     no_neighbours_found::Bool = true
@@ -274,7 +274,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceNo
         # find EG index for geometry
         if !singleEG
             cellEG = xCellGeometries[cell]
-            faces_per_cell = nfaces_for_geometry(cellEG)
+            faces_per_cell = num_faces(cellEG)
             for j=1:length(EG)
                 if cellEG == EG[j]
                     iEG = j
@@ -295,7 +295,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceNo
             # get face geometry
             if !singleFEG
                 faceEG = facetype_of_cellface(cellEG, k)
-                nodes_per_cellface = nnodes_for_geometry(faceEG)
+                nodes_per_cellface = num_nodes(faceEG)
             end
             
             # flag face nodes and commons4cells
@@ -321,7 +321,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceNo
                 # find face enumeration rule
                 if !singleEG
                     cell2EG = xCellGeometries[cell2]
-                    faces_per_cell2 = nfaces_for_geometry(cell2EG)
+                    faces_per_cell2 = num_faces(cell2EG)
                     for j=1:length(EG)
                         if cell2EG == EG[j]
                             iEG = j
@@ -474,7 +474,6 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeNo
     end
 
     if dim == 2
-
         xgrid[CellEdges] = xgrid[CellFaces]
         xgrid[EdgeCells] = xgrid[FaceCells]
         xgrid[EdgeNodes] = xgrid[FaceNodes]
@@ -493,50 +492,40 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeNo
     # find unique edge enumeration rules
     EG::Array{DataType,1} = unique(xCellGeometries)
     edge_rules::Array{Array{Ti,2},1} = Array{Array{Ti,2},1}(undef,length(EG))
-    EEG = [edgetype_of_celledge(EG[1], 1)]
     maxedgenodes::Ti = 0
     for j = 1 : length(EG)
-        edge_rules[j] = edge_enum_rule(EG[j])
+        edge_rules[j] = local_celledgenodes(EG[j])
         maxedgenodes = max(size(edge_rules[j],1),maxedgenodes)
     end
     if length(EG) == 1
         singleEG = true
-        singleEEG = true # even in 3D every edge is Edge1D
-        xCellEdges = zeros(Ti,nedges_for_geometry(EG[1]),ncells)
-        xCellEdgeSigns = zeros(Ti,nedges_for_geometry(EG[1]),ncells)
+        xCellEdges = zeros(Ti,num_edges(EG[1]),ncells)
+        xCellEdgeSigns = zeros(Ti,num_edges(EG[1]),ncells)
     else
         singleEG = false
-        singleEEG = true # even in 3D every edge is Edge1D
         xCellEdges = VariableTargetAdjacency(Ti)
         # pre-allocate xCellEdges
         cellEG = xCellGeometries[1]
         for cell = 1 : ncells
             cellEG = xCellGeometries[cell]
-            append!(xCellEdges,zeros(Ti,nedges_for_geometry(cellEG)))
-            append!(xCellEdgeSigns,zeros(Ti,nedges_for_geometry(cellEG)))
+            append!(xCellEdges,zeros(Ti,num_edges(cellEG)))
+            append!(xCellEdgeSigns,zeros(Ti,num_edges(cellEG)))
         end   
     end
-    if !singleEEG
-        xEdgeNodes = VariableTargetAdjacency(Ti)
-        xEdgeGeometries::Array{DataType,1} = []
-    else
-        xEdgeNodes = zeros(Ti,0)
-    end
+    xEdgeNodes = zeros(Ti,0)
 
     edge_rule::Array{Ti,2} = edge_rules[1]
     edge_rule2::Array{Ti,2} = edge_rules[1]
-    current_item::Array{Ti,1} = zeros(Ti,nnodes_for_geometry(EEG[1])) # should be large enough to store largest nnodes_per_celledge
+    current_item::Array{Ti,1} = zeros(Ti,2)
     flag4item::Array{Bool,1} = zeros(Bool,nnodes)
     cellEG = EG[1]
     cell2EG = EG[1]
     node::Ti = 0
-    node_cells::Array{Ti,1} = zeros(Ti,max_ncell4node) # should be large enough to store largest nnodes_per_celledge
+    node_cells::Array{Ti,1} = zeros(Ti,max_ncell4node)
     cell2::Ti = 0
     nneighbours::Ti = 0
-    edges_per_cell::Ti = nedges_for_geometry(EG[1])
-    edges_per_cell2::Ti = nedges_for_geometry(EG[1])
-    nodes_per_celledge::Ti = nnodes_for_geometry(EEG[1])
-    nodes_per_celledge2::Ti = nnodes_for_geometry(EEG[1])
+    edges_per_cell::Ti = num_edges(EG[1])
+    edges_per_cell2::Ti = num_edges(EG[1])
     common_nodes::Ti = 0
     cells_with_common_edge::Array{Ti,1} = zeros(Ti,max_ncell4node)
     pos_in_cells_with_common_edge::Array{Ti,1} = zeros(Ti,max_ncell4node)
@@ -551,7 +540,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeNo
         # find EG index for geometry
         if singleEG == false
             cellEG = xCellGeometries[cell]
-            edges_per_cell = nedges_for_geometry(cellEG)
+            edges_per_cell = num_edges(cellEG)
             for j=1:length(EG)
                 if cellEG == EG[j]
                     iEG = j
@@ -568,14 +557,13 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeNo
             if xCellEdges[k,cell] > 0
                 continue;
             end    
-            #nodes_per_celledge = nnodes_for_geometry(edgetype_of_celledge(cellEG, k))
             ncells_with_common_edge = 1
             cells_with_common_edge[1] = cell
             pos_in_cells_with_common_edge[1] = k
             sign_in_cells_with_common_edge[1] = 1
 
             # flag edge nodes and commons4cells
-            for j = 1 : nodes_per_celledge
+            for j = 1 : 2
                 node = xCellNodes[edge_rule[j,k],cell]
                 current_item[j] = node
                 flag4item[node] = true; 
@@ -598,7 +586,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeNo
                 # loop over edges of cell2
                 if singleEG == false
                     cell2EG = xCellGeometries[cell2]
-                    edges_per_cell2 = nedges_for_geometry(cell2EG)
+                    edges_per_cell2 = num_edges(cell2EG)
 
                     # find edge enumeration rule
                     for j=1:length(EG)
@@ -612,20 +600,17 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeNo
 
                 for f2 = 1 : edges_per_cell2
                     # compare nodes of edge and edge2
-                    #nodes_per_celledge2 = nnodes_for_geometry(edgetype_of_celledge(cell2EG, f2))
                     common_nodes = 0
-                    if nodes_per_celledge == nodes_per_celledge2
-                        for j = 1 : nodes_per_celledge2
-                            if flag4item[xCellNodes[edge_rule2[j,f2],cell2]]
-                                common_nodes += 1
-                            else
-                                continue;    
-                            end    
-                        end
+                    for j = 1 : 2
+                        if flag4item[xCellNodes[edge_rule2[j,f2],cell2]]
+                            common_nodes += 1
+                        else
+                            continue;    
+                        end    
                     end
 
                     # if all nodes are the same, register edge
-                    if (common_nodes == nodes_per_celledge2)
+                    if (common_nodes == 2)
                         ncells_with_common_edge += 1
                         cells_with_common_edge[ncells_with_common_edge] = cell2
                         pos_in_cells_with_common_edge[ncells_with_common_edge] = f2
@@ -640,27 +625,15 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeNo
 
             # register edge
             edge += 1
-            if singleEG
-                for c = 1 : ncells_with_common_edge
-                    xCellEdges[pos_in_cells_with_common_edge[c],cells_with_common_edge[c]] = edge
-                    xCellEdgeSigns[pos_in_cells_with_common_edge[c],cells_with_common_edge[c]] = sign_in_cells_with_common_edge[c]
-                end
-            else
-                for c = 1 : ncells_with_common_edge
-                    xCellEdges.colentries[xCellEdges.colstart[cells_with_common_edge[c]]+pos_in_cells_with_common_edge[c]-1] = edge
-                    xCellEdgeSigns.colentries[xCellEdgeSigns.colstart[cells_with_common_edge[c]]+pos_in_cells_with_common_edge[c],cells_with_common_edge[c]] = sign_in_cells_with_common_edge[c]
-                end
+            for c = 1 : ncells_with_common_edge
+                xCellEdges[pos_in_cells_with_common_edge[c],cells_with_common_edge[c]] = edge
+                xCellEdgeSigns[pos_in_cells_with_common_edge[c],cells_with_common_edge[c]] = sign_in_cells_with_common_edge[c]
             end
             append!(xEdgeCells,view(cells_with_common_edge,1:ncells_with_common_edge))
-            if singleEEG == false
-                push!(xEdgeGeometries,edgetype_of_celledge(cellEG,k))
-                append!(xEdgeNodes,view(current_item,1:nodes_per_celledge))
-            else
-                append!(xEdgeNodes,current_item)
-            end
+            append!(xEdgeNodes,current_item)
 
             #reset flag4item
-            for j = 1 : nodes_per_celledge
+            for j = 1 : 2
                 flag4item[current_item[j]] = false; 
             end
         end    
@@ -668,13 +641,8 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeNo
     xgrid[CellEdges] = xCellEdges
     xgrid[EdgeCells] = xEdgeCells
     xgrid[CellEdgeSigns] = xCellEdgeSigns
-    if singleEEG
-        xgrid[EdgeGeometries] = VectorOfConstants(edgetype_of_celledge(EG[1],1),edge)
-        reshape(xEdgeNodes,(nnodes_for_geometry(edgetype_of_celledge(EG[1],1)),edge))
-    else
-        xgrid[EdgeGeometries] = xEdgeGeometries
-        xEdgeNodes
-    end
+    xgrid[EdgeGeometries] = VectorOfConstants(Edge1D,edge)
+    reshape(xEdgeNodes,(2,edge))
 end
 
 
@@ -690,7 +658,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{CellFa
     face_rules = Array{Array{Ti,2},1}(undef,length(EG))
     maxfacenodes = 0
     for j = 1 : length(EG)
-        face_rules[j] = face_enum_rule(EG[j])
+        face_rules[j] = local_cellfacenodes(EG[j])
         maxfacenodes = max(size(face_rules[j],2),maxfacenodes)
     end
     singleEG = false
@@ -774,26 +742,26 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceEd
     edge_rules = Array{Array{Ti,2},1}(undef,length(EG))
     maxedgenodes = 0
     for j = 1 : length(EG)
-        edge_rules[j] = face_enum_rule(EG[j]) # face edges are faces of the face
+        edge_rules[j] = local_cellfacenodes(EG[j]) # face edges are faces of the face
         maxedgenodes = max(size(edge_rules[j],2),maxedgenodes)
     end
     edge_rule::Array{Ti,2} = edge_rules[1]
     if length(EG) == 1
         singleEG = true
-        xFaceEdges = zeros(Ti,nfaces_for_geometry(EG[1]),nfaces)
+        xFaceEdges = zeros(Ti,num_faces(EG[1]),nfaces)
     else
         singleEG = false
         faceEG = xCellGeometries[1]
         for face = 1 : nfaces
             faceEG = xCellGeometries[cell]
-            append!(xCellEdges,zeros(Ti,nfaces_for_geometry(cellEG)))
+            append!(xCellEdges,zeros(Ti,num_faces(cellEG)))
         end   
     end
 
     nfacenodes::Ti = num_targets(xFaceNodes,1)
     ncelledges::Ti = 0
     nedgenodes::Ti = 0
-    nfaceedges::Ti = nedges_for_geometry(EG[1])
+    nfaceedges::Ti = num_edges(EG[1])
     node::Ti = 0
     cell::Ti = 0
     edge::Ti = 0
@@ -809,7 +777,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceEd
 
         if singleEG == false
             faceEG = xFaceGeometries[face]
-            nfaceedges = nedges_for_geometry(faceEG)
+            nfaceedges = num_edges(faceEG)
             # find EG index for geometry
             for j=1:length(EG)
                 if faceEG == EG[j]
@@ -1108,7 +1076,7 @@ function instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BEdgeNodes}) where {Tc
 
     for bface = 1 : nbfaces
         EG = xBFaceGeometries[bface]
-        nfaceedges = nedges_for_geometry(EG)
+        nfaceedges = num_edges(EG)
         face = xBFaces[bface]
         for k = 1 : nfaceedges
             edge = xFaceEdges[k,face]
