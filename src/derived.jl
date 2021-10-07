@@ -946,23 +946,23 @@ end
 
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{CellVolumes}) where {Tc,Ti}
-    collectVolumes4Geometries(Float64, xgrid, ITEMTYPE_CELL)
+    collectVolumes4Geometries(Tc, xgrid, ITEMTYPE_CELL)
 end
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceVolumes}) where {Tc,Ti}
-    collectVolumes4Geometries(Float64, xgrid, ITEMTYPE_FACE)
+    collectVolumes4Geometries(Tc, xgrid, ITEMTYPE_FACE)
 end
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BFaceVolumes}) where {Tc,Ti}
-    collectVolumes4Geometries(Float64, xgrid, ITEMTYPE_BFACE)
+    collectVolumes4Geometries(Tc, xgrid, ITEMTYPE_BFACE)
 end
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeVolumes}) where {Tc,Ti}
-    collectVolumes4Geometries(Float64, xgrid, ITEMTYPE_EDGE)
+    collectVolumes4Geometries(Tc, xgrid, ITEMTYPE_EDGE)
 end
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BEdgeVolumes}) where {Tc,Ti}
-    collectVolumes4Geometries(Float64, xgrid, ITEMTYPE_BEDGE)
+    collectVolumes4Geometries(Tc, xgrid, ITEMTYPE_BEDGE)
 end
 
 
@@ -1145,7 +1145,6 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BFaceC
     # gets the local position of a bface in the CellFaces row of its adjacent cell
 
     # get links to other stuff
-    xCoordinates = xgrid[Coordinates]
     xCellFaces = xgrid[CellFaces]
     xFaceCells = xgrid[FaceCells]
     xBFaceFaces = xgrid[BFaceFaces]
@@ -1174,41 +1173,43 @@ end
 
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceNormals}) where {Tc,Ti}
-    dim = size(xgrid[Coordinates],1) 
-    xCoordinates = xgrid[Coordinates]
-    xFaceNodes = xgrid[FaceNodes]
-    nfaces = num_sources(xFaceNodes)
-    xFaceGeometries = xgrid[FaceGeometries]
+    dim::Int = size(xgrid[Coordinates],1) 
+    xCoordinates::Array{Tc,2} = xgrid[Coordinates]
+    xFaceNodes::Adjacency{Ti} = xgrid[FaceNodes]
+    nfaces::Int = num_sources(xFaceNodes)
+    xFaceGeometries::GridEGTypes = xgrid[FaceGeometries]
     xCoordinateSystem = xgrid[CoordinateSystem]
-    xFaceNormals::Array{Float64,2} = zeros(Float64,dim,nfaces)
-    normal = zeros(Float64,dim)
+    xFaceNormals::Array{Tc,2} = zeros(Tc,dim,nfaces)
+    normal::Array{Tc,1} = zeros(Tc,dim)
+    EG = xFaceGeometries[1]
     for face = 1 : nfaces
-        Normal4ElemType!(normal,xCoordinates,xFaceNodes,face,xFaceGeometries[face],xCoordinateSystem)
+        EG = xFaceGeometries[face]
+        Normal4ElemType!(normal,xCoordinates,xFaceNodes,face,EG,xCoordinateSystem)
         for k = 1 : dim
             xFaceNormals[k, face] = normal[k]
         end    
     end
-
     xFaceNormals
 end
 
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeTangents}) where {Tc,Ti}
-    dim = size(xgrid[Coordinates],1) 
-    xCoordinates = xgrid[Coordinates]
-    xEdgeNodes = xgrid[EdgeNodes]
-    nedges = num_sources(xEdgeNodes)
-    xEdgeGeometries = xgrid[EdgeGeometries]
+    dim::Int = size(xgrid[Coordinates],1) 
+    xCoordinates::Array{Tc,2} = xgrid[Coordinates]
+    xEdgeNodes::Adjacency{Ti} = xgrid[EdgeNodes]
+    nedges::Int = num_sources(xEdgeNodes)
+    xEdgeGeometries::GridEGTypes = xgrid[EdgeGeometries]
     xCoordinateSystem = xgrid[CoordinateSystem]
-    xEdgeTangents = zeros(Float64,dim,nedges)
-    tangent = zeros(Float64,dim)
+    xEdgeTangents::Array{Tc,2} = zeros(Tc,dim,nedges)
+    EG = xEdgeGeometries[1]
+    tangent::Array{Tc,1} = zeros(Tc,dim)
     for edge = 1 : nedges
-        Tangent4ElemType!(tangent,xCoordinates,xEdgeNodes,edge,xEdgeGeometries[edge],xCoordinateSystem)
+        EG = xEdgeGeometries[edge]
+        Tangent4ElemType!(tangent,xCoordinates,xEdgeNodes,edge,EG,xCoordinateSystem)
         for k = 1 : dim
             xEdgeTangents[k, edge] = tangent[k]
         end    
     end
-
     xEdgeTangents
 end
 

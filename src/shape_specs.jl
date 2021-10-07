@@ -443,9 +443,9 @@ function Volume4ElemType(Coords, Nodes, ::Type{<:Quadrilateral2D}, ::Type{Cartes
     end
 end
 
-function Volume4ElemType(Coords, Nodes, ::Type{<:Triangle2D}, ::Type{Cartesian3D})
-    d12 = zeros(Float64,3)
-    d14 = zeros(Float64,3)
+function Volume4ElemType(Coords::Array{Tc,2}, Nodes, ::Type{<:Triangle2D}, ::Type{Cartesian3D}) where {Tc}
+    d12 = zeros(Tc,3)
+    d14 = zeros(Tc,3)
     function closure(item)
         # norm(cross(p(1)-p(2), p(1)-p(3)), 2)
         for k = 1 : 3
@@ -457,9 +457,9 @@ function Volume4ElemType(Coords, Nodes, ::Type{<:Triangle2D}, ::Type{Cartesian3D
 end
 
 
-function Volume4ElemType(Coords, Nodes, ::Type{<:Parallelogram2D}, ::Type{Cartesian3D})
-    d12 = zeros(Float64,3)
-    d14 = zeros(Float64,3)
+function Volume4ElemType(Coords::Array{Tc,2}, Nodes, ::Type{<:Parallelogram2D}, ::Type{Cartesian3D}) where {Tc}
+    d12 = zeros(Tc,3)
+    d14 = zeros(Tc,3)
     function closure(item)
         # norm(cross(p(1)-p(2), p(1)-p(3)), 2)
         for k = 1 : 3
