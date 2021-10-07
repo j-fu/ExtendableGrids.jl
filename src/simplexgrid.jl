@@ -90,11 +90,15 @@ returned array X such that
   - There is a number q such that  `X[i+1]-X[i] == q*(X[i]-X[i-1])`
   - X is the array with the minimal possible number of points with the above property
   
-Caveat: the algorithm behind this is  well tested but unproven.
+Caveat: the algorithm behind this is  tested for many cases but unproven.
 
 Returns an Array containing the points of the subdivision.
 """
 function geomspace(a, b, ha, hb ; tol=1.0e-10)
+    a=Float64(a)
+    b=Float64(b)
+    ha=Float64(ha)
+    hb=Float64(hb)
     
     function _geomspace0(l,h0, hl, tol=1.0e-10)
         @assert (l>0.0)
@@ -147,7 +151,7 @@ function geomspace(a, b, ha, hb ; tol=1.0e-10)
             while  lmismatch(q,n)>0.0
                 n+=1
             end
-            
+
             # find initial interval for q containing
             # value with zero lmismatch 
             ns=0
@@ -177,7 +181,9 @@ function geomspace(a, b, ha, hb ; tol=1.0e-10)
                 end
                 xm=0.5*(xl+xr)
             end
-            q=xm
+            # increase q slightly to increase probability
+            # for last interval to be <=hl
+            q=xm*(1.0+100.0*tol)
             @assert ns<nsmax
             hmiss=hmismatch(q,n)
             if hmiss>1.0+tol 
@@ -185,7 +191,7 @@ function geomspace(a, b, ha, hb ; tol=1.0e-10)
             end
         end
         #  printf("%d %g %g %g\n",n,q,lmismatch(q,n),hmismatch(q,n))
-        
+
         X = Array{Float64,1}(undef,n+1)
         X[1]=0
         h=h0
@@ -194,23 +200,35 @@ function geomspace(a, b, ha, hb ; tol=1.0e-10)
             h*=q
         end
         X[n+1]=l
+
+        # sometimes, we get a zero sized last interval
+        # so we just pop the last element.
+        if X[n]>X[n+1]
+            pop!(X)
+            n=n-1
+            @assert X[n+1]-X[n] > hl/2
+        end
         return X
     end
 
-    # Map things to [0,b-a]
     @assert (ha>0.0)
     @assert (hb>0.0)
     @assert (a<b)
 
-
+    
+    # Map things to [0,b-a]
     tol=tol*(b-a)
-    if ha<=hb
+    if ha<hb-tol
         X=_geomspace0(b-a,ha,hb,tol)
         X.+=a
-    else
+    elseif ha>hb+tol
         X=-reverse(_geomspace0(b-a,hb,ha,tol))
         X.+=b
+    else
+        n=Int(ceil((b-a)/ha))
+        X=collect(range(a,b,length=n+1))
     end
+#    @show X[2]-X[1],ha, X[end]-X[end-1],hb
 
     @assert (X[2]-X[1])<=ha+tol
     @assert (X[end]-X[end-1])<=hb+tol
@@ -224,18 +242,18 @@ collect_or_assign(X::AbstractRange)=collect(X)
 is_monotone(X)=all(X[2:end]-X[1:end-1].>0)
 
 """
-$(TYPEDSIGNATURES)
+    c=glue(a,b)
 
-Glue together two vectors a and b resulting in a vector c. They last element 
-of a shall be equal (up to tol) to the first element of b.
+Glue together two vectors `a` and b resulting in a vector c. They last element 
+of `a` shall be equal (up to tol) to the first element of b.
 The result fulfills `length(c)=length(a)+length(b)-1`
 """
 function glue(_a::AbstractVector, _b::AbstractVector; tol=1.0e-10)
     a=collect_or_assign(_a)
     b=collect_or_assign(_b)
 
-    is_monotone(a) || error("a not monotone")
-    is_monotone(b) || error("b not monotone")
+    is_monotone(a) || error("non-monotonous first argument of glue")
+    is_monotone(b) || error("non-monotonous second argument of glue")
     Tv=promote_type(eltype(a),eltype(b))
     na=length(a)
     nb=length(b)

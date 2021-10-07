@@ -17,8 +17,23 @@ import PyPlot
         (X1[2]-X1[1])  ≈ (X2[end]-X2[end-1]) &&
             (X2[2]-X2[1])  ≈ (X1[end]-X1[end-1])
     end
+    function test_geomspace1(n,h0,h1)
+        for i=1:n
+            X=geomspace(0,1,h0*rand(),h1*rand())
+        end
+        true
+    end
+    
     @test test_geomspace()
+    @test test_geomspace1(100,0.01,0.01)
+    @test test_geomspace1(100,0.01,0.1)
+    @test test_geomspace1(100,0.1,0.01)
+    @test test_geomspace1(100,0.001,0.1)
+    @test test_geomspace1(100,0.0001,0.1)
 
+
+
+    
     function test_prepare_edges()
         ## Compared with pdelib; have more of these
         nodes=[
