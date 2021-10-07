@@ -15,7 +15,7 @@ using LinearAlgebra
 
 
 include("adjacency.jl")
-export Adjacency,VariableTargetAdjacency,FixedTargetAdjacency, GridAdjacencyTypes
+export Adjacency,VariableTargetAdjacency,FixedTargetAdjacency
 export atranspose,num_targets,num_sources,num_links,append!, max_num_targets_per_source
 export asparse,tryfix,makevar
 

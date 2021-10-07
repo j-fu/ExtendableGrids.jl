@@ -19,7 +19,7 @@ struct L2GTransformer{Tv <: Real, Ti <: Integer, EG <: AbstractElementGeometry, 
     citem::Base.RefValue{Int}
     nonlinear::Bool # so that users know if derivatives of map change in every quadrature point of cell or not
     Coords::Array{Tv,2}
-    Nodes::GridAdjacencyTypes{Ti}
+    Nodes::Adjacency{Ti}
     ItemVolumes::Array{Tv,1}
     A::Matrix{Tv}
     b::Vector{Tv}

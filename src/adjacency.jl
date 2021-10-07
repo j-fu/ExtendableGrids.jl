@@ -178,7 +178,6 @@ Adjacency type as union of FixedTargetAdjacency and VariableTargetAdjacency
 const Adjacency{T}=Union{FixedTargetAdjacency{T},VariableTargetAdjacency{T}}
 
 
-const GridAdjacencyTypes=Adjacency
 """
 $(TYPEDSIGNATURES)
 

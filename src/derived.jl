@@ -421,7 +421,7 @@ end
 
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{NodePatchGroups}) where {Tc,Ti}
-    xCellNodes::GridAdjacencyTypes = xgrid[CellNodes]
+    xCellNodes::Adjacency = xgrid[CellNodes]
     xNodeCells = atranspose(xCellNodes)
     nnodes = size(xgrid[Coordinates],2)
     ncells = num_sources(xCellNodes)

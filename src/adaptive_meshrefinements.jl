@@ -1,4 +1,4 @@
-function bulk_mark(xgrid, refinement_indicators, theta = 0.5; indicator_AT = ON_CELLS)
+function bulk_mark(xgrid::ExtendableGrid{Tv,Ti}, refinement_indicators::Vector{T}, theta = 0.5; indicator_AT = ON_CELLS) where {T,Tv,Ti}
 
     xFaceCells = xgrid[FaceCells]
     xFaceNodes = xgrid[FaceNodes]
@@ -6,7 +6,7 @@ function bulk_mark(xgrid, refinement_indicators, theta = 0.5; indicator_AT = ON_
 
     # redistribute refinement_indicators to face indicators (if necessary)
     if indicator_AT == ON_CELLS
-        refind4face = zeros(Float64,nfaces)
+        refind4face::Array{T,1} = zeros(T,nfaces)
         cell::Int = 0
         for face = 1 : nfaces
             for k = 1 : 2
@@ -44,25 +44,26 @@ end
 # first k nodes are the CellNodes
 # next m nodes are the CellFaces midpoints
 # next node is the CellMidpoint (if needed)
-red_refinement(::Type{<:Triangle2D}) = [1 4 6; 4 2 5; 6 5 3; 5 6 4]
-blueR_refinement(::Type{<:Triangle2D}) = [3 1 4; 4 2 5; 3 4 5]
-blueL_refinement(::Type{<:Triangle2D}) = [1 4 6; 2 3 4; 4 3 6]
-green_refinement(::Type{<:Triangle2D}) = [3 1 4; 2 3 4]
+const _no_refinement_Triangle2D = reshape([1 2 3],3,1)
+const _red_refinement_Triangle2D = [1 4 6; 4 2 5; 6 5 3; 5 6 4]'
+const _blueR_refinement_Triangle2D = [3 1 4; 4 2 5; 3 4 5]'
+const _blueL_refinement_Triangle2D = [1 4 6; 2 3 4; 4 3 6]'
+const _gree_refinement_Triangle2D = [3 1 4; 2 3 4]'
 
-function RGB_refinement_rule(EG::Type{<:Triangle2D}, marked_faces::Array{Bool,1})
+function RGB_refinement_rule(::Type{<:Triangle2D}, marked_faces::Array{Bool,1})
     if any(marked_faces) == true
         @assert marked_faces[1] = true # closure should always mark reference face
         if marked_faces[2] == true && marked_faces[3] == true
-            return red_refinement(EG), 1
+            return _red_refinement_Triangle2D
         elseif marked_faces[2] == true && marked_faces[3] == false
-            return blueR_refinement(EG), 2
+            return _blueR_refinement_Triangle2D
         elseif marked_faces[2] == false && marked_faces[3] == true
-            return blueL_refinement(EG), 3
+            return _blueL_refinement_Triangle2D
         elseif marked_faces[2] == false && marked_faces[3] == false
-            return green_refinement(EG), 4
+            return _gree_refinement_Triangle2D
         end
     else
-        return Array{Int,2}([1 2 3]), 5
+        return _no_refinement_Triangle2D
     end
 end
 
@@ -95,15 +96,14 @@ function RGB_refine(source_grid::ExtendableGrid{T,K}, facemarkers::Array{Bool,1}
     # currently it is assumed to be the same for all cells
     dim = dim_element(EG[1]) 
     
-    xCellNodes = VariableTargetAdjacency(Int32)
+    xCellNodes = VariableTargetAdjacency(K)
     xCellGeometries = []
-    xCellRegions = zeros(Int32,0)
+    xCellRegions = zeros(K,0)
     oldCellNodes = source_grid[CellNodes]
     oldCellFaces = source_grid[CellFaces]
     oldFaceNodes = source_grid[FaceNodes]
     nfaces = num_sources(oldFaceNodes)
     ncells = num_sources(oldCellNodes)
-    nrefcounts = [0,0,0,0,0]
 
     # closuring
     # @logmsg MoreInfo "RGB refinement with $(sum(facemarkers)) marked faces"
@@ -137,11 +137,11 @@ function RGB_refine(source_grid::ExtendableGrid{T,K}, facemarkers::Array{Bool,1}
             newvertices += 1
         end
     end
-    xCoordinates = zeros(Float64,size(oldCoordinates,1),oldvertices+newvertices)
+    xCoordinates = zeros(T,size(oldCoordinates,1),oldvertices+newvertices)
     @views xCoordinates[:,1:oldvertices] = oldCoordinates
 
     # refine faces
-    newvertex = zeros(Float64,size(xCoordinates,1))
+    newvertex = zeros(T,size(xCoordinates,1))
     newnodenr = oldvertices
     newnode4facemidpoint = zeros(Int,nfaces)
     nnodes4item = 0
@@ -166,106 +166,89 @@ function RGB_refine(source_grid::ExtendableGrid{T,K}, facemarkers::Array{Bool,1}
     nnodes4item = 3
     nfaces4item = 3
     ncells = 0
-    iEG = 1
-    subitemnodes = zeros(Int32,max_num_targets_per_source(oldCellNodes)+max_num_targets_per_source(oldCellFaces)+1)
+    subitemnodes = zeros(K,3)
     m = 0
     localmarked_faces = zeros(Bool,3)
-    refine_rule = Array{Int,2}([1 2 3])
+    refine_rule = RGB_refinement_rule(Triangle2D,localmarked_faces)
+    nnewcells::Int = 0
     for cell = 1 : num_sources(oldCellNodes)
         for f = 1 : 3
             localmarked_faces[f] = facemarkers[oldCellFaces[f,cell]]
         end
-        refine_rule, refid = RGB_refinement_rule(Triangle2D,localmarked_faces)
-        nrefcounts[refid] += 1
-        for j = 1 : size(refine_rule,1)
-            for k = 1 : size(refine_rule,2)
-                m = refine_rule[j,k]
+        refine_rule = RGB_refinement_rule(Triangle2D,localmarked_faces)
+        nnewcells = size(refine_rule,2)
+        for j = 1 : nnewcells
+            for k = 1 : 3
+                m = refine_rule[k,j]
                 if m <= nnodes4item 
                     subitemnodes[k] = oldCellNodes[m,cell]
                 elseif m <= nnodes4item + nfaces4item
                     subitemnodes[k] = newnode4facemidpoint[oldCellFaces[m-nnodes4item,cell]]
                 end       
             end    
-            append!(xCellNodes,subitemnodes[1:size(refine_rule,2)])
+            append!(xCellNodes,view(subitemnodes,:))
             push!(xCellGeometries,Triangle2D)
             push!(xCellRegions,oldCellRegions[cell])
         end    
-        ncells += size(refine_rule,1)
+        ncells += nnewcells
     end
-
-    # @logmsg DeepInfo "\tred/blueR/blueL/green/unrefined = $nrefcounts"
 
     # assign new cells to grid
     xgrid[Coordinates] = xCoordinates
-    if typeof(oldCellNodes) == Array{Int32,2}
+    if typeof(oldCellNodes) == Array{K,2}
         nnodes4item = size(oldCellNodes,1)
         xgrid[CellNodes] = reshape(xCellNodes.colentries,nnodes4item,num_sources(xCellNodes))
     else
         xgrid[CellNodes] = xCellNodes
     end
     if typeof(oldCellRegions) <: VectorOfConstants
-        xgrid[CellRegions] = VectorOfConstants{Int32}(1,ncells)
+        xgrid[CellRegions] = VectorOfConstants{K}(1,ncells)
     else
         xgrid[CellRegions] = xCellRegions
     end
-    xgrid[CellGeometries] = Array{DataType,1}(xCellGeometries)
+    xgrid[CellGeometries] = VectorOfConstants(Triangle2D,ncells)
 
 
     # determine new boundary faces
     oldBFaceNodes = source_grid[BFaceNodes]
     oldBFaceFaces = source_grid[BFaceFaces]
     oldBFaceRegions = source_grid[BFaceRegions]
-    oldBFaceGeometries = source_grid[BFaceGeometries]
     
-    xBFaceRegions = zeros(Int32,0)
-    xBFaceGeometries = []
+    xBFaceRegions = zeros(K,0)
     nbfaces = num_sources(oldBFaceNodes)
-    xBFaceNodes = []
+    xBFaceNodes = zeros(K,0)
 
-    EG = Base.unique(oldBFaceGeometries)
-
-    refine_rules = Array{Array{Int,2},1}(undef,length(EG))
-    for j = 1 : length(EG)
-        refine_rules[j] = uniform_refine_rule(EG[j])
-    end
+    refine_rule = uniform_refine_rule(Edge1D)
 
     newbfaces = 0
     for bface = 1 : nbfaces
         face = oldBFaceFaces[bface]
-        itemEG = oldBFaceGeometries[bface]
         if facemarkers[face] == true
-            nnodes4item = num_nodes(itemEG)
-            nfaces4item = num_faces(itemEG)
-            iEG = findfirst(isequal(itemEG), EG)
-
-            for j = 1 : size(refine_rules[iEG],1)
-                for k = 1 : size(refine_rules[iEG],2)
-                    m = refine_rules[iEG][j,k]
+            for j = 1 : 2
+                for k = 1 : 2
+                    m = refine_rule[j,k]
                     if dim == 2
-                        if m <= nnodes4item 
+                        if m <= 2 
                             subitemnodes[k] = oldBFaceNodes[m,bface]
                         else
                             subitemnodes[k] = newnode4facemidpoint[face]
                         end            
                     end
                 end
-                append!(xBFaceNodes,subitemnodes[1:size(refine_rules[iEG],2)])
-                push!(xBFaceGeometries,itemEG)
+                append!(xBFaceNodes,view(subitemnodes,1:2))
                 push!(xBFaceRegions,oldBFaceRegions[bface])
             end    
             newbfaces +=1
         else
-            append!(xBFaceNodes,oldBFaceNodes[:,bface])
-            push!(xBFaceGeometries,itemEG)
+            append!(xBFaceNodes,view(oldBFaceNodes,:,bface))
             push!(xBFaceRegions,oldBFaceRegions[bface])
         end
     end
     @debug "bisected bfaces = $newbfaces"
     
-    xgrid[BFaceNodes] = Array{Int32,2}(reshape(xBFaceNodes,(2,nbfaces+newbfaces)))
+    xgrid[BFaceNodes] = reshape(xBFaceNodes,(2,nbfaces+newbfaces))
     xgrid[BFaceRegions] = xBFaceRegions
-    xgrid[BFaceGeometries] = Array{DataType,1}(xBFaceGeometries)
+    xgrid[BFaceGeometries] = VectorOfConstants(Edge1D,nbfaces+newbfaces)
 
-    xgrid = split_grid_into(xgrid,Triangle2D)
     return xgrid
 end
