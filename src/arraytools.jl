@@ -75,42 +75,43 @@ function geomspace(a, b, ha, hb ; tol=1.0e-10, maxiterations=100)
         while  hmiss>1.0
             # increase number of intervals until
             # lmismatch becomes less than zero
-            while  lmismatch(q,n)>0.0
+            while  lmismatch(q,n)>tol
                 n+=1
             end
+
 
             # find initial interval for q containing
             # value with zero lmismatch 
             ns=0
             
-            while lmismatch(q,n)<0 &&  ns<maxiterations
+            while lmismatch(q,n)<tol &&  ns<maxiterations
                 q*=0.99
                 ns+=1
             end
             
-            xl=q
-            xr=q/0.99
+            ql=q*0.9
+            qr=q*1.1
             @assert ns<maxiterations "Unable to determine geomspace data after $(maxiterations) iterations"
             
             # bisection to define q with zero lmismatch
             ns=0
-            xm=0.5*(xl+xr)
-            while abs(xr-xl)>tol && ns<maxiterations
+            qm=0.5*(ql+qr)
+            while abs(qr-ql)>tol && ns<maxiterations
                 ns+=1
-                mmm=lmismatch(xm,n)
-                if abs(mmm)<tol
+                mmm=lmismatch(qm,n)
+                if abs(mmm)<0
                     break
-                elseif   lmismatch(xl,n)*mmm<0
-                    xr=xm
+                elseif lmismatch(ql,n)*mmm<0
+                    qr=qm
                 else
-                    xl=xm
+                    ql=qm
                 end
-                xm=0.5*(xl+xr)
+                qm=0.5*(ql+qr)
             end
             # increase q slightly to increase probability
             # for last interval to be <=hl
-            q=xm*(1.0+100.0*tol)
-            @assert ns<maxiterations
+            q=qm*(1.0+tol)
+            @assert ns<maxiterations "Unable to determine geomspace data after $(maxiterations) iterations"
             hmiss=hmismatch(q,n)
             if hmiss>1.0+tol 
                 n=n+1
@@ -127,13 +128,17 @@ function geomspace(a, b, ha, hb ; tol=1.0e-10, maxiterations=100)
         end
         X[n+1]=l
 
-        # sometimes, we get a zero sized last interval
-        # so we just pop the last element.
-        if X[n]>X[n+1]
-            pop!(X)
-            n=n-1
-            @assert X[n+1]-X[n] > hl/2 "Interval turned out to be less than $(hl)/2"
+
+        # Fix last interval and remove "overshoots"
+        if X[end]>l
+            X[end]=l
         end
+        
+        while X[end-1]+tol>X[end]
+            pop!(X)
+            X[end]=l
+        end
+        
         return X
     end
 
@@ -157,11 +162,14 @@ function geomspace(a, b, ha, hb ; tol=1.0e-10, maxiterations=100)
     end
 #    @show X[2]-X[1],ha, X[end]-X[end-1],hb
 
+
     @assert (X[2]-X[1])<=ha+tol  "First interval turned out to be larger than $(ha)"
+    @assert (X[2]-X[1])>ha/2  "First interval turned out to be less  than $(ha)/10"
     @assert (X[end]-X[end-1])<=hb+tol  "Last interval turned out to be larger than $(hb)"
-    @assert X[1]≈a  "Range start differs from $(b)"
-    @assert X[end]≈b "Range end differs from $(b)"
-    
+    @assert (X[end]-X[end-1])>=hb/2  "Last interval turned out to be less than $(hb)/10"
+    @assert abs(X[1]-a)<tol  "Range start $(X[1]) differs from $(a)"
+    @assert abs(X[end]-b)<tol "Range end $(X[end])  differs from $(b)"
+   
     return X
 end
 

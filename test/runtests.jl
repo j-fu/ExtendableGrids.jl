@@ -32,7 +32,7 @@ import PyPlot
     @test test_geomspace1(100,0.01,0.1)
     @test test_geomspace1(100,0.1,0.01)
     @test test_geomspace1(100,0.001,0.1)
-    @test test_geomspace1(100,0.0001,0.1)
+
 
     @test length(geomspace(0,1,0.01,0.1))==27
     @test length(geomspace(0,1,0.001,0.1))==47
@@ -76,12 +76,10 @@ end
         @show grid[EdgeNodes]
         @show grid[EdgeCells]
         
-        grid[CellEdges]==Int32[3 5; 2 4; 1 3] &&       
-        grid[FaceNodes]==Int32[2 3 3 4 4; 1 1 2 2 3] &&
-            grid[EdgeCells]==Int32[1 1 1 2 2; 0 0 2 0 0] 
+        grid[CellEdges]==Int32[1 2; 2 4; 3 5] &&       
+        grid[FaceNodes]==Int32[1 2 3 3 4; 2 3 1 4 2] &&
+            grid[EdgeCells]==Int32[1 1 1 2 2; 0 2 0 0 0]
 
-
-        true
     end
     @test test_prepare_edges()
 
