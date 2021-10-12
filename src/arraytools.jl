@@ -159,7 +159,7 @@ function geomspace(a, b, ha, hb ; tol=1.0e-10, maxiterations=100)
 
     @assert (X[2]-X[1])<=ha+tol  "First interval turned out to be larger than $(ha)"
     @assert (X[end]-X[end-1])<=hb+tol  "Last interval turned out to be larger than $(hb)"
-    @assert X[begin]≈a  "Range start differs from $(b)"
+    @assert X[1]≈a  "Range start differs from $(b)"
     @assert X[end]≈b "Range end differs from $(b)"
     
     return X
