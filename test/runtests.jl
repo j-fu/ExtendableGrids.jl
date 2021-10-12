@@ -3,7 +3,9 @@ ENV["MPLBACKEND"]="agg"
 using Test, ExtendableGrids, GridVisualize
 import PyPlot
 
-@testset "Basic" begin
+
+
+@testset "Geomspace" begin
     function test_geomspace()
         X1=geomspace(2.0,3.0,0.2,0.2)
         X2=collect(2:0.2:3)
@@ -17,6 +19,7 @@ import PyPlot
         (X1[2]-X1[1])  ≈ (X2[end]-X2[end-1]) &&
             (X2[2]-X2[1])  ≈ (X1[end]-X1[end-1])
     end
+
     function test_geomspace1(n,h0,h1)
         for i=1:n
             X=geomspace(0,1,h0*rand(),h1*rand())
@@ -30,6 +33,15 @@ import PyPlot
     @test test_geomspace1(100,0.1,0.01)
     @test test_geomspace1(100,0.001,0.1)
     @test test_geomspace1(100,0.0001,0.1)
+
+    @test length(geomspace(0,1,0.01,0.1))==27
+    @test length(geomspace(0,1,0.001,0.1))==47
+    @test length(geomspace(0,1,0.0001,0.1))==68
+    @test length(geomspace(0,1,0.00001,0.1))==90
+
+end
+
+@testset "Basic" begin
 
 
 

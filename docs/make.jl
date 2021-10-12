@@ -45,6 +45,7 @@ function mkdocs()
                  "more.md",
                  "assembly.md",
                  "cellfinder.md",
+                 "arraytools.md",
                  "gridconstructors.md",
                  "refinement.md",
                  "regionedit.md",

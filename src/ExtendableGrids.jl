@@ -161,6 +161,10 @@ export grid_triangle
 include("regionedit.jl")
 export cellmask!, bfacemask!, bedgemask!
 
+
+include("arraytools.jl")
+export glue,geomspace,linspace
+
 include("simplexgrid.jl")
 export simplexgrid, geomspace,glue
 export XCoordinates, YCoordinates, ZCoordinates
