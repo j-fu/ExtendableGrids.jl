@@ -43,6 +43,7 @@ function mkdocs()
                  "extendablegrid.md",
                  "subgrid.md",
                  "more.md",
+                 "voronoi.md",
                  "assembly.md",
                  "cellfinder.md",
                  "arraytools.md",

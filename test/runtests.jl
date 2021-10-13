@@ -68,14 +68,6 @@ end
         
         grid=simplexgrid(nodes,cells,cellmat,bfaces,bfacemat)
 
-        @show grid[CellFaces]
-        @show grid[FaceNodes]
-        @show grid[FaceCells]
-        
-        @show grid[CellEdges]
-        @show grid[EdgeNodes]
-        @show grid[EdgeCells]
-        
         grid[CellEdges]==Int32[1 2; 2 4; 3 5] &&       
         grid[FaceNodes]==Int32[1 2 3 3 4; 2 3 1 4 2] &&
             grid[EdgeCells]==Int32[1 1 1 2 2; 0 2 0 0 0]
@@ -195,7 +187,18 @@ if !Sys.isapple()
     end
 end
 
+function voronoitest()
+    g=simplexgrid(0:0.1:1)
+    @test g[VoronoiFaceCenters]≈[0.05  0.15  0.25  0.35  0.45  0.55  0.65  0.75  0.85  0.95]
+    g=simplexgrid(0:0.5:1,0:0.5:1)
+    @test g[VoronoiFaceCenters]≈[0.25  0.5   0.25  0.25  0.0   0.75  1.0   0.75  0.75  0.5   0.25  0.25  0.0   1.0   0.75  0.75;
+                                 0.0   0.25  0.25  0.5   0.25  0.0   0.25  0.25  0.5   0.75  0.75  1.0   0.75  0.75  0.75  1.0]
+end
 
+@testset "Voronoi" begin
+    voronoitest()
+end
+                           
 @testset "Grid Stuff" begin
     include("test_gridstuff.jl")
     run_grid_tests()

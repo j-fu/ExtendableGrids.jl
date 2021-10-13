@@ -119,6 +119,8 @@ include("more.jl")
 # export EdgeNodes, CellEdges, EdgeCells,
 export BFaceCells, BFaceNormals, BFaceEdges, BEdgeNodes
 
+include("voronoi.jl")
+export tricircumcenter!,VoronoiFaceCenters
 
 include("meshrefinements.jl")
 export split_grid_into
