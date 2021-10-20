@@ -641,3 +641,186 @@ function Base.write(fname::String, g::ExtendableGrid; format="")
     end
     nothing
 end
+
+
+
+"""
+$(TYPEDSIGNATURES)
+
+Merge two grids along their common boundary facets. 
+
+- g1: First grid to be merged
+- g2: Second grid to be merged
+- breg:  Interior boundary region number of merged facets. If zero (default value), no extra facets are generated.
+- tol:  Distance below which two points are seen as identical. Default: 1.0e-10
+
+"""
+function glue(g1,g2; breg=0, tol=1.0e-10)
+    
+    dim=dim_space(g1)
+
+    bfn1=g1[BFaceNodes]
+    bfn2=g2[BFaceNodes]
+
+    nbf1=size(bfn1,2)
+    nbf2=size(bfn2,2)
+
+    coord1=g1[Coordinates]
+    coord2=g2[Coordinates]
+
+    nn1=size(coord1,2)
+    nn2=size(coord2,2)
+
+    # numbers of faces in grid1 which match nodes in grid2
+    matching_faces=zeros(Int,nbf2)
+    n_matching_faces=0
+
+
+    # numbers of nodes in grid1 which match nodes in grid2
+    matching_nodes=zeros(Int,nn2)
+    n_matching_nodes=0
+
+    
+    # Add matching pair to index of matching pairs
+    function add_match!(match_list, nmatch, i1,i2)
+        @assert match_list[i2]==0 || match_list[i2]==i1
+        if match_list[i2]==0
+            match_list[i2]=i1;
+            nmatch+=1
+        end
+        nmatch
+    end
+
+    # Add two point indices to list of matching points
+    add_matching_points(ip1,ip2) = n_matching_nodes = add_match!(matching_nodes,n_matching_nodes,ip1,ip2)
+
+    # Add two face indices to list of matching faces
+    add_matching_faces(if1,if2) = n_matching_faces = add_match!(matching_faces,n_matching_faces,if1,if2)
+
+    ## Check if two points match (distance < tol)
+    points_match(ip1, ip2) = @views norm(coord1[:,ip1]-coord2[:,ip2])<tol
+
+    # Check if points in faces match, if so, add them to point matching index
+    # Check if faces match, if so, add them to face matching index
+    function match_faces(if1,if2) 
+        nmatch=0
+        for ip1=1:dim
+            for ip2=1:dim
+                xip1=bfn1[ip1,if1]
+                xip2=bfn2[ip2,if2]
+                if points_match(xip1,xip2)
+                    add_matching_points(xip1,xip2)
+                    nmatch+=1
+                end
+            end
+        end
+        
+      if nmatch==dim
+          add_matching_faces(if1,if2);
+      end
+    end
+
+    
+    # Run over all pairs of boundary faces and try to match them
+    for ibf1=1:nbf1
+        for ibf2=1:nbf2
+            match_faces(ibf1,ibf2)
+        end
+    end
+    @info "glue: matches found: nodes $(n_matching_nodes) bfaces: $(n_matching_faces)"
+
+
+
+    
+    creg1=g1[CellRegions]
+    creg2=g2[CellRegions]
+    
+    breg1=g1[BFaceRegions]
+    breg2=g2[BFaceRegions]
+    
+    cn1=g1[CellNodes]
+    cn2=g2[CellNodes]
+
+    nc1=size(cn1,2)
+    nc2=size(cn2,2)
+
+
+    # transposed list of matching faces
+    mf1=zeros(Int,nbf1)
+    for if2=1:nbf2
+        if matching_faces[if2]!=0
+            mf1[matching_faces[if2]]=if2
+        end
+    end
+
+    mfac = breg == 0 ? 2 : 1
+
+    coordx=zeros(dim,nn1+nn2-n_matching_nodes)
+    cnx=zeros(Int, dim+1,nc1+nc2)
+    cregx=zeros(Int,nc1+nc2)
+    bfnx=zeros(Int,dim,nbf1+nbf2-mfac*n_matching_faces)
+    bregx=zeros(Int,nbf1+nbf2-mfac*n_matching_faces)
+
+
+
+    #   copy all data from g1 into new fields
+    for ix=1:nn1
+        @views coordx[:,ix].=coord1[:,ix]
+    end
+
+    for ix=1:nc1
+        cregx[ix]=creg1[ix]
+        @views cnx[:,ix].=cn1[:,ix]
+    end
+
+    ibfx=1
+    for ibf1=1:nbf1
+        if mf1[ibf1]!=0 && breg == 0
+            continue
+        end
+        if mf1[ibf1]!=0
+            bregx[ibfx]=breg
+        else
+            bregx[ibfx]=breg1[ibf1]
+        end
+        @views bfnx[:,ibfx].=bfn1[:,ibf1]
+        ibfx+=1
+    end
+
+
+    # re-calculate matching nodes with new global numbers
+    # add missing coordinates
+    ix=nn1+1
+    for in2=1:nn2
+        if matching_nodes[in2]!=0
+            continue
+        end
+        matching_nodes[in2]=ix
+        @views coordx[:,ix].=coord2[:,in2]
+        ix=ix+1
+    end
+
+
+    # copy missing data from g2 into arrays.
+    ix=nc1+1
+    for ic2=1:nc2
+        cregx[ix]=creg2[ic2]
+        for id=1:dim+1
+            cnx[id,ix]=matching_nodes[cn2[id,ic2]]
+        end
+        ix=ix+1
+    end
+
+    for ibf2=1:nbf2
+        if matching_faces[ibf2]!=0
+            continue
+        end
+        bregx[ibfx]=breg2[ibf2]
+        for id=1:dim
+            bfnx[id,ibfx]=matching_nodes[bfn2[id,ibf2]]
+        end
+        ibfx+=1
+    end
+    @assert ibfx == nbf1+nbf2-mfac*n_matching_faces+1
+    simplexgrid(coordx,cnx,cregx,bfnx,bregx)
+end

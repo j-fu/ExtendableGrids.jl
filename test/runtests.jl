@@ -187,12 +187,52 @@ if !Sys.isapple()
     end
 end
 
+
+
+function tglue(;dim=2,breg=0)
+    X1=linspace(0,1,5)
+    Y1=linspace(0,1,5)
+    Z1=linspace(0,1,5)
+
+    X2=linspace(1,2,5)
+    Y2=linspace(0,0.5,3)
+    Z2=linspace(0,0.5,3)
+
+    if dim==1
+        g1=simplexgrid(X1)
+        g2=simplexgrid(X2)
+    end
+    
+    if dim==2
+        g1=simplexgrid(X1,Y1)
+        g2=simplexgrid(X2,Y2)
+    end
+    
+    if dim==3
+        g1=simplexgrid(X1,Y1,Z1)
+        g2=simplexgrid(X2,Y2,Z2)
+    end
+    
+    glue(g1,g2,breg=breg)
+end
+
+@testset "Glue" begin
+    @test testgrid(tglue(;dim=1,breg=0),(9,8,2))
+    @test testgrid(tglue(;dim=1,breg=1),(9,8,3))
+    @test testgrid(tglue(;dim=2,breg=0),(37, 48, 24))
+    @test testgrid(tglue(;dim=2,breg=1),(37, 48, 26))
+    @test testgrid(tglue(;dim=3,breg=0),(161, 480, 256))
+    @test testgrid(tglue(;dim=3,breg=1),(161, 480, 264))
+end
+
+
+    
 function voronoitest()
     g=simplexgrid(0:0.1:1)
     @test g[VoronoiFaceCenters]≈[0.05  0.15  0.25  0.35  0.45  0.55  0.65  0.75  0.85  0.95]
     g=simplexgrid(0:0.5:1,0:0.5:1)
     @test g[VoronoiFaceCenters]≈[0.25  0.5   0.25  0.25  0.0   0.75  1.0   0.75  0.75  0.5   0.25  0.25  0.0   1.0   0.75  0.75;
-                                 0.0   0.25  0.25  0.5   0.25  0.0   0.25  0.25  0.5   0.75  0.75  1.0   0.75  0.75  0.75  1.0]
+                                  0.0   0.25  0.25  0.5   0.25  0.0   0.25  0.25  0.5   0.75  0.75  1.0   0.75  0.75  0.75  1.0]
 end
 
 @testset "Voronoi" begin

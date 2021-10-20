@@ -168,7 +168,7 @@ include("arraytools.jl")
 export glue,geomspace,linspace
 
 include("simplexgrid.jl")
-export simplexgrid, geomspace,glue
+export simplexgrid, geomspace, glue
 export XCoordinates, YCoordinates, ZCoordinates
 export writefile
 
