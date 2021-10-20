@@ -168,6 +168,13 @@ end
 @testset "3D" begin
     @test testgrid(quadrilateral(),(330,1200,440))
     @test mask_bedges()
+
+    X=collect(0:0.25:1)
+    gxy=simplexgrid(X,X)
+    gxyz=simplexgrid(gxy,X)
+    g=simplexgrid(X,X,X)
+    @test testgrid(gxyz,(125,384,192))
+    @test g[Coordinates]≈gxyz[Coordinates]
 end
 
 if !Sys.isapple()

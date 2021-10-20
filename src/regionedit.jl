@@ -32,6 +32,7 @@ function cellmask!(grid::ExtendableGrid,
         end
     end
     grid[NumCellRegions]=max(num_cellregions(grid),ireg)
+    grid
 end
 
 

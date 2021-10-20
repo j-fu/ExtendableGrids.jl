@@ -446,8 +446,8 @@ function  simplexgrid(_X::AbstractVector,_Y::AbstractVector,_Z::AbstractVector)
 	        p100 = ip+1;
 	        p010 = ip  +nx;
 	        p110 = ip+1+nx;
-	        p001 = ip	+nxy;
-	        p101 = ip+1	+nxy;
+	        p001 = ip     +nxy;
+	        p101 = ip+1   +nxy;
 	        p011 = ip  +nx+nxy;
 	        p111 = ip+1+nx+nxy;
 
@@ -491,6 +491,119 @@ function  simplexgrid(_X::AbstractVector,_Y::AbstractVector,_Z::AbstractVector)
 end
 
 
+"""
+$(TYPEDSIGNATURES)
+Create tensor product of 2D  grid and 1D coordinate arrays.
+
+Cellregions and outer facet regions are taken over from 2D grid.
+Top an bottom facet region given in ibot and itop, by default these
+are detected from the largest cell region number of the 2D grid.
+"""
+function simplexgrid(grid2::ExtendableGrid, coordZ; ibot=0, itop=0)
+
+    coord2=grid2[Coordinates]
+    nnodes2=size(coord2,2)
+    nnodesZ=length(coordZ)
+    nnodes3=nnodes2*nnodesZ
+    coord3=zeros(3,nnodes3)
+    
+    cells2=grid2[CellNodes]
+    ncells2=size(cells2,2)
+    ncells3=ncells2*3*(nnodesZ-1)
+    cells3=zeros(Int, 4,ncells3)
+
+    cellregions2=grid2[CellRegions]
+    cellregions3=zeros(Int, ncells3)
+
+    bfaces2=grid2[BFaceNodes]
+    nbfaces2=size(bfaces2,2)
+    nbfaces3=2*ncells2+2*nbfaces2*(nnodesZ-1)
+    bfaces3=zeros(Int,3,nbfaces3)
+
+    bfaceregions2=grid2[BFaceRegions]
+    bfaceregions3=zeros(Int,nbfaces3)
+
+
+    # handle defaults of top and bottom bc numbers
+    nbfr=maximum(bfaceregions2)
+    if ibot==0
+        nbfr=nbfr+1
+        ibot=nbfr
+    end
+
+    if itop==0
+        nbfr=nbfr+1
+        itop=nbfr
+    end
+
+    # 3D coordinates
+    i3=1
+    for iZ=1:nnodesZ
+        for i2=1:nnodes2
+            coord3[1,i3]=coord2[1,i2]
+            coord3[2,i3]=coord2[2,i2]
+            coord3[3,i3]=coordZ[iZ]
+            i3+=1
+        end
+    end
+    
+
+    # 3D cells
+    i3=1
+    ishift=0
+    for iZ=1:nnodesZ-1
+        for i2=1:ncells2
+            n1 = cells2[1,i2]+ishift
+            n2 = cells2[2,i2]+ishift
+            n3 = cells2[3,i2]+ishift
+
+            n1>n2 ? (n1,n2) = (n2,n1) : nothing
+            n2>n3 ? (n2,n3) = (n3,n2) : nothing
+            n1>n2 ? (n1,n2) = (n2,n1) : nothing
+       
+            cells3[:,i3  ].=(n1,n2,        n3,        n3+nnodes2)
+            cells3[:,i3+1].=(n1,n2,        n2+nnodes2,n3+nnodes2)
+            cells3[:,i3+2].=(n1,n1+nnodes2,n2+nnodes2,n3+nnodes2)
+
+
+            cellregions3[i3]   = cellregions2[i2]
+            cellregions3[i3+1] = cellregions2[i2]
+            cellregions3[i3+2] = cellregions2[i2]
+            
+            i3+=3
+        end
+        ishift+=nnodes2
+    end
+
+
+    #xy parallel  facets
+    i3=1
+    for iZ ∈ [1,nnodesZ]
+        ishift=(iZ-1)*nnodes2
+        for i2=1:ncells2
+            @views bfaces3[:,i3].=cells2[:,i2].+ishift
+            bfaceregions3[i3] = iZ==1 ? ibot : itop
+            i3+=1
+        end
+    end
+
+    # facets vertical to the x-y plane
+    ishift=0
+    for iZ=1:nnodesZ-1
+        for i2=1:nbfaces2
+            n1=bfaces2[1,i2]+ishift
+            n2=bfaces2[2,i2]+ishift
+            n1>n2 ? (n1,n2)=(n2,n1) : nothing
+            @views bfaces3[:,i3  ].=(n1,n2,        n2+nnodes2)
+            @views bfaces3[:,i3+1].=(n1,n1+nnodes2,n2+nnodes2)
+            bfaceregions3[i3]   = bfaceregions2[i2]
+            bfaceregions3[i3+1] = bfaceregions2[i2]
+            i3+=2
+        end
+        ishift+=nnodes2
+    end
+    simplexgrid(coord3,cells3,cellregions3,bfaces3,bfaceregions3)
+end
 
 
 ######################################################
