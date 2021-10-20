@@ -55,7 +55,11 @@ end
 
 
 
+"""
+$(TYPEDEF)
 
+Centers of voronoi cell facets (currently 1D, 2D).
+"""
 abstract type VoronoiFaceCenters <: AbstractGridFloatArray2D  end
 
 
