@@ -158,6 +158,7 @@ export grid_unitcube
 export grid_lshape
 export grid_unitsquare, grid_unitsquare_mixedgeometries
 export grid_triangle
+export ringsector
 
 
 include("regionedit.jl")

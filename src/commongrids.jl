@@ -155,3 +155,82 @@ function grid_unitsquare_mixedgeometries()
     return xgrid
 end
 
+#################################
+# Specific tensor product grids #
+#################################
+
+function ringsector(rad,ang; eltype=Triangle2D)
+    Tv=Float32
+    Ti=Int32
+    
+    coord=ElasticArray{Tv,2}(undef,2,0)
+    cells=ElasticArray{Ti,2}(undef,3,0)
+    bfaces=ElasticArray{Ti,2}(undef,2,0)
+    bfaceregions=Vector{Ti}(undef,0)
+    cellregions=Vector{Ti}(undef,0)
+
+    nrad=length(rad)
+    icell=0
+    ibface=0
+
+    fullcircle= ang[end]-ang[1]≈2π
+    
+    narc=length(ang)
+
+    for iarc=1:narc
+        ϕ=ang[iarc]
+        x=cos(ϕ)
+        y=sin(ϕ)
+        for irad=1:nrad
+            append!(coord,(rad[irad]*x,rad[irad]*y))
+            icoord=size(coord,2)
+	    if irad<nrad
+	        if iarc<narc
+		    i1=icoord
+		    i2=i1+1
+                    if fullcircle && iarc==narc-1
+                        i3=irad
+                        i4=irad+1
+                    else
+		        i3=i1+nrad
+		        i4=i2+nrad
+                    end
+                    append!(cells,(i1,i2,i3))
+                    push!(cellregions,1)
+                    append!(cells,(i3,i2,i4))
+                    push!(cellregions,1)
+                end
+            end
+            if irad==1 && iarc<narc
+                if fullcircle && iarc==narc-1
+                    append!(bfaces,(icoord,1))
+                else
+                    append!(bfaces,(icoord,icoord+nrad))
+                end
+                push!(bfaceregions,1)
+            end
+            if irad==nrad && iarc<narc
+                if fullcircle && iarc==narc-1
+                    append!(bfaces,(icoord,irad))
+                else
+                    append!(bfaces,(icoord,icoord+nrad))
+                end
+                push!(bfaceregions,2)
+            end
+
+            if !fullcircle
+                if iarc==1 && irad<nrad
+                    append!(bfaces,(icoord,icoord+1))
+                    push!(bfaceregions,3)
+                end
+                
+                if iarc==narc && irad<nrad
+                    append!(bfaces,(icoord,icoord+1))
+                    push!(bfaceregions,4)
+                end
+            end
+        end
+    end
+    simplexgrid(coord,cells,cellregions,bfaces,bfaceregions)
+end
+
