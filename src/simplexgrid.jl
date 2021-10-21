@@ -495,11 +495,12 @@ end
 $(TYPEDSIGNATURES)
 Create tensor product of 2D  grid and 1D coordinate arrays.
 
-Cellregions and outer facet regions are taken over from 2D grid.
-Top an bottom facet region given in ibot and itop, by default these
-are detected from the largest cell region number of the 2D grid.
+Cellregions and outer facet regions are taken over from 2D grid
+and added to `cell_offset`
+Top an bottom facet regions are detected from the cell regions and
+added to `bot_offset` resp. `top_offset`.
 """
-function simplexgrid(grid2::ExtendableGrid, coordZ; ibot=0, itop=0)
+function simplexgrid(grid2::ExtendableGrid, coordZ; bot_offset=0,cell_offset=0,top_offset=0)
 
     coord2=grid2[Coordinates]
     nnodes2=size(coord2,2)
@@ -523,18 +524,6 @@ function simplexgrid(grid2::ExtendableGrid, coordZ; ibot=0, itop=0)
     bfaceregions2=grid2[BFaceRegions]
     bfaceregions3=zeros(Int,nbfaces3)
 
-
-    # handle defaults of top and bottom bc numbers
-    nbfr=maximum(bfaceregions2)
-    if ibot==0
-        nbfr=nbfr+1
-        ibot=nbfr
-    end
-
-    if itop==0
-        nbfr=nbfr+1
-        itop=nbfr
-    end
 
     # 3D coordinates
     i3=1
@@ -566,9 +555,9 @@ function simplexgrid(grid2::ExtendableGrid, coordZ; ibot=0, itop=0)
             cells3[:,i3+2].=(n1,n1+nnodes2,n2+nnodes2,n3+nnodes2)
 
 
-            cellregions3[i3]   = cellregions2[i2]
-            cellregions3[i3+1] = cellregions2[i2]
-            cellregions3[i3+2] = cellregions2[i2]
+            cellregions3[i3]   = cellregions2[i2]+cell_offset
+            cellregions3[i3+1] = cellregions2[i2]+cell_offset
+            cellregions3[i3+2] = cellregions2[i2]+cell_offset
             
             i3+=3
         end
@@ -582,7 +571,7 @@ function simplexgrid(grid2::ExtendableGrid, coordZ; ibot=0, itop=0)
         ishift=(iZ-1)*nnodes2
         for i2=1:ncells2
             @views bfaces3[:,i3].=cells2[:,i2].+ishift
-            bfaceregions3[i3] = iZ==1 ? ibot : itop
+            bfaceregions3[i3] = iZ==1 ? cellregions2[i2]+bot_offset :  cellregions2[i2]+top_offset 
             i3+=1
         end
     end
