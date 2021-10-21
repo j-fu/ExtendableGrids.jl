@@ -40,85 +40,77 @@ end
 $(TYPEDSIGNATURES)
 
 Edit region numbers of grid  boundary facets  via rectangular mask.
-For 1D grids, inner boundaries can be added by this method.
+If `allow_new` is true (default), new facets are added
 """
 function bfacemask!(grid::ExtendableGrid,
                     maskmin::AbstractArray,
                     maskmax::AbstractArray,
                     ireg::Int;
+                    allow_new=true,
                     tol=1.0e-10)
 
     xmaskmin=maskmin.-tol
     xmaskmax=maskmax.+tol
 
 
-    nbfaces=num_bfaces(grid)
     bfacenodes=grid[BFaceNodes]
+    nbfaces=size(bfacenodes,2)
+
+
+
+    
     Ti=eltype(bfacenodes)
     dim=dim_space(grid)
     bfaceregions=grid[BFaceRegions]
-    new_bfacenodes=ElasticArray{Ti,2}(bfacenodes)
     coord=grid[Coordinates]
-    
-    function isbface(ix)
-        for ibface=1:num_bfaces(grid)
-            if bfacenodes[1,ibface]==ix
-                return ibface
-            end
-        end
-        return 0
-    end
 
-    function isbface(ix,iy)
-        for ibface=1:num_bfaces(grid)
-            if (bfacenodes[1,ibface] == ix && bfacenodes[2,ibface] == iy) ||
-                (bfacenodes[1,ibface] == iy && bfacenodes[2,ibface] == ix)
-                return ibface
-            end
-        end
-        return 0
-    end
-
-    if dim_space(grid)==1
-        for inode=1:num_nodes(grid)
-            x=coord[1,inode]
-            if x>xmaskmin[1] && x<xmaskmax[1]
-                ibface=isbface(inode)
-                if ibface>0
-                    bfaceregions[ibface]=ireg
-                else
-                    push!(bfaceregions,ireg)
-                    append!(new_bfacenodes,[inode])
-                end
-            end
-        end
-    else
+    xfacenodes=bfacenodes
+    if allow_new
+        new_bfacenodes=ElasticArray{Ti,2}(bfacenodes)
         facenodes=grid[FaceNodes]
-        for iface=1:size(facenodes,2)
-            in_region=true
-            for inode=1:num_targets(facenodes,iface)
-                ignode=facenodes[inode,iface]
-                for idim=1:dim_space(grid)
-                    if coord[idim,ignode]<xmaskmin[idim]
-                        in_region=false
-                    elseif coord[idim,ignode]>xmaskmax[idim]
-                        in_region=false
-                    end
+        bfacefaces=grid[BFaceFaces]
+        nfaces=size(facenodes,2)
+        bmark=zeros(Int,nfaces)
+        for ibface=1:nbfaces
+            bmark[bfacefaces[ibface]]=ibface
+        end
+        xfacenodes=facenodes
+    end
+    
+    for ixface=1:size(xfacenodes,2)
+        in_region=true
+        for inode=1:num_targets(xfacenodes,ixface)
+            ignode=xfacenodes[inode,ixface]
+            for idim=1:dim_space(grid)
+                if coord[idim,ignode]<xmaskmin[idim]
+                    in_region=false
+                elseif coord[idim,ignode]>xmaskmax[idim]
+                    in_region=false
                 end
             end
-            if in_region
-                ibface=isbface(facenodes[1,iface],facenodes[2,iface])
+        end
+
+        if in_region
+            if allow_new
+                ibface=bmark[ixface]
                 if ibface>0
                     bfaceregions[ibface]=ireg
                 else
                     push!(bfaceregions,ireg)
-                    append!(new_bfacenodes,[facenodes[1,iface],facenodes[2,iface]])
+                    @views append!(new_bfacenodes,xfacenodes[:,ixface])
                 end
+            else
+                bfaceregions[ixface]=ireg
             end
         end
     end
+
+
+    delete!(grid,BFaceFaces)
     btype=grid[BFaceGeometries][1]
-    grid[BFaceNodes]=Array{Ti,2}(new_bfacenodes)
+    if allow_new
+        grid[BFaceNodes]=Array{Ti,2}(new_bfacenodes)
+    end
     grid[BFaceGeometries]=VectorOfConstants(btype,length(bfaceregions))
     grid[NumBFaceRegions]=max(num_bfaceregions(grid),ireg)
     return grid

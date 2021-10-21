@@ -207,6 +207,14 @@ Set new grid component
 """
 Base.setindex!(grid::ExtendableGrid,v,T::Type{<:AbstractGridComponent})= grid.components[T]=veryform(grid,v,T)
 
+"""
+$(TYPEDSIGNATURES)
+
+Remove grid component
+"""
+Base.delete!(grid::ExtendableGrid,T::Type{<:AbstractGridComponent})= delete!(grid.components,T)
+
+
 
 """
 $(TYPEDSIGNATURES)
