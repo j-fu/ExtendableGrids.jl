@@ -405,7 +405,7 @@ local_celledgenodes(::Type{<:Hexahedron3D}) = _local_celledgenodes_Hexahedron3D
 
 function Volume4ElemType(Coords, Nodes, ::Type{<:Vertex0D}, ::Type{<:ExtendableGrids.AbstractCoordinateSystem})
     function closure(item)
-        return 0
+        return 1
     end
 end
 
