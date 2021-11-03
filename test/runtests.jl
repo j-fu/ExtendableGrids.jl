@@ -177,7 +177,7 @@ end
     @test g[Coordinates]≈gxyz[Coordinates]
 end
 
-if !Sys.isapple()
+if !Sys.isapple() && !Sys.iswindows()
     @testset "plotting examples" begin
         include("../docs/makeplots.jl")
         picdir=mktempdir()
