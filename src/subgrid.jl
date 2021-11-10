@@ -165,7 +165,7 @@ function subgrid(parent,
         subgrid[BFaceNodes]=tryfix(sub_bfacenodes)
         subgrid[NumBFaceRegions]=maximum(sub_bfaceregions)
     end
-    
+    subgrid[CoordinateSystem]=parent[CoordinateSystem]
     subgrid
 end
 
