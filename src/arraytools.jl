@@ -32,7 +32,7 @@ function geomspace(a, b, ha, hb ; tol=1.0e-10, maxiterations=100)
         @assert (h0>0.0)
         @assert (hl>=h0)
         @assert((hl+h0)<l)
-        
+
         #  We need to  adjust two things:
         
         # The sum of the geometric progression must
@@ -88,7 +88,6 @@ function geomspace(a, b, ha, hb ; tol=1.0e-10, maxiterations=100)
                 q*=0.99
                 ns+=1
             end
-            
             ql=q*0.9
             qr=q*1.1
             @assert ns<maxiterations "Unable to determine geomspace data after $(maxiterations) iterations"
@@ -99,7 +98,7 @@ function geomspace(a, b, ha, hb ; tol=1.0e-10, maxiterations=100)
             while abs(qr-ql)>tol && ns<maxiterations
                 ns+=1
                 mmm=lmismatch(qm,n)
-                if abs(mmm)<0
+                if abs(mmm)<tol
                     break
                 elseif lmismatch(ql,n)*mmm<0
                     qr=qm
@@ -111,6 +110,7 @@ function geomspace(a, b, ha, hb ; tol=1.0e-10, maxiterations=100)
             # increase q slightly to increase probability
             # for last interval to be <=hl
             q=qm*(1.0+tol)
+
             @assert ns<maxiterations "Unable to determine geomspace data after $(maxiterations) iterations"
             hmiss=hmismatch(q,n)
             if hmiss>1.0+tol 
