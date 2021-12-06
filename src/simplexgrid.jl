@@ -106,15 +106,15 @@ function simplexgrid(_X::AbstractVector)
     X=collect_or_assign(_X)
     #    is_monotone(X) || error("X not monotone")
     coord=reshape(X,1,length(X))
-    cellnodes=zeros(Int32,2,length(X)-1)
-    cellregions=zeros(Int32,length(X)-1)
+    cellnodes=zeros(Cint,2,length(X)-1)
+    cellregions=zeros(Cint,length(X)-1)
     for i=1:length(X)-1 
         cellnodes[1,i]=i
         cellnodes[2,i]=i+1
         cellregions[i]=1
     end
-    bfacenodes=Array{Int32}(undef,1,2)
-    bfaceregions=zeros(Int32,2)
+    bfacenodes=Array{Cint}(undef,1,2)
+    bfaceregions=zeros(Cint,2)
     bfacenodes[1,1]=1
     bfacenodes[1,2]=length(X)
     bfaceregions[1]=1
@@ -231,10 +231,10 @@ function  simplexgrid(_X::AbstractVector, _Y::AbstractVector)
     num_bfacenodes=2*(nx-1)+2*(ny-1)
     
     coord=zeros(Tc,2,num_nodes)
-    cellnodes=zeros(Int32,3,num_cells)
-    cellregions=zeros(Int32,num_cells)
-    bfacenodes=Array{Int32}(undef,2,num_bfacenodes)
-    bfaceregions=zeros(Int32,num_bfacenodes)
+    cellnodes=zeros(Cint,3,num_cells)
+    cellregions=zeros(Cint,num_cells)
+    bfacenodes=Array{Cint}(undef,2,num_bfacenodes)
+    bfaceregions=zeros(Cint,num_bfacenodes)
     
     ipoint=0
     for iy=1:ny
@@ -413,7 +413,7 @@ function  simplexgrid(_X::AbstractVector,_Y::AbstractVector,_Z::AbstractVector)
     num_cells=6*(nx-1)*(ny-1)*(nz-1)
     num_bfacenodes=4*(nx-1)*(ny-1)+4*(nx-1)*(nz-1)+4*(ny-1)*(nz-1)
 
-    Ti=Int32
+    Ti=Cint
     coord=zeros(Tc,3,num_nodes)
     cellnodes=zeros(Ti,4,num_cells)
     cellregions=zeros(Ti,num_cells)
@@ -501,7 +501,7 @@ Top an bottom facet regions are detected from the cell regions and
 added to `bot_offset` resp. `top_offset`.
 """
 function simplexgrid(grid2::ExtendableGrid, coordZ; bot_offset=0,cell_offset=0,top_offset=0)
-
+    Ti=Cint
     coord2=grid2[Coordinates]
     nnodes2=size(coord2,2)
     nnodesZ=length(coordZ)
@@ -511,18 +511,18 @@ function simplexgrid(grid2::ExtendableGrid, coordZ; bot_offset=0,cell_offset=0,t
     cells2=grid2[CellNodes]
     ncells2=size(cells2,2)
     ncells3=ncells2*3*(nnodesZ-1)
-    cells3=zeros(Int, 4,ncells3)
+    cells3=zeros(Ti, 4,ncells3)
 
     cellregions2=grid2[CellRegions]
-    cellregions3=zeros(Int, ncells3)
+    cellregions3=zeros(Ti, ncells3)
 
     bfaces2=grid2[BFaceNodes]
     nbfaces2=size(bfaces2,2)
     nbfaces3=2*ncells2+2*nbfaces2*(nnodesZ-1)
-    bfaces3=zeros(Int,3,nbfaces3)
+    bfaces3=zeros(Ti,3,nbfaces3)
 
     bfaceregions2=grid2[BFaceRegions]
-    bfaceregions3=zeros(Int,nbfaces3)
+    bfaceregions3=zeros(Ti,nbfaces3)
 
 
     # 3D coordinates
@@ -602,6 +602,7 @@ $(TYPEDSIGNATURES)
 Read grid from file. Currently for pdelib sg format only
 """
 function simplexgrid(file::String;format="")
+    Ti=Cint
     (fbase,fext)=splitext(file)
     if format==""
         format=fext[2:end]
@@ -621,18 +622,18 @@ function simplexgrid(file::String;format="")
         error("Read grid: wrong format version: $(version)")
     end
 
-    dim::Int32=0
+    dim::Ti=0
     coord=Array{Float64,2}(undef,0,0)
-    cells=Array{Int32,2}(undef,0,0)
-    regions=Array{Int32,1}(undef,0)
-    faces=Array{Int32,2}(undef,0,0)
-    bregions=Array{Int32,1}(undef,0)
+    cells=Array{Ti,2}(undef,0,0)
+    regions=Array{Ti,1}(undef,0)
+    faces=Array{Ti,2}(undef,0,0)
+    bregions=Array{Ti,1}(undef,0)
     while(true)
         if (trytoken(tks,"DIMENSION"))
-            dim=parse(Int32,gettoken(tks));
+            dim=parse(Ti,gettoken(tks));
         elseif (trytoken(tks,"NODES")) 
-            nnodes=parse(Int32,gettoken(tks));
-            embdim=parse(Int32,gettoken(tks));
+            nnodes=parse(Ti,gettoken(tks));
+            embdim=parse(Ti,gettoken(tks));
             if(dim!=embdim)
                 error("Dimension error (DIMENSION $(dim)) in section NODES")
             end
@@ -643,14 +644,14 @@ function simplexgrid(file::String;format="")
                 end
             end
         elseif (trytoken(tks,"CELLS"))
-            ncells=parse(Int32,gettoken(tks));
-            cells=Array{Int32,2}(undef,dim+1,ncells)
-            regions=Array{Int32,1}(undef,ncells)
+            ncells=parse(Ti,gettoken(tks));
+            cells=Array{Ti,2}(undef,dim+1,ncells)
+            regions=Array{Ti,1}(undef,ncells)
             for icell=1:ncells
                 for inode=1:dim+1
-                    cells[inode,icell]=parse(Int32,gettoken(tks));
+                    cells[inode,icell]=parse(Ti,gettoken(tks));
                 end
-                regions[icell]=parse(Int32,gettoken(tks));
+                regions[icell]=parse(Ti,gettoken(tks));
 	        if version20
 		    for j=1:dim+1
 		        gettoken(tks);  # skip file format garbage
@@ -658,14 +659,14 @@ function simplexgrid(file::String;format="")
                 end
             end
         elseif (trytoken(tks,"FACES"))
-            nfaces=parse(Int32,gettoken(tks));
-            faces=Array{Int32,2}(undef,dim,nfaces)
-            bregions=Array{Int32,1}(undef,nfaces)
+            nfaces=parse(Ti,gettoken(tks));
+            faces=Array{Ti,2}(undef,dim,nfaces)
+            bregions=Array{Ti,1}(undef,nfaces)
             for iface=1:nfaces
                 for inode=1:dim
-                    faces[inode,iface]=parse(Int32,gettoken(tks));
+                    faces[inode,iface]=parse(Ti,gettoken(tks));
                 end
-                bregions[iface]=parse(Int32,gettoken(tks));
+                bregions[iface]=parse(Ti,gettoken(tks));
 	        if (version20)
 		    for j=1:dim+2
 		        gettoken(tks); #skip file format garbage
@@ -758,6 +759,7 @@ Merge two grids along their common boundary facets.
 
 """
 function glue(g1,g2; breg=0, tol=1.0e-10)
+    Ti=Cint
     
     dim=dim_space(g1)
 
@@ -774,12 +776,12 @@ function glue(g1,g2; breg=0, tol=1.0e-10)
     nn2=size(coord2,2)
 
     # numbers of faces in grid1 which match nodes in grid2
-    matching_faces=zeros(Int,nbf2)
+    matching_faces=zeros(Ti,nbf2)
     n_matching_faces=0
 
 
     # numbers of nodes in grid1 which match nodes in grid2
-    matching_nodes=zeros(Int,nn2)
+    matching_nodes=zeros(Ti,nn2)
     n_matching_nodes=0
 
     
@@ -848,7 +850,7 @@ function glue(g1,g2; breg=0, tol=1.0e-10)
 
 
     # transposed list of matching faces
-    mf1=zeros(Int,nbf1)
+    mf1=zeros(Ti,nbf1)
     for if2=1:nbf2
         if matching_faces[if2]!=0
             mf1[matching_faces[if2]]=if2
@@ -858,10 +860,10 @@ function glue(g1,g2; breg=0, tol=1.0e-10)
     mfac = breg == 0 ? 2 : 1
 
     coordx=zeros(dim,nn1+nn2-n_matching_nodes)
-    cnx=zeros(Int, dim+1,nc1+nc2)
-    cregx=zeros(Int,nc1+nc2)
-    bfnx=zeros(Int,dim,nbf1+nbf2-mfac*n_matching_faces)
-    bregx=zeros(Int,nbf1+nbf2-mfac*n_matching_faces)
+    cnx=zeros(Ti, dim+1,nc1+nc2)
+    cregx=zeros(Ti,nc1+nc2)
+    bfnx=zeros(Ti,dim,nbf1+nbf2-mfac*n_matching_faces)
+    bregx=zeros(Ti,nbf1+nbf2-mfac*n_matching_faces)
 
 
 
