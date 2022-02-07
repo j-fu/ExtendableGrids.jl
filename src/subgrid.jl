@@ -90,7 +90,7 @@ function subgrid(parent,
     
     sub_xnodes=VariableTargetAdjacency(Ti)
     sub_nip=zeros(Ti,nsubnodes)
-    sub_ct=Vector{DataType}(undef,0)
+    sub_ct=Vector{ElementGeometries}(undef,0)
     sub_cr=Vector{Ti}(undef,0)
     for inode in eachindex(nodemark)
         if nodemark[inode]>0
@@ -138,7 +138,7 @@ function subgrid(parent,
         
         sub_bfacenodes=VariableTargetAdjacency(Ti)
         sub_bfaceregions=Vector{Ti}(undef,0)
-        sub_bfacetypes=Vector{DataType}(undef,0)
+        sub_bfacetypes=Vector{ElementGeometries}(undef,0)
         
         for ibface in eachindex(bfaceregions)
             nbn=num_targets(bfacenodes,ibface)

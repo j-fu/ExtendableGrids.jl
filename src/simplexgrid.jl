@@ -36,10 +36,10 @@ function simplexgrid(coord::Array{Tc,2},
     grid[Coordinates]=coord
     grid[CellNodes]=cellnodes
     grid[CellRegions]=cellregions
-    grid[CellGeometries]=VectorOfConstants(eltype,length(cellregions))
+    grid[CellGeometries]=VectorOfConstants{ElementGeometries,Int}(eltype,length(cellregions))
     grid[BFaceNodes]=bfacenodes
     grid[BFaceRegions]=bfaceregions
-    grid[BFaceGeometries]=VectorOfConstants(btype,length(bfaceregions))
+    grid[BFaceGeometries]=VectorOfConstants{ElementGeometries,Int}(btype,length(bfaceregions))
     grid[CoordinateSystem]=csys
     return grid
 end

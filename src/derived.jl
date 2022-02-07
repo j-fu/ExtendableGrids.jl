@@ -22,7 +22,7 @@
 #    return Edge1DWithParent{CEG}
 #end
 
-const GridEGTypes = Vector{DataType}
+const GridEGTypes = Vector{ElementGeometries}
 const GridRegionTypes{Ti} = Union{VectorOfConstants{Ti}, Array{Ti,1}}
 
 
@@ -229,7 +229,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceNo
         xFaceNodes = zeros(Ti,0)
     else
         xFaceNodes = VariableTargetAdjacency(Ti)
-        xFaceGeometries::Array{DataType,1} = []
+        xFaceGeometries::Array{ElementGeometries,1} = []
     end
     if singleEG == true && singleFEG == true
         # only one geometry type allows for much faster code
@@ -409,7 +409,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceNo
 
     if singleFEG
         xFaceNodes = reshape(xFaceNodes,(nodes_per_cellface,Ti(length(xFaceNodes)/nodes_per_cellface)))
-        xgrid[FaceGeometries] = VectorOfConstants(facetype_of_cellface(EG[1], 1), face)
+        xgrid[FaceGeometries] = VectorOfConstants{ElementGeometries,Int}(facetype_of_cellface(EG[1], 1), face)
     else
         xgrid[FaceGeometries] = xFaceGeometries
     end
@@ -495,7 +495,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeNo
     xEdgeCells = VariableTargetAdjacency(Ti)
 
     # find unique edge enumeration rules for each cell geometry
-    EG::Array{DataType,1} = unique(xCellGeometries)
+    EG::Array{ElementGeometries,1} = unique(xCellGeometries)
     edge_rules::Array{Array{Ti,2},1} = Array{Array{Ti,2},1}(undef,length(EG))
     maxedgenodes::Ti = 0
     for j = 1 : length(EG)
@@ -645,7 +645,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeNo
     xgrid[CellEdges] = xCellEdges
     xgrid[EdgeCells] = xEdgeCells
     xgrid[CellEdgeSigns] = xCellEdgeSigns
-    xgrid[EdgeGeometries] = VectorOfConstants(Edge1D,edge)
+    xgrid[EdgeGeometries] = VectorOfConstants{ElementGeometries,Int}(Edge1D,edge)
     reshape(xEdgeNodes,(2,edge))
 end
 
@@ -977,9 +977,9 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BFaceF
     # init BFaceFaces
     xBFaceFaces::Array{Ti,1} = zeros(Ti,nbfaces)
     #xBFaceGeometries = xgrid[BFaceGeometries]
-    #if typeof(xBFaceGeometries) == VectorOfConstants{DataType}
+    #if typeof(xBFaceGeometries) == VectorOfConstants{ElementGeometries}
     #    EG = xBFaceGeometries[1]
-    #    xBFaceGeometries = Array{DataType,1}(undef,nbfaces)
+    #    xBFaceGeometries = Array{ElementGeometries,1}(undef,nbfaces)
     #    for j = 1 : nbfaces
     #        xBFaceGeometries[j] = EG
     #    end
@@ -1214,11 +1214,11 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeTa
 end
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{UniqueCellGeometries}) where {Tc,Ti}
-    xUniqueCellGeometries = unique(xgrid[CellGeometries])
+    xUniqueCellGeometries = ElementGeometries[unique(xgrid[CellGeometries])...]
 end
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{UniqueFaceGeometries}) where {Tc,Ti}
-    xUniqueFaceGeometries = unique(xgrid[FaceGeometries])
+    xUniqueFaceGeometries = ElementGeometries[unique(xgrid[FaceGeometries])...]
 end
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{UniqueBFaceGeometries}) where {Tc,Ti}

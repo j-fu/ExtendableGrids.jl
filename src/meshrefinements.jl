@@ -5,7 +5,7 @@ abstract type CellParents <: AbstractGridIntegerArray1D end
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid, ::Type{CellParents})
     ncells = num_sources(xgrid[CellNodes]) 
-    VectorOfConstants{K}(0,ncells)
+    VectorOfConstants{ElementGeometries,Int}(K,ncells)
 end
 
 
@@ -71,10 +71,10 @@ function split_grid_into(source_grid::ExtendableGrid{T,K}, targetgeometry::Type{
     end
     xCellNodes = reshape(xCellNodes,num_nodes(targetgeometry),ncells)
     xgrid[CellNodes] = xCellNodes
-    xgrid[CellGeometries] = VectorOfConstants(targetgeometry,ncells)
+    xgrid[CellGeometries] = VectorOfConstants{ElementGeometries,Int}(targetgeometry,ncells)
     xgrid[CoordinateSystem]=source_grid[CoordinateSystem]
     if typeof(oldCellRegions) <: VectorOfConstants
-        xgrid[CellRegions] = VectorOfConstants{K}(1,ncells)
+        xgrid[CellRegions] = VectorOfConstants{ElementGeometries,Int}(K,ncells)
     else
         xgrid[CellRegions] = xCellRegions
     end
@@ -83,7 +83,7 @@ function split_grid_into(source_grid::ExtendableGrid{T,K}, targetgeometry::Type{
     if dim_element(targetgeometry) == 2 # BFaces are Edge1D wich stay the same
         xgrid[BFaceNodes]=source_grid[BFaceNodes]
         xgrid[BFaceRegions]=source_grid[BFaceRegions]
-        xgrid[BFaceGeometries]=VectorOfConstants(facetype_of_cellface(targetgeometry,1),num_sources(xgrid[BFaceNodes]))
+        xgrid[BFaceGeometries]=VectorOfConstants{ElementGeometries,Int}(facetype_of_cellface(targetgeometry,1),num_sources(xgrid[BFaceNodes]))
     elseif dim_element(targetgeometry) == 3 
         # BFaces may be split into different shapes, e.g. from Quadrilateral2D to two Triangle2D
         # and it is hard to predict how they are splitted
@@ -136,7 +136,7 @@ function split_grid_into(source_grid::ExtendableGrid{T,K}, targetgeometry::Type{
         newBFaceNodes = reshape(newBFaceNodes,num_nodes(facetype_of_cellface(targetgeometry,1)),newnbfaces)
         xgrid[BFaceNodes]=newBFaceNodes
         xgrid[BFaceRegions]=newBFaceRegions
-        xgrid[BFaceGeometries]=VectorOfConstants(facetype_of_cellface(targetgeometry,1),newnbfaces)
+        xgrid[BFaceGeometries]=VectorOfConstants{ElementGeometries,Int}(facetype_of_cellface(targetgeometry,1),newnbfaces)
     end
 
     return xgrid
@@ -236,7 +236,7 @@ function uniform_refine(source_grid::ExtendableGrid{T,K}; store_parents = false)
     end
 
     xCellNodes = VariableTargetAdjacency(K)
-    xCellGeometries = Array{DataType,1}(undef,0)
+    xCellGeometries = Array{ElementGeometries,1}(undef,0)
     xCellRegions = zeros(K,0)
     oldCellNodes::Adjacency{K} = source_grid[CellNodes]
     oldCellFaces::Adjacency{K} = source_grid[CellFaces]
@@ -385,7 +385,7 @@ function uniform_refine(source_grid::ExtendableGrid{T,K}; store_parents = false)
     if singleEG
         nnodes4item = size(oldCellNodes,1)
         xgrid[CellNodes] = reshape(xCellNodes.colentries,nnodes4item,num_sources(xCellNodes))
-        xgrid[CellGeometries] = VectorOfConstants(EG[1],ncells)
+        xgrid[CellGeometries] = VectorOfConstants{ElementGeometries,Int}(EG[1],ncells)
     else
         xgrid[CellNodes] = xCellNodes
         xgrid[CellGeometries] = xCellGeometries
@@ -409,7 +409,7 @@ function uniform_refine(source_grid::ExtendableGrid{T,K}; store_parents = false)
         xgrid[BFaceGeometries] = oldBFaceGeometries
     else
         xBFaceRegions = zeros(K,0)
-        xBFaceGeometries = Array{DataType,1}(undef,0)
+        xBFaceGeometries = Array{ElementGeometries,1}(undef,0)
         nbfaces = num_sources(oldBFaceNodes)
         if dim == 2 || typeof(oldBFaceNodes) == Array{K,2}
             xBFaceNodes = zeros(K,0)
@@ -556,7 +556,7 @@ function barycentric_refine(source_grid::ExtendableGrid{T,K}) where {T,K}
         singleEG = true
     end
     xCellNodes::Adjacency = VariableTargetAdjacency(K)
-    xCellGeometries = Array{DataType,1}(undef,0)
+    xCellGeometries = Array{ElementGeometries,1}(undef,0)
     xCellRegions = zeros(K,0)
 
     oldCellNodes = source_grid[CellNodes]
@@ -619,7 +619,7 @@ function barycentric_refine(source_grid::ExtendableGrid{T,K}) where {T,K}
     if singleEG
         nnodes4item = size(oldCellNodes,1)
         xgrid[CellNodes] = reshape(xCellNodes.colentries,nnodes4item,num_sources(xCellNodes))
-        xgrid[CellGeometries] = VectorOfConstants(EG[1],num_sources(xCellNodes))
+        xgrid[CellGeometries] = VectorOfConstants{ElementGeometries,Int}(EG[1],num_sources(xCellNodes))
     else
         xgrid[CellNodes] = xCellNodes
         xgrid[CellGeometries] = xCellGeometries

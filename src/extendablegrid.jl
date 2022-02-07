@@ -175,7 +175,7 @@ end
 # 
 """
 ````
-const ElementInfo{T}=Union{Vector{T},VectorOfConstants{T}}`
+const ElementInfo{T}=Union{Vector{T},VectorOfConstants{T}}
 ````
 
 Union type for element information arrays. If all elements have
@@ -262,6 +262,7 @@ Check proper type of adjacencies upon insertion
 veryform(grid::ExtendableGrid{Tc,Ti},v,T::Type{<:AbstractGridAdjacency}) where{Tc,Ti}= typeof(v)<:Adjacency{Ti} ? v : throw("Type mismatch")
 
 
+
 ############################################################
 # Type stable component access
 
@@ -301,12 +302,12 @@ end
 
 """
 ````
-Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractElementGeometries})::ElementInfo{DataType}
+Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractElementGeometries})::ElementInfo{ElementGeometries}
 ````
 
 Type stable method to obtain  element type
 """
-function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractElementGeometries})::ElementInfo{DataType} where{Tc,Ti}
+function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractElementGeometries})::ElementInfo{ElementGeometries} where{Tc,Ti}
     get!(grid,T)
 end
 
@@ -344,6 +345,9 @@ function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridFloatCo
     get!(grid,T)
 end
 
+function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{CoordinateSystem})::CoordinateSystems where{Tc,Ti}
+    get!(grid,T)
+end
 
 ############################################################
 # Instantiation methods

@@ -206,7 +206,7 @@ function RGB_refine(source_grid::ExtendableGrid{T,K}, facemarkers::Array{Bool,1}
     else
         xgrid[CellRegions] = xCellRegions
     end
-    xgrid[CellGeometries] = VectorOfConstants(Triangle2D,ncells)
+    xgrid[CellGeometries] = VectorOfConstants{ElementGeometries}(Triangle2D,ncells)
 
 
     # determine new boundary faces
@@ -248,7 +248,7 @@ function RGB_refine(source_grid::ExtendableGrid{T,K}, facemarkers::Array{Bool,1}
     
     xgrid[BFaceNodes] = reshape(xBFaceNodes,(2,nbfaces+newbfaces))
     xgrid[BFaceRegions] = xBFaceRegions
-    xgrid[BFaceGeometries] = VectorOfConstants(Edge1D,nbfaces+newbfaces)
+    xgrid[BFaceGeometries] = VectorOfConstants{ElementGeometries,Int}(Edge1D,nbfaces+newbfaces)
 
     return xgrid
 end
