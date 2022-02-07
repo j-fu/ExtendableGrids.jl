@@ -176,4 +176,7 @@ export writefile
 include("tokenstream.jl")
 export TokenStream, gettoken, expecttoken,trytoken
 
+include("io.jl")
+export writeVTK
+
 end # module
