@@ -916,29 +916,16 @@ function collectVolumes4Geometries(T::Type{<:Real}, xgrid::ExtendableGrid{Tc,Ti}
     EG = xgrid[GridComponent4TypeProperty(ItemType,PROPERTY_UNIQUEGEOMETRY) ]
     nitems::Ti = num_sources(xItemNodes)
 
-    # get Volume4ElemType handlers
-    handlers = Array{Function,1}(undef, length(EG))
-    for j = 1: length(EG)
-        handlers[j] = Volume4ElemType(xCoordinates, xItemNodes, EG[j], xCoordinateSystem)
-    end
-
     # init Volumes
     xVolumes::Array{T,1} = zeros(T,nitems)
 
     # loop over items and call handlers
-    iEG::Ti = 1
-    itemEG = EG[1]
+    itemEG::ElementGeometries = EG[1]
     for item = 1 : nitems
         if length(EG) > 1
             itemEG = xGeometries[item]
-            for j=1:length(EG)
-                if itemEG == EG[j]
-                    iEG = j
-                    break;
-                end
-            end
         end
-        xVolumes[item] = handlers[iEG](item)
+        xVolumes[item] = volume(xCoordinates, xItemNodes, item, itemEG, xCoordinateSystem)::T
     end
 
     xVolumes
@@ -1222,13 +1209,13 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{Unique
 end
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{UniqueBFaceGeometries}) where {Tc,Ti}
-    xUniqueBFaceGeometries = unique(xgrid[BFaceGeometries])
+    xUniqueBFaceGeometries = ElementGeometries[unique(xgrid[BFaceGeometries])...]
 end
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{UniqueEdgeGeometries}) where {Tc,Ti}
-    xUniqueEdgeGeometries = unique(xgrid[EdgeGeometries])
+    xUniqueEdgeGeometries = ElementGeometries[unique(xgrid[EdgeGeometries])...]
 end
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{UniqueBEdgeGeometries}) where {Tc,Ti}
-    xUniqueBEdgeGeometries = unique(xgrid[BEdgeGeometries])
+    xUniqueBEdgeGeometries = ElementGeometries[unique(xgrid[BEdgeGeometries])...]
 end
