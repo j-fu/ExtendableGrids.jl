@@ -434,16 +434,16 @@ function volume(Coords, Nodes, item, ::Type{<:Quadrilateral2D}, ::Type{Cartesian
 end
 
 function volume(Coords, Nodes, item, ::Type{<:Triangle2D}, ::Type{Cartesian3D})
-    d12 = view(Coords,:, Nodes[1,item]) - view(Coords,:,Nodes[2,item])
-    d14 = view(Coords,:, Nodes[1,item]) - view(Coords,:,Nodes[3,item])
+    @views d12 = SVector{3}(Coords[:, Nodes[1,item]]) - SVector{3}(Coords[:,Nodes[2,item]])
+    @views d14 = SVector{3}(Coords[:, Nodes[1,item]]) - SVector{3}(Coords[:,Nodes[3,item]])
     return sqrt((d12[2]*d14[3]-d12[3]*d14[2])^2 + (d12[3]*d14[1]-d12[1]*d14[3])^2 + (d12[1]*d14[2]-d12[2]*d14[1])^2) / 2
 end
 
 
 
 function volume(Coords::Array{Tc,2}, Nodes, item, ::Type{<:Parallelogram2D}, ::Type{Cartesian3D}) where {Tc}
-    d12 = view(Coords,:, Nodes[1,item]) - view(Coords,:,Nodes[2,item])
-    d14 = view(Coords,:, Nodes[1,item]) - view(Coords,:,Nodes[4,item])
+    @views d12 = SVector{3}(Coords[:, Nodes[1,item]]) - SVector{3}(Coords[:,Nodes[2,item]])
+    @views d14 = SVector{3}(Coords[:, Nodes[1,item]]) - SVector{3}(Coords[:,Nodes[3,item]])
     return sqrt((d12[2]*d14[3]-d12[3]*d14[2])^2 + (d12[3]*d14[1]-d12[1]*d14[3])^2 + (d12[1]*d14[2]-d12[2]*d14[1])^2)
 end
 

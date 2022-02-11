@@ -2,6 +2,7 @@ module ExtendableGrids
 
 using DocStringExtensions
 using ElasticArrays
+using StaticArrays
 using AbstractTrees
 
 using InteractiveUtils
