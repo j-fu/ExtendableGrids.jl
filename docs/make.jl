@@ -24,7 +24,7 @@ function mkdocs()
     
     generated_examples=joinpath.("examples",filter(x->endswith(x, ".md"),readdir(example_md_dir)))
 
-#    makeplots(example_md_dir)
+    makeplots(example_md_dir)
     
     makedocs(sitename="ExtendableGrids.jl",
              modules = [ExtendableGrids],
@@ -34,7 +34,6 @@ function mkdocs()
              repo="https://github.com/j-fu/ExtendableGrids.jl",
              pages=[
                  "Home"=>"index.md",
-                 "unionize.md",
                  "adjacency.md",
                  "vectorofconstants.md",
                  "typehierarchy.md",
