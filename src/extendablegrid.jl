@@ -7,6 +7,43 @@ Apex type for grid components.
 """
 abstract type AbstractGridComponent <: AbstractExtendableGridApexType end
 
+"""
+$(TYPEDEF)
+
+Grid type wrapping Dict
+"""
+mutable struct ExtendableGrid{Tc,Ti}
+    components::Dict{Type{<:AbstractGridComponent},Any}
+    ExtendableGrid{Tc,Ti}() where{Tc,Ti} =new(Dict{Type{<:AbstractGridComponent},Any}())
+end
+
+"""
+````
+Base.getindex(grid::ExtendableGrid,T::Type{<:AbstractGridComponent})
+````
+
+Generic method for obtaining grid component.
+
+This method is mutating in the sense that non-existing grid components
+are created on demand.
+
+Due to the fact that components are stored as Any the return
+value triggers type instability. To prevent this, specialized methods must be (and are) defined.
+"""
+Base.getindex( grid::ExtendableGrid,        T::Type{<:AbstractGridComponent}      ) = get!(grid,T)
+
+
+"""
+````
+const ElementInfo{T}=Union{Vector{T},VectorOfConstants{T}}
+````
+
+Union type for element information arrays. If all elements have
+the same information, it can be stored in an economical form
+as a [`VectorOfConstants`](@ref).
+"""
+const ElementInfo{T}=Union{Vector{T},VectorOfConstants{T}}
+
 
 """
 $(TYPEDEF)
@@ -14,11 +51,16 @@ $(TYPEDEF)
 """
 abstract type AbstractGridFloatArray1D <: AbstractGridComponent end
 
+function Base.getindex( grid::ExtendableGrid{Tc,Ti}, T::Type{<:AbstractGridFloatArray1D}   )::Array{Tc,1} where{Tc,Ti}  get!(grid,T) end
+
+
 """
 $(TYPEDEF)
 2D Array of floating point data
 """
 abstract type AbstractGridFloatArray2D <: AbstractGridComponent end
+
+function Base.getindex( grid::ExtendableGrid{Tc,Ti}, T::Type{<:AbstractGridFloatArray2D}   )::Array{Tc,2} where{Tc,Ti}  get!(grid,T) end
 
 """
 $(TYPEDEF)
@@ -26,11 +68,18 @@ $(TYPEDEF)
 """
 abstract type AbstractGridIntegerArray1D <: AbstractGridComponent end
 
+function Base.getindex( grid::ExtendableGrid{Tc,Ti}, T::Type{<:AbstractGridIntegerArray1D} )::Array{Ti,1} where{Tc,Ti}  get!(grid,T) end
+
+
+
 """
 $(TYPEDEF)
 2D Array of integer data
 """
 abstract type AbstractGridIntegerArray2D <: AbstractGridComponent end
+
+function Base.getindex( grid::ExtendableGrid{Tc,Ti}, T::Type{<:AbstractGridIntegerArray2D} )::Array{Ti,1} where{Tc,Ti}  get!(grid,T) end
+
 
 """
 $(TYPEDEF)
@@ -38,12 +87,16 @@ Integer number
 """
 abstract type AbstractGridIntegerConstant <: AbstractGridComponent end
 
+function Base.getindex( grid::ExtendableGrid{Tc,Ti}, T::Type{<:AbstractGridIntegerConstant})::Ti where{Tc,Ti} get!(grid,T) end
+
+
 """
 $(TYPEDEF)
 Floating point number
 """
 abstract type AbstractGridFloatConstant <: AbstractGridComponent end
 
+function Base.getindex( grid::ExtendableGrid{Tc,Ti}, T::Type{<:AbstractGridFloatConstant}  )::Tc where{Tc,Ti} get!(grid,T) end
 
 """
 $(TYPEDEF)
@@ -52,6 +105,7 @@ Any kind of adjacency between grid components
 """
 abstract type AbstractGridAdjacency <: AbstractGridComponent end
 
+function Base.getindex( grid::ExtendableGrid{Tc,Ti}, T::Type{<:AbstractGridAdjacency}      )::Adjacency{Ti} where{Tc,Ti}  get!(grid,T) end
 
 """
 $(TYPEDEF)
@@ -59,6 +113,10 @@ $(TYPEDEF)
 Array of element geometry information. 
 """
 abstract type AbstractElementGeometries <: AbstractGridComponent end
+
+function Base.getindex( grid::ExtendableGrid{Tc,Ti}, T::Type{<:AbstractElementGeometries}  )::ElementInfo{ElementGeometries} where{Tc,Ti}  get!(grid,T) end
+
+
 
 
 """
@@ -68,9 +126,22 @@ Array of element region number information.
 """
 abstract type AbstractElementRegions <: AbstractGridComponent end
 
+function Base.getindex( grid::ExtendableGrid{Tc,Ti}, T::Type{<:AbstractElementRegions}     )::ElementInfo{Ti} where{Tc,Ti} get!(grid,T) end
+
+
+"""
+$(TYPEDEF)
+
+Coordinate system
+"""
+abstract type CoordinateSystem <: AbstractGridComponent end
+
+function Base.getindex( grid::ExtendableGrid{Tc,Ti}, T::Type{CoordinateSystem}             )::CoordinateSystems where{Tc,Ti}  get!(grid,T) end
+
+
 
 ##################################################################
-# Component key types
+# Component key types: for these, access is  type stable
 
 """
 $(TYPEDEF)
@@ -139,13 +210,6 @@ abstract type NumBFaceRegions <: AbstractGridIntegerConstant end
 """
 $(TYPEDEF)
 
-Coordinate system
-"""
-abstract type CoordinateSystem <: AbstractGridComponent end
-
-"""
-$(TYPEDEF)
-
 Boundary edge region number per boundary edge
 """
 abstract type BEdgeRegions <: AbstractElementRegions end
@@ -157,32 +221,6 @@ Number of boundary edge regions
 """
 abstract type NumBEdgeRegions <: AbstractGridIntegerConstant end
 
-
-############################################################
-# Grid type
-
-"""
-$(TYPEDEF)
-Grid type wrapping Dict
-"""
-mutable struct ExtendableGrid{Tc,Ti}
-    components::Dict{Type{<:AbstractGridComponent},Any}
-    ExtendableGrid{Tc,Ti}() where{Tc,Ti} =new(Dict{Type{<:AbstractGridComponent},Any}())
-end
-
-
-#############################################################
-# 
-"""
-````
-const ElementInfo{T}=Union{Vector{T},VectorOfConstants{T}}`
-````
-
-Union type for element information arrays. If all elements have
-the same information, it can be stored in an economical form
-as a [`VectorOfConstants`](@ref).
-"""
-const ElementInfo{T}=Union{Vector{T},VectorOfConstants{T}}
 
 
 ############################################################
@@ -233,20 +271,6 @@ $(TYPEDSIGNATURES)
 function instantiate end
 
 
-"""
-````
-Base.getindex(grid::ExtendableGrid,T::Type{<:AbstractGridComponent})
-````
-
-Generic method for obtaining grid component.
-
-This method is mutating in the sense that non-existing grid components
-are created on demand.
-
-Due to the fact that components are stored as Any the return
-value triggers type instability.
-"""
-Base.getindex(grid::ExtendableGrid,T::Type{<:AbstractGridComponent})=get!(grid,T)
 
 
 ############################################################
@@ -262,87 +286,10 @@ Check proper type of adjacencies upon insertion
 veryform(grid::ExtendableGrid{Tc,Ti},v,T::Type{<:AbstractGridAdjacency}) where{Tc,Ti}= typeof(v)<:Adjacency{Ti} ? v : throw("Type mismatch")
 
 
-############################################################
-# Type stable component access
-
-"""
-````
-Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridAdjacency})::Adjacency{Ti} where{Tc,Ti}
-````
-
-Type stable return of adjacency component
-"""
-function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridAdjacency})::Adjacency{Ti} where{Tc,Ti}
-    get!(grid,T)
-end
-
-"""
-````
-Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridFloatArray2D})::Array{Tc,2} 
-````
-
-Type stable c method to obtain 2D array from grid
-"""
-function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridFloatArray2D})::Array{Tc,2} where{Tc,Ti}
-    get!(grid,T)
-end
-
-"""
-````
-Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridFloatArray1D})::Array{Tc,1} where{Tc,Ti}
-````
-
-Type stable method to obtain 1D array from grid
-"""
-function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridFloatArray1D})::Array{Tc,1} where{Tc,Ti}
-    get!(grid,T)
-end
 
 
-"""
-````
-Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractElementGeometries})::ElementInfo{DataType}
-````
-
-Type stable method to obtain  element type
-"""
-function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractElementGeometries})::ElementInfo{DataType} where{Tc,Ti}
-    get!(grid,T)
-end
-
-"""
-````
-Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractElementRegions})::ElementInfo{Ti} where{Tc,Ti}
-````
-
-Type stable method to obtain element region number
-"""
-function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractElementRegions})::ElementInfo{Ti} where{Tc,Ti}
-    get!(grid,T)
-end
 
 
-"""
-````
-Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridIntegerConstant})::Ti where{Tc,Ti}
-````
-
-Type stable method to obtain  integer constant stored on elements
-"""
-function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridIntegerConstant})::Ti where{Tc,Ti}
-    get!(grid,T)
-end
-
-"""
-````
-Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridFloatConstant})::Tc where{Tc,Ti}
-````
-
-Type stable  method to obtain float constant stored on elements
-"""
-function Base.getindex(grid::ExtendableGrid{Tc,Ti},T::Type{<:AbstractGridFloatConstant})::Tc where{Tc,Ti}
-    get!(grid,T)
-end
 
 
 ############################################################

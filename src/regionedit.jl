@@ -111,7 +111,7 @@ function bfacemask!(grid::ExtendableGrid,
     if allow_new
         grid[BFaceNodes]=Array{Ti,2}(new_bfacenodes)
     end
-    grid[BFaceGeometries]=VectorOfConstants(btype,length(bfaceregions))
+    grid[BFaceGeometries]=VectorOfConstants{ElementGeometries,Int}(btype,length(bfaceregions))
     grid[NumBFaceRegions]=max(num_bfaceregions(grid),ireg)
     return grid
 end

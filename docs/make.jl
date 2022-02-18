@@ -29,7 +29,7 @@ function mkdocs()
     makedocs(sitename="ExtendableGrids.jl",
              modules = [ExtendableGrids],
              clean = false, 
-             doctest = false,
+             doctest = true,
              authors = "J. Fuhrmann, Ch. Merdon",
              repo="https://github.com/j-fu/ExtendableGrids.jl",
              pages=[
