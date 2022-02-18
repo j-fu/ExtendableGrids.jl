@@ -108,12 +108,12 @@ function gFindLocal!(xref, CF::CellFinder{Tv,Ti}, x; icellstart::Int = 1, eps = 
         L2Gb = L2G.b
 
         # compute barycentric coordinates of node
-        for j = 1 : length(x)
+        for j = 1 : length(cx)
             cx[j] = x[j] - L2Gb[j]
         end
         mapderiv!(invA,L2G,xref)
         fill!(xreftest,0)
-        for j = 1 : length(x), k = 1 : length(x)
+        for j = 1 : length(cx), k = 1 : length(cx)
             xreftest[k] += invA[j,k] * cx[j]
         end
         postprocess_xreftest!(xreftest,xCellGeometries[icell])
