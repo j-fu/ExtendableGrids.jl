@@ -910,22 +910,17 @@ end
 function collectVolumes4Geometries(T::Type{<:Real}, xgrid::ExtendableGrid{Tc,Ti}, ItemType) where {Tc,Ti}
     # get links to other stuff
     xCoordinates = xgrid[Coordinates]
-    xCoordinateSystem::Type{<:AbstractCoordinateSystem} = xgrid[CoordinateSystem]
-    xItemNodes::Adjacency{Ti} = xgrid[GridComponent4TypeProperty(ItemType,PROPERTY_NODES) ]
+    xCoordinateSystem = xgrid[CoordinateSystem]
+    xItemNodes = xgrid[GridComponent4TypeProperty(ItemType,PROPERTY_NODES) ]
     xGeometries = xgrid[GridComponent4TypeProperty(ItemType,PROPERTY_GEOMETRY) ]
-    EG = xgrid[GridComponent4TypeProperty(ItemType,PROPERTY_UNIQUEGEOMETRY) ]
-    nitems::Ti = num_sources(xItemNodes)
+    nitems = num_sources(xItemNodes)
 
     # init Volumes
     xVolumes = zeros(T,nitems)
 
     # loop over items and call handlers
-    itemEG::ElementGeometries = EG[1]
     for item = 1 : nitems
-        if length(EG) > 1
-            itemEG = xGeometries[item]
-        end
-        xVolumes[item] = volume(xCoordinates, xItemNodes, item, itemEG, xCoordinateSystem)::T
+        xVolumes[item] = volume(xCoordinates, xItemNodes, item, xGeometries[item], xCoordinateSystem)
     end
 
     xVolumes

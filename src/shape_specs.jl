@@ -403,7 +403,7 @@ local_celledgenodes(::Type{<:Hexahedron3D}) = _local_celledgenodes_Hexahedron3D
 ### VOLUMES ###
 ###############
 
-function volume(Coords, Nodes, item ::Type{<:Vertex0D}, ::Type{<:ExtendableGrids.AbstractCoordinateSystem})
+function volume(Coords, Nodes, item, ::Type{<:Vertex0D}, ::Type{<:ExtendableGrids.AbstractCoordinateSystem})
     return 1
 end
 
