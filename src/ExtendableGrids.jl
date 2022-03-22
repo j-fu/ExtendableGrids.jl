@@ -3,6 +3,7 @@ module ExtendableGrids
 using DocStringExtensions
 using ElasticArrays
 using AbstractTrees
+using WriteVTK
 
 using InteractiveUtils
 using SparseArrays

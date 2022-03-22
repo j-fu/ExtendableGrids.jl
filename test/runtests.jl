@@ -249,5 +249,14 @@ end
 @testset "Grid Stuff" begin
     include("test_gridstuff.jl")
     run_grid_tests()
+end         
+
+@testset "writeVTK" begin
+    grid=simplexgrid(0:0.1:1,0:0.1:1)
+
+    somedata = zeros(Float64, num_nodes(grid))
+    @views somedata .= sin.(4*grid[Coordinates][1,:]) .* cos.(4*grid[Coordinates][2,:])
+    
+    writeVTK("testfile_writevtk.vtu", grid; regions = grid[CellRegions], scalar_data = somedata, vector_data = grid[Coordinates])
 end
 
