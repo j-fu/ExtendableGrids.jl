@@ -35,9 +35,6 @@ function writeVTK(filename::String, grid::ExtendableGrid{Tc,Ti}; kwargs...) wher
     end 
 
     vtk_grid(filename, coords, vtk_cells) do vtk
-        if write_regions
-            vtk["regions"] = cell_regions
-        end
         for (key, value) in kwargs
             vtk[String(key)] = value
         end
