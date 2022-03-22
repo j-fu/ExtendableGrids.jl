@@ -261,19 +261,17 @@ end
     nc = num_cells(g)
 
     point_data    = map((x,y,z) -> (sinpi(2*x)*sinpi(2*y)*z), g)
-    cell_data  = rand(Float64, nc)
     field_data = [1.0, 2, 3, 4, 5, 6]
 
     writeVTK("testfile_writevtk.vtu", g; 
         cellregions = g[CellRegions],
         point_data = point_data, 
-        cell_data = cell_data, 
         field_data = field_data)
 
     sha_code = open("testfile_writevtk.vtu") do f
         sha256(f)
     end |> bytes2hex
 
-    @test sha_code == "d77079ba10bd4c9e7c4489ce6227fd87dc338b56c6eb9391fe44de4c0baf7266"
+    @test sha_code == "9ad048339e9e2605576aa141b41cdc7a8899171e3b99574b669178a6dd8b38c3"
 end
 
