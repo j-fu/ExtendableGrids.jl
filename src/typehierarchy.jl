@@ -20,3 +20,18 @@ Print complete type hierachy for ExtendableGrids
 """
 typehierarchy()=AbstractTrees.print_tree(AbstractExtendableGridApexType,5,indicate_truncation=false)
 
+
+function leaftypes(TApex)
+    function leaftypes!(leafs,t)
+        st=subtypes(t)
+        if length(st)==0
+            push!(leafs,t)
+        else
+            for tsub in st
+                leaftypes!(leafs,tsub)
+            end
+        end
+        leafs
+    end
+    leaftypes!(Type[],TApex)
+end

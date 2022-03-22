@@ -2,6 +2,7 @@ module ExtendableGrids
 
 using DocStringExtensions
 using ElasticArrays
+using StaticArrays
 using AbstractTrees
 using WriteVTK
 
@@ -32,7 +33,7 @@ export typehierarchy
 
 include("elementgeometry.jl")
 export AbstractElementGeometry, ElementInfo
-export elementgeometries
+export elementgeometries, ElementGeometries
 
 export AbstractElementGeometry0D
 export Vertex0D
@@ -53,7 +54,7 @@ export dim_element
 
 
 include("coordinatesystem.jl")
-export coordinatesystems
+export coordinatesystems,CoordinateSystems
 export AbstractCoordinateSystem
 export Cartesian1D,Cartesian2D,Cartesian3D
 export Cylindrical2D,Cylindrical3D

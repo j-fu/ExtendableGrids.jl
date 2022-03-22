@@ -22,21 +22,23 @@ Julia default data structures do not provide these properties.
 
 #### `Dict`
   - Plain Dicts with flexible value types are a source of type instability
-  - Typical use of Dicts with strings as keys needs a meta protocol to handle
+  - Dicts with strings as keys needs a meta protocol to handle
     semantics of keys which at the end probably hinges on string comparison which
     will make things slow
+  - Dicts with symbols as keys still need this meta protocol
   - Same for the implementation of a lazy evaluation protocol
+  - If a dict contains components of different types, component access will not be typestable
 
 ### Proposed solution:
 
 Harness the power of the Julia type system: 
 - Use a struct containing a  Dict with DataType as keys. Every key is a type.
+- Use type hierarchies to manage different  value classes
 - Use the type system to dispatch between  `getindex`/`setindex!` methods for keys
-- Use type hierarchies to manage different different value classes
 - Extension requires declaring new types, keys can be only existing types almost removing
   typos as sources for errors
 - Lazy extension is managed bye an  `instantiate` method called by `getindex` if necessary
-- Component access is made type stable by type dependent `getindex` methods
+- Component access is made type stable by type dispatched`getindex` methods
 - Component insertion is made safe by having  `setindex!`  calling a `veryform` method
 
 #### Pros

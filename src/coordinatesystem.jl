@@ -67,3 +67,5 @@ $(TYPEDEF)
 """
 abstract type Spherical1D   <: AbstractCoordinateSystem end  #r (integral over ϕ,\theta)
 
+
+const CoordinateSystems=Union{[Type{t} for t in leaftypes(AbstractCoordinateSystem)]...}

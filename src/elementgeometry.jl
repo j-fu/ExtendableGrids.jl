@@ -133,3 +133,5 @@ dim_element(::Type{<:AbstractElementGeometry4D})=4
 
 
 
+
+const ElementGeometries=Union{[Type{t} for t in leaftypes(AbstractElementGeometry)]...}
