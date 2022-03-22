@@ -1,6 +1,6 @@
 ENV["MPLBACKEND"]="agg"
 
-using Test, ExtendableGrids, GridVisualize
+using Test, ExtendableGrids, GridVisualize, SHA
 import PyPlot
 
 
@@ -252,11 +252,32 @@ end
 end         
 
 @testset "writeVTK" begin
-    grid=simplexgrid(0:0.1:1,0:0.1:1)
+    X = collect(-1:1.0:1)
+    Y = collect(-1:1.0:1)
+    Z = collect(0:0.5:1)
+    g = simplexgrid(X,Y,Z)
 
-    somedata = zeros(Float64, num_nodes(grid))
-    @views somedata .= sin.(4*grid[Coordinates][1,:]) .* cos.(4*grid[Coordinates][2,:])
-    
-    writeVTK("testfile_writevtk.vtu", grid; regions = grid[CellRegions], scalar_data = somedata, vector_data = grid[Coordinates])
+    nx = num_nodes(g)
+    nc = num_cells(g)
+
+    point_data    = map((x,y,z) -> (sinpi(2*x)*sinpi(2*y)*z), g)
+    cell_data  = rand(Float64, nc)
+    field_data = [1.0, 2, 3, 4, 5, 6]
+    rnd_vector_data = rand(Float64, (3,nx))
+    rnd_vector_data2 = rand(Float64, (3,nx))
+
+    writeVTK("testfile_writevtk.vtu", g; 
+        cellregions = g[CellRegions],
+        point_data = point_data, 
+        cell_data = cell_data, 
+        field_data = field_data,
+        rnd_vector_data = rnd_vector_data,
+        rnd_vector_data2 = rnd_vector_data2)
+
+    sha_code = open("testfile_writevtk.vtu") do f
+        sha256(f)
+    end |> bytes2hex
+
+    @test sha_code == "03b2feb14dcdd20ade3d2090d877e79c338d5bed131ccb1d6dca8cb2d6354b2a"
 end
 

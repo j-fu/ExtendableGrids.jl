@@ -26,7 +26,6 @@ function writeVTK(filename::String, grid::ExtendableGrid{Tc,Ti}; kwargs...) wher
     geo_dim = size(coords, 1)
 
     cell_geo     = grid[CellGeometries]
-    cell_regions = grid[CellRegions]
 
     vtk_cells = Array{MeshCell,1}(undef, ncells)
 
