@@ -36,10 +36,10 @@ function simplexgrid(coord::Array{Tc,2},
     grid[Coordinates]=coord
     grid[CellNodes]=cellnodes
     grid[CellRegions]=cellregions
-    grid[CellGeometries]=VectorOfConstants(eltype,length(cellregions))
+    grid[CellGeometries]=VectorOfConstants{ElementGeometries,Int}(eltype,length(cellregions))
     grid[BFaceNodes]=bfacenodes
     grid[BFaceRegions]=bfaceregions
-    grid[BFaceGeometries]=VectorOfConstants(btype,length(bfaceregions))
+    grid[BFaceGeometries]=VectorOfConstants{ElementGeometries,Int}(btype,length(bfaceregions))
     grid[CoordinateSystem]=csys
     return grid
 end
@@ -591,7 +591,22 @@ function simplexgrid(grid2::ExtendableGrid, coordZ; bot_offset=0,cell_offset=0,t
         end
         ishift+=nnodes2
     end
-    simplexgrid(coord3,cells3,cellregions3,bfaces3,bfaceregions3)
+
+    xgrid = simplexgrid(coord3,cells3,cellregions3,bfaces3,bfaceregions3)
+
+    ## quick and dirty fix of local orderings to avoid negative CellVolumes
+    ## and problems with CellFinder
+    cellvolumes = xgrid[CellVolumes]
+    cellnodes = xgrid[CellNodes]
+    for cell = 1 : num_cells(xgrid)
+        if cellvolumes[cell] < 0
+            ishift = cellnodes[1,cell]
+            cellnodes[1,cell] = cellnodes[2,cell]
+            cellnodes[2,cell] = ishift
+            cellvolumes[cell] *= -1
+        end
+    end
+    return xgrid
 end
 
 
