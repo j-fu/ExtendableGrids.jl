@@ -1,6 +1,6 @@
 ENV["MPLBACKEND"]="agg"
 
-using Test, ExtendableGrids, GridVisualize
+using Test, ExtendableGrids, GridVisualize, SHA
 import PyPlot
 
 
@@ -249,5 +249,29 @@ end
 @testset "Grid Stuff" begin
     include("test_gridstuff.jl")
     run_grid_tests()
+end         
+
+@testset "writeVTK" begin
+    X = collect(-1:1.0:1)
+    Y = collect(-1:1.0:1)
+    Z = collect(0:0.5:1)
+    g = simplexgrid(X,Y,Z)
+
+    nx = num_nodes(g)
+    nc = num_cells(g)
+
+    point_data    = map((x,y,z) -> (sinpi(2*x)*sinpi(2*y)*z), g)
+    field_data = [1.0, 2, 3, 4, 5, 6]
+
+    writeVTK("testfile_writevtk.vtu", g; 
+        cellregions = g[CellRegions],
+        point_data = point_data, 
+        field_data = field_data)
+
+    sha_code = open("testfile_writevtk.vtu") do f
+        sha256(f)
+    end |> bytes2hex
+
+    @test sha_code == "9ad048339e9e2605576aa141b41cdc7a8899171e3b99574b669178a6dd8b38c3"
 end
 

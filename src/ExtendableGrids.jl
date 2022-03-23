@@ -4,6 +4,7 @@ using DocStringExtensions
 using ElasticArrays
 using StaticArrays
 using AbstractTrees
+using WriteVTK
 
 using InteractiveUtils
 using SparseArrays
@@ -176,5 +177,8 @@ export writefile
 
 include("tokenstream.jl")
 export TokenStream, gettoken, expecttoken,trytoken
+
+include("io.jl")
+export writeVTK
 
 end # module
