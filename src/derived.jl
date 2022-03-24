@@ -39,6 +39,7 @@ abstract type FaceNodes <: AbstractGridAdjacency end
 abstract type FaceVolumes <: AbstractGridFloatArray1D end
 abstract type FaceCells <: AbstractGridAdjacency end
 abstract type FaceEdges <: AbstractGridAdjacency end
+abstract type FaceEdgeSigns <: AbstractGridAdjacency end
 abstract type FaceNormals <: AbstractGridFloatArray2D end
 abstract type FaceGeometries <: AbstractElementGeometries end
 abstract type FaceRegions <: AbstractElementRegions end
@@ -752,13 +753,16 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceEd
     edge_rule::Array{Ti,2} = edge_rules[1]
     if length(EG) == 1
         singleEG = true
-        xFaceEdges = zeros(Ti,num_faces(EG[1]),nfaces)
+        xFaceEdges = zeros(Ti,num_edges(EG[1]),nfaces)
+        xFaceEdgeSigns = zeros(Ti,num_edges(EG[1]),nfaces)
     else
         singleEG = false
-        faceEG = xCellGeometries[1]
+        faceEG = xFaceGeometries[1]
+        xFaceEdgeSigns = VariableTargetAdjacency(Ti)
         for face = 1 : nfaces
-            faceEG = xCellGeometries[cell]
-            append!(xCellEdges,zeros(Ti,num_faces(cellEG)))
+            faceEG = xFaceGeometries[face]
+            append!(xFaceEdges,zeros(Ti,num_edges(faceEG)))
+            append!(xFaceEdgeSigns,zeros(Ti,num_edges(faceEG)))
         end   
     end
 
@@ -840,9 +844,11 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceEd
                     end
                 end
                 if singleEG
-                    xFaceEdges[pos,face] = edge
+                    xFaceEdges[pos, face] = edge
+                    xFaceEdgeSigns[pos, face] = xEdgeNodes[1, edge] == xFaceNodes[edge_rule[1, pos], face] ? 1 : -1
                 else
                     xFaceEdges.colentries[xFaceEdges.colstart[face]+pos-1] = edge
+                    xFaceEdgeSigns.colentries[xFaceEdgeSigns.colstart[face]+pos-1] = xEdgeNodes[1, edge] == xFaceNodes[edge_rule[1, pos], face] ? 1 : -1
                 end
 
                 # reset flag4edge
@@ -866,6 +872,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceEd
 
     end
     
+    xgrid[FaceEdgeSigns] = xFaceEdgeSigns
     xFaceEdges
 end
 
@@ -894,13 +901,17 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeCe
 end
 
 
-# CellEdgeSigns = edges for each cell
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{CellEdgeSigns}) where {Tc,Ti}
     ExtendableGrids.instantiate(xgrid, EdgeNodes)
     xgrid[CellEdgeSigns]
 end
 
-# CellFaceSigns = orientation signs for each face on each cell
+
+function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceEdgeSigns}) where {Tc,Ti}
+    ExtendableGrids.instantiate(xgrid, FaceEdges)
+    xgrid[FaceEdgeSigns]
+end
+
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{CellFaceSigns}) where {Tc,Ti}
     ExtendableGrids.instantiate(xgrid, FaceNodes)
     xgrid[CellFaceSigns]

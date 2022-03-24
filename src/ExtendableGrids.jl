@@ -104,7 +104,7 @@ export xrefFACE2xrefOFACE
 include("derived.jl")
 export Coordinates
 export CellVolumes, CellFaces, CellEdges, CellFaceSigns, CellFaceOrientations, CellEdgeSigns
-export FaceNodes, FaceGeometries, FaceVolumes, FaceRegions, FaceCells, FaceEdges, FaceNormals
+export FaceNodes, FaceGeometries, FaceVolumes, FaceRegions, FaceCells, FaceEdges, FaceEdgeSigns, FaceNormals
 export EdgeNodes, EdgeGeometries, EdgeVolumes, EdgeRegions, EdgeCells, EdgeTangents
 export BFaceFaces, BFaceCellPos, BFaceVolumes
 export BEdgeNodes, BEdgeEdges, BEdgeVolumes, BEdgeGeometries
