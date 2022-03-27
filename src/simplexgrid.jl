@@ -763,24 +763,44 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+   function glue(g1,g2;
+            g1regions=1:num_bfaceregions(g1),
+            g2regions=1:num_bfaceregions(g2),
+            interface=0,
+            tol=1.0e-10)
 
 Merge two grids along their common boundary facets. 
 
 - g1: First grid to be merged
 - g2: Second grid to be merged
-- breg:  Interior boundary region number of merged facets. If zero (default value), no extra facets are generated.
+- g1regions: boundary regions to be used from grid1. Default: all.
+- g2regions: boundary regions to be used from grid2. Default: all.
+- interface: if nonzero, create interface region in new grid, otherwise, ignore
 - tol:  Distance below which two points are seen as identical. Default: 1.0e-10
 
+
+Deprecated:
+- breg: old notation for interface
 """
-function glue(g1,g2; breg=0, tol=1.0e-10)
+function glue(g1,g2;
+              g1regions=1:num_bfaceregions(g1),
+              g2regions=1:num_bfaceregions(g2),
+              breg=nothing,
+              interface=0,
+              tol=1.0e-10)
     Ti=Cint
-    
     dim=dim_space(g1)
 
+    if breg!=nothing
+        interface=breg
+        @warn "glue: set interface=$(interface) from deprecated breg kwarg"
+    end
+    
+    bfreg1=g1[BFaceRegions]
+    bfreg2=g2[BFaceRegions]
     bfn1=g1[BFaceNodes]
     bfn2=g2[BFaceNodes]
-
+    
     nbf1=size(bfn1,2)
     nbf2=size(bfn2,2)
 
@@ -815,10 +835,16 @@ function glue(g1,g2; breg=0, tol=1.0e-10)
 
     # Add two face indices to list of matching faces
     add_matching_faces(if1,if2) = n_matching_faces = add_match!(matching_faces,n_matching_faces,if1,if2)
-
+    
     ## Check if two points match (distance < tol)
-    points_match(ip1, ip2) = @views norm(coord1[:,ip1]-coord2[:,ip2])<tol
-
+    function points_match(ip1, ip2)
+        nm=0.0
+        for i=1:dim
+            nm+=(coord1[i,ip1]-coord2[i,ip2])^2
+        end
+        return nm<tol^2
+    end
+    
     # Check if points in faces match, if so, add them to point matching index
     # Check if faces match, if so, add them to face matching index
     function match_faces(if1,if2) 
@@ -839,13 +865,19 @@ function glue(g1,g2; breg=0, tol=1.0e-10)
       end
     end
 
-    
+
+    use_region(ireg,regionlist) = findfirst(i->i==ireg,regionlist)!=nothing
     # Run over all pairs of boundary faces and try to match them
     for ibf1=1:nbf1
-        for ibf2=1:nbf2
-            match_faces(ibf1,ibf2)
+        if use_region(bfreg1[ibf1],g1regions)
+            for ibf2=1:nbf2
+                if use_region(bfreg2[ibf2],g2regions)
+                    match_faces(ibf1,ibf2)
+                end
+            end
         end
     end
+    
     @info "glue: matches found: nodes $(n_matching_nodes) bfaces: $(n_matching_faces)"
 
 
@@ -872,7 +904,7 @@ function glue(g1,g2; breg=0, tol=1.0e-10)
         end
     end
 
-    mfac = breg == 0 ? 2 : 1
+    mfac = interface == 0 ? 2 : 1
 
     coordx=zeros(dim,nn1+nn2-n_matching_nodes)
     cnx=zeros(Ti, dim+1,nc1+nc2)
@@ -894,11 +926,11 @@ function glue(g1,g2; breg=0, tol=1.0e-10)
 
     ibfx=1
     for ibf1=1:nbf1
-        if mf1[ibf1]!=0 && breg == 0
+        if mf1[ibf1]!=0 && interface == 0
             continue
         end
         if mf1[ibf1]!=0
-            bregx[ibfx]=breg
+            bregx[ibfx]=interface
         else
             bregx[ibfx]=breg1[ibf1]
         end
