@@ -120,6 +120,14 @@ function check_cellfinder(xgrid)
 end
 
 
+
+function check_uniform_refinement(xgrid, bary::Bool)
+    xgrid2 = bary ? barycentric_refine(xgrid) : uniform_refine(xgrid)
+    minvol = minimum(xgrid2[CellVolumes])
+    return minvol > 0
+end
+
+
 function run_grid_tests()
     # test FACE enumerations
     @test check_enumeration_consistency(Edge1D, CellFaces, FaceNodes, local_cellfacenodes)
@@ -142,4 +150,10 @@ function run_grid_tests()
     @test check_cellfinder(get_testgrid(Triangle2D,Parallelogram2D))
     @test check_cellfinder(get_testgrid(Tetrahedron3D))
     @test check_cellfinder(get_testgrid(Parallelepiped3D))
+
+    @test check_uniform_refinement(reference_domain(Triangle2D), false)
+    @test check_uniform_refinement(reference_domain(Triangle2D), true)
+    @test check_uniform_refinement(reference_domain(Parallelogram2D), false)
+    @test check_uniform_refinement(reference_domain(Tetrahedron3D), false)
+    @test check_uniform_refinement(reference_domain(Tetrahedron3D), true)
 end

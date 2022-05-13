@@ -523,6 +523,8 @@ end
 # first k nodes are the CellNodes, k+1-th  node is cell midpoint
 const _barycentric_rule_Triangle2D = [1 2 4; 2 3 4; 3 1 4]'
 barycentric_refine_rule(::Type{<:Triangle2D}) = _barycentric_rule_Triangle2D
+const _barycentric_rule_Tetrahedron3D = [1 3 5 2; 1 2 5 4; 2 3 5 4; 3 1 5 4]'
+barycentric_refine_rule(::Type{<:Tetrahedron3D}) = _barycentric_rule_Tetrahedron3D
 
 
 """
@@ -538,7 +540,10 @@ function barycentric_refine(source_grid::ExtendableGrid{T,K}) where {T,K}
     # @logmsg MoreInfo "Barycentric refinement of $(num_sources(source_grid[CellNodes])) cells"
     
     # split first into triangles
-    source_grid = split_grid_into(source_grid,Triangle2D)
+    oldCellGeometries = source_grid[CellGeometries]
+    dim = dim_element(oldCellGeometries[1])
+    itemEG = dim == 2 ? Triangle2D : Tetrahedron3D
+    source_grid = split_grid_into(source_grid, itemEG)
 
     xgrid = ExtendableGrid{T,K}()
     oldCoordinates = source_grid[Coordinates]
@@ -551,10 +556,6 @@ function barycentric_refine(source_grid::ExtendableGrid{T,K}) where {T,K}
         refine_rules[j] = barycentric_refine_rule(EG[j])
     end
 
-    singleEG = false
-    if length(EG) == 1
-        singleEG = true
-    end
     xCellNodes::Adjacency = VariableTargetAdjacency(K)
     xCellGeometries = Array{ElementGeometries,1}(undef,0)
     xCellRegions = zeros(K,0)
@@ -563,7 +564,6 @@ function barycentric_refine(source_grid::ExtendableGrid{T,K}) where {T,K}
     oldCellFaces = source_grid[CellFaces]
 
     # determine number of new vertices
-    itemEG = Triangle2D
     newvertices = num_sources(oldCellNodes)
     oldvertices = size(oldCoordinates,2)
     xCoordinates = zeros(T,size(oldCoordinates,1),oldvertices+newvertices)
@@ -579,12 +579,6 @@ function barycentric_refine(source_grid::ExtendableGrid{T,K}) where {T,K}
     newvertex::Array{T,1} = zeros(T,size(xCoordinates,1))
     refine_rule::Array{Int,2} = refine_rules[iEG]
     for cell = 1 : num_sources(oldCellNodes)
-        if !singleEG
-            nnodes4item = num_targets(oldCellNodes,cell)
-            itemEG = oldCellGeometries[cell]
-            iEG = findfirst(isequal(itemEG), EG)
-            refine_rule = refine_rules[iEG]
-        end
         
         # add cell midpoint to Coordinates
         newnode += 1
@@ -607,23 +601,15 @@ function barycentric_refine(source_grid::ExtendableGrid{T,K}) where {T,K}
                 end        
             end    
             append!(xCellNodes,view(subitemnodes,1:size(refine_rule,1)))
-            if !singleEG
-                push!(xCellGeometries,itemEG)
-            end
             push!(xCellRegions, oldCellRegions[cell])
         end    
         ncells += size(refine_rule,2)
     end
 
     xgrid[Coordinates] = xCoordinates
-    if singleEG
-        nnodes4item = size(oldCellNodes,1)
-        xgrid[CellNodes] = reshape(xCellNodes.colentries,nnodes4item,num_sources(xCellNodes))
-        xgrid[CellGeometries] = VectorOfConstants{ElementGeometries,Int}(EG[1],num_sources(xCellNodes))
-    else
-        xgrid[CellNodes] = xCellNodes
-        xgrid[CellGeometries] = xCellGeometries
-    end
+    nnodes4item = size(oldCellNodes,1)
+    xgrid[CellNodes] = reshape(xCellNodes.colentries,nnodes4item,num_sources(xCellNodes))
+    xgrid[CellGeometries] = VectorOfConstants{ElementGeometries,Int}(EG[1],num_sources(xCellNodes))
     if typeof(oldCellRegions) <: VectorOfConstants
         xgrid[CellRegions] = VectorOfConstants{K}(1,num_sources(xCellNodes))
     else
