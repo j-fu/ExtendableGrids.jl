@@ -151,18 +151,34 @@ examples3d=joinpath(@__DIR__,"..","examples","examples3d.jl")
 include(examples3d)
 
 
+
+
 @testset "1D" begin
+    function rect1d()
+        X=collect(0:0.1:1)
+        g=simplexgrid(X)
+        rect!(g, [0.3],[0.6], region=2,bregions=[3,4])
+    end
+    
     @test testgrid(interval_from_vector(),(21,20,2))
     @test testgrid(interval_localref(),   (27,26,2))
     @test testgrid(interval_multiregion(),(21,20,3))
     @test testgrid(interval_subgrid(),(51,50,2))
+    @test testgrid(rect1d(),(11,10,4))
 end
 
 @testset "2D" begin
+    function rect2d()
+        X=collect(0:0.1:1)
+        g=simplexgrid(X,X)
+        rect!(g, [0.3, 0.3],[0.6,0.6], region=2,bregions=[3,4,5,6])
+    end
+
     @test testgrid(rectangle(),(441,800,80))
     @test testgrid(rectangle_localref(),(729, 1352, 104))
     @test testgrid(rectangle_multiregion(),(441,800,100))
     @test testgrid(rectangle_subgrid(),(360, 600, 120))
+    @test testgrid(rect2d(),(121,200,52))
 end
 
 @testset "3D" begin
@@ -188,7 +204,15 @@ end
         subgrid(g,[1])
     end
 
+    function rect3d()
+        X=collect(0:0.1:1)
+        g=simplexgrid(X,X,X)
+        rect!(g, [0.3, 0.3,0.4],[0.6,0.6,0.7], region=2,bregion=8)
+        g
+    end
 
+
+    
     @test testgrid(quadrilateral(),(330,1200,440))
     @test mask_bedges()
 
@@ -199,7 +223,10 @@ end
     @test testgrid(gxyz,(125,384,192))
     @test g[Coordinates]≈gxyz[Coordinates]
     @test testgrid(subgen(),(756,3000,950))
+    @test testgrid(rect3d(),(1331,6000,1308))
 end
+
+
 
 if !Sys.isapple() && !Sys.iswindows()
     @testset "plotting examples" begin

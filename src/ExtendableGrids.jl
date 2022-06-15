@@ -164,7 +164,7 @@ export ringsector
 
 
 include("regionedit.jl")
-export cellmask!, bfacemask!, bedgemask!
+export cellmask!, bfacemask!, bedgemask!, rect!
 
 
 include("arraytools.jl")

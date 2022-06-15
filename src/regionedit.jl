@@ -4,8 +4,8 @@ $(TYPEDSIGNATURES)
 Edit region numbers of grid cells via rectangular mask.
 """
 function cellmask!(grid::ExtendableGrid,
-                   maskmin::AbstractArray,
-                   maskmax::AbstractArray,
+                   maskmin,
+                   maskmax,
                    ireg::Int;
                    tol=1.0e-10)
     xmaskmin=maskmin.-tol
@@ -43,8 +43,8 @@ Edit region numbers of grid  boundary facets  via rectangular mask.
 If `allow_new` is true (default), new facets are added
 """
 function bfacemask!(grid::ExtendableGrid,
-                    maskmin::AbstractArray,
-                    maskmax::AbstractArray,
+                    maskmin,
+                    maskmax,
                     ireg::Int;
                     allow_new=true,
                     tol=1.0e-10)
@@ -124,8 +124,8 @@ Edit region numbers of grid  boundary edges via line mask.
 This only works for 3D grids.
 """
 function bedgemask!(grid::ExtendableGrid,
-                    xa::AbstractArray,
-                    xb::AbstractArray,
+                    xa,
+                    xb,
                     ireg::Int;
                     tol=1.0e-10)
     # Masking of boundary edges makes only sense in 3D
@@ -181,4 +181,76 @@ function bedgemask!(grid::ExtendableGrid,
 
     grid[NumBEdgeRegions]=max(num_bedgeregions(grid),ireg)
     return grid
+end
+
+"""
+    rect!(grid,maskmin,maskmax; 
+          region=1, 
+          bregion=1, 
+          bregions=nothing, 
+          tol=1.0e-10)
+
+Place a rectangle in rectangular grid. It places a cellmask according to `maskmin` and `maskmax`,
+and introduces boundary faces via `bfacesmask! at all sides of the mask area. It is checked that the coordinate
+values in the mask match (with tolerance) corresponding directional coordinates of the grid.
+
+If `bregions` is given it is assumed to be a vector corrsponding to the number of sides,
+im the sequence `w,e` in 1D. `s,e,n,w` in 2D and `s,e,n,w,b,t` in 3D.
+"""
+function rect!(grid,maskmin,maskmax; region=1, bregion=1, bregions=nothing, tol=1.0e-10)
+    function findval(X,x)
+        for i in eachindex(X)
+            if abs(X[i]-x)<tol
+                return true
+            end
+        end
+        return false
+    end
+
+    dim=dim_space(grid)
+    if dim>=1
+        nfaces=2
+        X=grid[XCoordinates]
+        @assert findval(X,maskmin[1]) 
+        @assert findval(X,maskmax[1])
+    end
+    if dim>=2
+        nfaces=4
+        Y=grid[YCoordinates]
+        @assert findval(Y,maskmin[2]) 
+        @assert findval(Y,maskmax[2])
+    end
+    if dim>=3
+        nfaces=6
+        Z=grid[ZCoordinates]
+        @assert findval(Z,maskmin[2]) 
+        @assert findval(Z,maskmax[2])
+    end
+    if bregions==nothing
+        bregions=fill(bregion,nfaces)
+    end
+    @assert length(bregions)==nfaces
+    cellmask!(grid,maskmin,maskmax,region;tol)
+
+    if dim==1
+        bfacemask!(grid, maskmin,maskmin,bregions[1];allow_new=true,tol)
+        bfacemask!(grid, maskmax,maskmax,bregions[2];allow_new=true,tol)
+    end
+
+    if dim==2
+        bfacemask!(grid, [maskmin[1],maskmin[2]],[maskmax[1],maskmin[2]],bregions[1];allow_new=true,tol)
+        bfacemask!(grid, [maskmax[1],maskmin[2]],[maskmax[1],maskmax[2]],bregions[2];allow_new=true,tol)
+        bfacemask!(grid, [maskmin[1],maskmax[2]],[maskmax[1],maskmax[2]],bregions[3];allow_new=true,tol)
+        bfacemask!(grid, [maskmin[1],maskmin[2]],[maskmin[1],maskmax[2]],bregions[4];allow_new=true,tol)
+    end
+
+    if dim==3
+        bfacemask!(grid, [maskmin[1],maskmin[2],maskmin[3]],[maskmax[1],maskmin[2],maskmax[3]],bregions[1];allow_new=true,tol) #south
+        bfacemask!(grid, [maskmax[1],maskmin[2],maskmin[3]],[maskmax[1],maskmax[2],maskmax[3]],bregions[2];allow_new=true,tol) #east
+        bfacemask!(grid, [maskmin[1],maskmax[2],maskmin[3]],[maskmax[1],maskmax[2],maskmax[3]],bregions[3];allow_new=true,tol) #north
+        bfacemask!(grid, [maskmin[1],maskmin[2],maskmin[3]],[maskmin[1],maskmax[2],maskmax[3]],bregions[4];allow_new=true,tol) #west
+        bfacemask!(grid, [maskmin[1],maskmin[2],maskmin[3]],[maskmax[1],maskmax[2],maskmin[3]],bregions[5];allow_new=true,tol) #bottom
+        bfacemask!(grid, [maskmin[1],maskmin[2],maskmax[3]],[maskmax[1],maskmax[2],maskmax[3]],bregions[5];allow_new=true,tol) #top
+    end
+    grid
 end
