@@ -166,6 +166,29 @@ end
 end
 
 @testset "3D" begin
+    function subgen(;h=0.2)
+        X=collect(-1:h:2)
+        Y=collect(0:h:1)
+        Z=collect(0:h:2)
+        g=simplexgrid(X,Y,Z)
+        # Mark all boundaries as region 1
+        bfacemask!(g,[-1,0,0], [2,1,2],1, allow_new=false)
+        
+        # Default cell region is 1
+        # Mark cut-out regions as 2
+        cellmask!(g, [-1,0,0], [0,1,1], 2)
+        cellmask!(g, [1,0,0], [2,1,1], 2)
+        
+        # add new interface elements
+        bfacemask!(g, [-1,0,1], [2,1,1],3,allow_new=true)
+        bfacemask!(g, [0,0,0], [0,1,1],3,allow_new=true)
+        bfacemask!(g, [1,0,0], [1,1,1],3,allow_new=true)
+        
+        # return subgrid of region 1
+        subgrid(g,[1])
+    end
+
+
     @test testgrid(quadrilateral(),(330,1200,440))
     @test mask_bedges()
 
@@ -175,6 +198,7 @@ end
     g=simplexgrid(X,X,X)
     @test testgrid(gxyz,(125,384,192))
     @test g[Coordinates]≈gxyz[Coordinates]
+    @test testgrid(subgen(),(756,3000,950))
 end
 
 if !Sys.isapple() && !Sys.iswindows()

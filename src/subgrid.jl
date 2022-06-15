@@ -47,7 +47,10 @@ function subgrid(parent,
 
     Tc=coord_type(parent)
     Ti=index_type(parent)
-    
+
+    #
+    # TODO: make a flag array here
+    #
     @inline function insubregions(xreg)
         for i in eachindex(subregions)
             if subregions[i]==xreg
@@ -135,6 +138,7 @@ function subgrid(parent,
         bfacenodes=parent[BFaceNodes]
         bfaceregions=parent[BFaceRegions]
         bfacetypes=parent[BFaceGeometries]
+        bfacecells=parent[BFaceCells]
         
         sub_bfacenodes=VariableTargetAdjacency(Ti)
         sub_bfaceregions=Vector{Ti}(undef,0)
@@ -146,6 +150,18 @@ function subgrid(parent,
             for inode=1:nbn
                 if nodemark[bfacenodes[inode,ibface]]==0
                     insubgrid=false
+                    continue
+                end
+            end
+            # All nodes may be in subgrid, but this still doesn't mean
+            # yet that the bface is in subgrid - we need to check if the
+            # neigboring cells are in the subgrid
+            # TODO: this even may be sufficient!
+            insubgrid=false
+            for itarget=1:num_targets(bfacecells,ibface)
+                icell=bfacecells[itarget, ibface]
+                if insubregions(xregions[icell])
+                    insubgrid=true
                     continue
                 end
             end
