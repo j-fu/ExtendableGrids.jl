@@ -223,8 +223,8 @@ function rect!(grid,maskmin,maskmax; region=1, bregion=1, bregions=nothing, tol=
     if dim>=3
         nfaces=6
         Z=grid[ZCoordinates]
-        @assert findval(Z,maskmin[2]) 
-        @assert findval(Z,maskmax[2])
+        @assert findval(Z,maskmin[3]) 
+        @assert findval(Z,maskmax[3])
     end
     if bregions==nothing
         bregions=fill(bregion,nfaces)
