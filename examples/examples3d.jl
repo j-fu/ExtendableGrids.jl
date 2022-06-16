@@ -11,6 +11,25 @@ function quadrilateral(;hx=0.25, hy=0.2, hz=0.1)
 end
 # ![](quadrilateral.svg)
 
+# ## Cross3d
+function cross3d()
+    X=collect(0:1:10)
+    Y=collect(0:1:10)
+    Z=collect(0:1:10)
+    grid=simplexgrid(X,Y,Z)
+
+    rect!(grid, (0,4,0), (10,6,2), region=2, bregions=[1,1,1,1,2,3])
+
+    rect!(grid, (4,0,2), (6,10,4), region=2, bregions=[ 4,4,4,4, (cur)-> cur == 3 ? 0 : 5 , 6] )
+
+    subgrid(grid,[2])
+
+end
+# ![](cross3d.svg)
+
+
+
+
 
 function mask_bedges()
     grid    = quadrilateral(hx=0.25, hy=0.25, hz=0.25)

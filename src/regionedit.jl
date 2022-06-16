@@ -2,6 +2,8 @@
 $(TYPEDSIGNATURES)
 
 Edit region numbers of grid cells via rectangular mask.
+
+Examples: [Rectangle-with-multiple-regions](@ref)
 """
 function cellmask!(grid::ExtendableGrid,
                    maskmin,
@@ -37,15 +39,27 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
+    bfacemask!(grid::ExtendableGrid,
+                    maskmin,
+                    maskmax,
+                    ireg;
+                    allow_new=true,
+                    tol=1.0e-10)
+
 
 Edit region numbers of grid  boundary facets  via rectangular mask.
-If `allow_new` is true (default), new facets are added
+If `allow_new` is true (default), new facets are added.
+
+ireg may be an integer  or a function `ireg(current_region)`.
+
+A zero region number removes boundary faces.
+
+Examples: [Rectangle-with-multiple-regions](@ref)
 """
 function bfacemask!(grid::ExtendableGrid,
                     maskmin,
                     maskmax,
-                    ireg::Int;
+                    ireg;
                     allow_new=true,
                     tol=1.0e-10)
 
@@ -55,9 +69,6 @@ function bfacemask!(grid::ExtendableGrid,
 
     bfacenodes=grid[BFaceNodes]
     nbfaces=size(bfacenodes,2)
-
-
-
     
     Ti=eltype(bfacenodes)
     dim=dim_space(grid)
@@ -76,7 +87,11 @@ function bfacemask!(grid::ExtendableGrid,
         end
         xfacenodes=facenodes
     end
+
+    newregion(ireg::Int, current_region)=ireg
     
+    newregion(ireg::T, current_region) where T<:Function=ireg(current_region)
+
     for ixface=1:size(xfacenodes,2)
         in_region=true
         for inode=1:num_targets(xfacenodes,ixface)
@@ -90,29 +105,58 @@ function bfacemask!(grid::ExtendableGrid,
             end
         end
 
+
         if in_region
             if allow_new
                 ibface=bmark[ixface]
-                if ibface>0
-                    bfaceregions[ibface]=ireg
-                else
-                    push!(bfaceregions,ireg)
-                    @views append!(new_bfacenodes,xfacenodes[:,ixface])
+                if ibface>0 # we are on an existing bface
+                    reg=newregion(ireg,bfaceregions[ibface])
+                    bfaceregions[ibface]=reg
+                else # new bface
+                    reg=newregion(ireg,0)
+                    if reg>0
+                        push!(bfaceregions,reg)
+                        @views append!(new_bfacenodes,xfacenodes[:,ixface])
+                    end
                 end
-            else
-                bfaceregions[ixface]=ireg
+            else # just updating bregion number
+                reg=newregion(ireg,bfaceregions[ixface])
+                bfaceregions[ixface]=reg
             end
         end
     end
 
-
+    
+    # This adjacency is not true anymore...
     delete!(grid,BFaceFaces)
-    btype=grid[BFaceGeometries][1]
+
     if allow_new
         grid[BFaceNodes]=Array{Ti,2}(new_bfacenodes)
     end
-    grid[BFaceGeometries]=VectorOfConstants{ElementGeometries,Int}(btype,length(bfaceregions))
-    grid[NumBFaceRegions]=max(num_bfaceregions(grid),ireg)
+    
+    # Remove bfaces with zero region number.
+    nzeros=sum(iszero, bfaceregions)
+    if nzeros>0
+        bfacenodes=grid[BFaceNodes]
+        newlength=length(bfaceregions)-nzeros
+        new_bfaceregions=zeros(Ti,newlength)
+        new_bfacenodes=zeros(Ti,size(bfacenodes,1),newlength)
+        ibfnew=1
+        for ibface in eachindex(bfaceregions)
+            if bfaceregions[ibface]>0
+                new_bfaceregions[ibfnew]=bfaceregions[ibface]
+                @views new_bfacenodes[:,ibfnew].=bfacenodes[:,ibface]
+                ibfnew+=1
+            end
+        end
+        grid[BFaceNodes]=new_bfacenodes
+        grid[BFaceRegions]=new_bfaceregions
+    end
+
+    # Update grid information
+    btype=grid[BFaceGeometries][1]
+    grid[BFaceGeometries]=VectorOfConstants{ElementGeometries,Int}(btype,length(grid[BFaceRegions]))
+    grid[NumBFaceRegions]=maximum(grid[BFaceRegions])
     return grid
 end
 
@@ -190,12 +234,16 @@ end
           bregions=nothing, 
           tol=1.0e-10)
 
-Place a rectangle in rectangular grid. It places a cellmask according to `maskmin` and `maskmax`,
+Place a rectangle into a rectangular grid. It places a cellmask according to `maskmin` and `maskmax`,
 and introduces boundary faces via `bfacesmask! at all sides of the mask area. It is checked that the coordinate
 values in the mask match (with tolerance) corresponding directional coordinates of the grid.
 
-If `bregions` is given it is assumed to be a vector corrsponding to the number of sides,
+If `bregions` is given it is assumed to be a vector corresponding to the number of sides,
 im the sequence `w,e` in 1D. `s,e,n,w` in 2D and `s,e,n,w,b,t` in 3D.
+
+`bregion` or elements of `bregions` can be numbers or functions `ireg(current_region)`.
+
+Examples: [Subgrid-from-rectangle](@ref), [Rect2d-with-bregion-function](@ref),  [Cross3d](@ref)
 """
 function rect!(grid,maskmin,maskmax; region=1, bregion=1, bregions=nothing, tol=1.0e-10)
     function findval(X,x)

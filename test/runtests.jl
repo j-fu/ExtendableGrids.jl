@@ -179,6 +179,7 @@ end
     @test testgrid(rectangle_multiregion(),(441,800,100))
     @test testgrid(rectangle_subgrid(),(360, 600, 120))
     @test testgrid(rect2d(),(121,200,52))
+    @test testgrid(rect2d_bregion_function(),(79,112,44))
 end
 
 @testset "3D" begin
@@ -224,6 +225,7 @@ end
     @test g[Coordinates]≈gxyz[Coordinates]
     @test testgrid(subgen(),(756,3000,950))
     @test testgrid(rect3d(),(1331,6000,1308))
+    @test testgrid(cross3d(),(189,480,344))
 end
 
 

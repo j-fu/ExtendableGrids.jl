@@ -18,6 +18,9 @@ function makeplots(picdir)
     makeplot("rectangle_localref",picdir)
     makeplot("rectangle_multiregion",picdir)
     makeplot("rectangle_subgrid",picdir)
+    makeplot("rect2d_bregion_function",picdir)
+
     makeplot("quadrilateral",picdir)
+    makeplot("cross3d",picdir)
     
 end
