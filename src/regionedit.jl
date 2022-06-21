@@ -24,8 +24,10 @@ function cellmask!(grid::ExtendableGrid,
             for idim=1:dim
                 if coord[idim,ignode]<xmaskmin[idim]
                     in_region=false
+                    break
                 elseif coord[idim,ignode]>xmaskmax[idim]
                     in_region=false
+                    break
                 end
             end
         end
@@ -92,19 +94,22 @@ function bfacemask!(grid::ExtendableGrid,
     
     newregion(ireg::T, current_region) where T<:Function=ireg(current_region)
 
+    ndim=dim_space(grid)
     for ixface=1:size(xfacenodes,2)
         in_region=true
         for inode=1:num_targets(xfacenodes,ixface)
             ignode=xfacenodes[inode,ixface]
-            for idim=1:dim_space(grid)
+            for idim=1:ndim
                 if coord[idim,ignode]<xmaskmin[idim]
                     in_region=false
                 elseif coord[idim,ignode]>xmaskmax[idim]
                     in_region=false
                 end
             end
+            if !in_region
+                break
+            end
         end
-
 
         if in_region
             if allow_new
