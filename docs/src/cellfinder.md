@@ -1,7 +1,13 @@
-# Cell finder
+# Search and Interpolation
 
-## API
-```@autodocs
-Modules = [ExtendableGrids]
-Pages = ["cellfinder.jl"]
+## Search
+```@docs
+CellFinder
+gFindLocal!
+gFindBruteForce!
+```
+## Interpolation
+```@docs
+interpolate
+interpolate!
 ```

@@ -304,6 +304,48 @@ end
     run_grid_tests()
 end         
 
+@testset "Interpolations" begin
+    X_from = collect(0:0.1:1)
+    X_to = collect(0:0.02:1)
+
+    grid_from=simplexgrid(X_from)
+    grid_to=simplexgrid(X_to)
+    u_from=map((x)->x,grid_from)
+    u_to_exact=map((x)->x,grid_to)
+    u_to=interpolate(grid_to,u_from,grid_from)
+    @test u_to≈u_to_exact
+    
+    u_from=Matrix(hcat(u_from,u_from)')
+    u_to_exact=Matrix(hcat(u_to_exact,u_to_exact)')
+    u_to=interpolate(grid_to,u_from,grid_from)
+    @test u_to≈u_to_exact
+    
+    grid_from=simplexgrid(X_from,X_from)
+    grid_to=simplexgrid(X_to,X_to)
+    u_from=map((x,y)->x+y,grid_from)
+    u_to_exact=map((x,y)->x+y,grid_to)
+    u_to=interpolate(grid_to,u_from,grid_from)
+    @test u_to≈u_to_exact
+    
+    u_from=Matrix(hcat(u_from,u_from)')
+    u_to_exact=Matrix(hcat(u_to_exact,u_to_exact)')
+    u_to=interpolate(grid_to,u_from,grid_from)
+    @test u_to≈u_to_exact
+    
+    grid_from=simplexgrid(X_from,X_from,X_from)
+    grid_to=simplexgrid(X_to,X_to,X_to)
+    u_from=map((x,y,z)->x+y+z,grid_from)
+    u_to_exact=map((x,y,z)->x+y+z,grid_to)
+    u_to=interpolate(grid_to,u_from,grid_from)
+    @test u_to≈u_to_exact
+    
+    u_from=Matrix(hcat(u_from,u_from)')
+    u_to_exact=Matrix(hcat(u_to_exact,u_to_exact)')
+    u_to=interpolate(grid_to,u_from,grid_from)
+    @test u_to≈u_to_exact
+    
+end
+
 @testset "writeVTK" begin
     X = collect(-1:1.0:1)
     Y = collect(-1:1.0:1)

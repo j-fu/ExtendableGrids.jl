@@ -1,4 +1,8 @@
+"""
+    $(TYPEDEF)
 
+CellFinder supports finding cells in grids.
+"""
 struct CellFinder{Tv,Ti}
     xgrid::ExtendableGrid{Tv,Ti}
     xCellFaces::Adjacency{Ti}
@@ -31,6 +35,7 @@ function postprocess_xreftest!(xreftest::Array{Tv}, ::Type{<:Parallelogram2D}) w
     xreftest[4] = 1 - xreftest[2]
     return nothing
 end
+
 function postprocess_xreftest!(xreftest::Array{Tv}, ::Type{<:Parallelepiped3D}) where {Tv}
     xreftest[4] = 1 - xreftest[1]
     xreftest[5] = 1 - xreftest[2]
@@ -38,7 +43,11 @@ function postprocess_xreftest!(xreftest::Array{Tv}, ::Type{<:Parallelepiped3D}) 
     return nothing
 end
 
+"""
+    CellFinder(grid)
 
+Create a cell finder on grid.
+"""
 function CellFinder(xgrid::ExtendableGrid{Tv,Ti}) where {Tv,Ti}
     CS = xgrid[CoordinateSystem]
     EG = xgrid[UniqueCellGeometries]
@@ -74,8 +83,19 @@ function CellFinder(xgrid::ExtendableGrid{Tv,Ti}) where {Tv,Ti}
 end
 
 
-# modification of pdelib function in gfind.cxx
-function gFindLocal!(xref, CF::CellFinder{Tv,Ti}, x; icellstart::Int = 1, eps = 1e-14) where{Tv,Ti}
+"""
+    icellfound=GFindLocal!(xref,cellfinder,p; icellstart=1,eps=1.0e-14, trybrute=true)
+
+Find cell containing point `p`  starting with cell number `icellstart`.
+
+Returns cell number if found, zero otherwise. If `trybrute==true` try [`gFindBruteForce!`](@ref) before giving up.
+Upon return, xref contains the barycentric coordinates of the point in the sequence 
+`dim+1, 1...dim`
+
+!!! warning
+    Currently implemented for simplex grids only.
+"""
+function gFindLocal!(xref, CF::CellFinder{Tv,Ti}, x; icellstart::Int = 1,trybrute=true, eps = 1e-14) where{Tv,Ti}
 
     # works for convex domainsand simplices only !
     xCellFaces::Adjacency{Ti} = CF.xCellFaces
@@ -141,20 +161,42 @@ function gFindLocal!(xref, CF::CellFinder{Tv,Ti}, x; icellstart::Int = 1, eps = 
         if icell == previous_cells[end]
             icell = xFaceCells[2,xCellFaces[facetogo[cEG][imin],icell]]
             if icell == 0
-                @debug  "could not find point in any cell and ended up at boundary of domain (maybe x lies outside of the domain ?)"
-                return 0
+                !trybrute
+                if trybrute
+                    return gFindBruteForce!(xref,CF,x; eps)
+                else
+                    @debug  "could not find point in any cell and ended up at boundary of domain (maybe x lies outside of the domain ?)"
+                    return 0
+                end
             end
         end
 
-        if icell == previous_cells[end-1]
-            @debug  "could not find point in any cell and ended up going in circles (better try brute force search)"
-            return 0
+        if icell == previous_cells[end-1] && !trybrute
+            if trybrute
+                return gFindBruteForce!(xref,CF,x; eps)
+            else
+                @debug  "could not find point in any cell and ended up at boundary of domain (maybe x lies outside of the domain ?)"
+                return 0
+            end
         end
     end
     
     return 0
 end
 
+"""
+    icellfound=gFindBruteForce!(xref,cellfinder,p; icellstart=1,eps=1.0e-14)
+
+Find cell containing point `p`  starting with cell number `icellstart`.
+
+Returns cell number if found, zero otherwise.
+Upon return, xref contains the barycentric coordinates of the point in the sequence 
+`dim+1, 1...dim`
+
+!!! warning
+    Currently implemented for simplex grids only.
+
+"""
 function gFindBruteForce!(xref, CF::CellFinder{Tv,Ti}, x; eps = 1e-14) where {Tv,Ti}
 
     cx::Vector{Tv} = CF.cx
@@ -209,4 +251,70 @@ function gFindBruteForce!(xref, CF::CellFinder{Tv,Ti}, x; eps = 1e-14) where {Tv
     @debug "gFindBruteForce did not find any cell that contains x = $x (make sure that x is inside the domain, or try reducing $eps)"
     
     return 0
+end
+
+
+"""
+    interpolate!(u_to,grid_to, u_from, grid_from;eps=1.0e-14,trybrute=true)
+
+Mutating form of [`interpolate`](@ref)
+"""
+function interpolate!(u_to::AbstractArray,grid_to, u_from::AbstractArray, grid_from;eps=1.0e-14,trybrute=true)
+    shuffle=[[2,1], [3,1,2], [4,1,2,3]]
+
+    update!(u_to::AbstractVector,inode_to,λ,u_from::AbstractVector,inode_from)=u_to[inode_to]+=λ*u_from[inode_from]
+    update!(u_to::AbstractMatrix,inode_to,λ,u_from::AbstractMatrix,inode_from)=@views u_to[:,inode_to]+=λ*u_from[:,inode_from]
+    
+    coord=grid_to[Coordinates]
+    dim=size(coord,1)
+    nnodes_to=size(coord,2)
+    nnodes_from=num_nodes(grid_from)
+    if ndims(u_from)==1
+        @assert length(u_to)==nnodes_to
+        @assert length(u_from)==nnodes_from
+    elseif ndims(u_from)==2
+        @assert size(u_to,2)==nnodes_to
+        @assert size(u_from,2)==nnodes_from
+        @assert size(u_to,1)==size(u_from,1)
+    else
+        @assert ndims(u_from)<3
+    end
+    
+    λ = zeros(dim+1)
+    λ_shuffle=view(λ,shuffle[dim])
+    cn_from=grid_from[CellNodes]
+    cf = CellFinder(grid_from)
+    icellstart=1
+    for inode_to=1:nnodes_to
+	@views icell_from=gFindLocal!(λ, cf, coord[:,inode_to];icellstart,eps,trybrute)
+	@assert icell_from>0
+	for i=1:dim+1
+            inode_from=cn_from[i,icell_from]
+            update!(u_to, inode_to, λ_shuffle[i], u_from, inode_from)
+	end
+	icell_start=icell_from	   	
+    end
+    u_to
+end
+
+
+"""
+	u_to=interpolate(grid_to, u_from, grid_from;eps=1.0e-14,trybrute=true)
+
+Piecewise linear interpolation of function `u_from` on grid `grid_from` to `grid_to`.
+Works for matrices with second dimension corresponding to grid nodes and for vectors.
+!!! warning
+    May be slow on non-convex domains. If `trybrute==false` it may even fail.
+
+!!! warning
+    Currently implemented for simplex grids only.
+"""
+function interpolate(grid_to, u_from::AbstractVector, grid_from;eps=1.0e-14,trybrute=true)
+    u_to=zeros(eltype(u_from),num_nodes(grid_to))
+    interpolate!(u_to,grid_to, u_from, grid_from;eps,trybrute)
+end
+
+function interpolate(grid_to, u_from::AbstractMatrix, grid_from;eps=1.0e-14,trybrute=true)
+    u_to=zeros(eltype(u_from),size(u_from,1),num_nodes(grid_to))
+    interpolate!(u_to,grid_to, u_from, grid_from;eps,trybrute)
 end

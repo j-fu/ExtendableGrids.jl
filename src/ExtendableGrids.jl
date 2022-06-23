@@ -151,7 +151,7 @@ export L2GTransformer, update_trafo!, eval_trafo!, mapderiv!
 
 include("cellfinder.jl")
 export CellFinder
-export gFindLocal!, gFindBruteForce!
+export gFindLocal!, gFindBruteForce!, interpolate,interpolate!
 
 
 include("commongrids.jl")
