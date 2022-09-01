@@ -349,13 +349,14 @@ end
 @testset "writeVTK" begin
     X = collect(-1:1.0:1)
     Y = collect(-1:1.0:1)
-    Z = collect(0:0.5:1)
+    Z = collect(-2:1.0:2)
     g = simplexgrid(X,Y,Z)
 
     nx = num_nodes(g)
     nc = num_cells(g)
 
-    point_data    = map((x,y,z) -> (sinpi(2*x)*sinpi(2*y)*z), g)
+    # ensure calculation of these data is free of roundoff errors
+    point_data    = map((x,y,z) -> (x+y+z), g)
     field_data = [1.0, 2, 3, 4, 5, 6]
 
     writeVTK("testfile_writevtk.vtu", g; 
@@ -367,6 +368,6 @@ end
         sha256(f)
     end |> bytes2hex
 
-    @test sha_code == "9ad048339e9e2605576aa141b41cdc7a8899171e3b99574b669178a6dd8b38c3"
+    @test sha_code == "93a31139ccb3ae3017351d7cef0c2639c5def97c9744699543fe8bc58e1ebcea"
 end
 
