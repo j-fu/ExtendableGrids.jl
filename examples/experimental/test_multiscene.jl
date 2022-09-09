@@ -6,7 +6,7 @@
  Features are  up to now
  - Arrangement of several subscenes with  in a given scene grid
  - ',' key switches between gallery view and focus view showing one  subscene
- - space key can block/unblock main task 
+ - space key can block/unblock main task
  - handle interactive variables associated with  hotkeys via keyboard interaction,
    separately for each subscene. Rationale: sliders would eat up too much screen real estate
  - Store context dict in the attributes of LScene
@@ -14,7 +14,7 @@
 
 import Pkg
 Pkg.activate(mktempdir())
-Pkg.add(["ExtendableGrids","GLMakie"]
+Pkg.add(["ExtendableGrids","GLMakie"])
 
 using ExtendableGrids.MultiScene
 using GLMakie
@@ -31,7 +31,7 @@ function subscene1!(ax)
     status=Node(makestatus(s,N))
 
     scene=lines(lift(a->a,data), color = :red, linewidth = 4)
-    
+
     scene_interaction(scene,[:n,:s]) do delta,key
         # key: which key  is "switched on" (of those passed in the array)
         # delta: increment/decrement value
@@ -52,12 +52,12 @@ end
 # which is stored in ax.attributes. Not sure if this is a good idea...
 function subscene2!(ax,k,l)
     ctx=subscenecontext(ax)
-    
+
     N=100
     makedata(k,l)=[sinpi(2*k*i/N)*sinpi(2*l*j/N) for i=1:N, j=1:N]
     makestatus(k,l)="k=$(round(k,digits=2)) l=$(round(k,digits=2))"
 
-    
+
     if isempty(ctx)
         data=Node(makedata(k,l))
         status=Node(makestatus(k,l))
@@ -66,7 +66,7 @@ function subscene2!(ax,k,l)
         ctx[:status]=status
         ctx[:k]=k
         ctx[:l]=l
-        
+
         scene_interaction(scene,[:k,:l]) do delta,key
             ctx[key]=max(0.1,ctx[key]+0.1*delta)
             status[]=makestatus(ctx[:k], ctx[:l])
@@ -120,7 +120,7 @@ end
 
 
 function test_multiscene()
-    
+
     parent,subscenes=multiscene(layout=(2,2))
 
     subscene1!(subscenes[1,1])
