@@ -409,7 +409,11 @@ function uniform_refine(source_grid::ExtendableGrid{T,K}; store_parents = false)
         xgrid[BFaceGeometries] = oldBFaceGeometries
     else
         xBFaceRegions = zeros(K,0)
-        xBFaceGeometries = Array{ElementGeometries,1}(undef,0)
+        BFEG = Base.unique(oldBFaceGeometries)
+        singleEG = length(BFEG) == 1
+        if singleEG == false
+            xBFaceGeometries = Array{ElementGeometries,1}(undef,0)
+        end
         nbfaces = num_sources(oldBFaceNodes)
         if dim == 2 || typeof(oldBFaceNodes) == Array{K,2}
             xBFaceNodes = zeros(K,0)
@@ -480,7 +484,9 @@ function uniform_refine(source_grid::ExtendableGrid{T,K}; store_parents = false)
                     end
                 end
                 append!(xBFaceNodes,view(subitemnodes,1:size(refine_rules[iEG],1)))
-                push!(xBFaceGeometries,itemEG)
+                if !singleEG
+                    push!(xBFaceGeometries,itemEG)
+                end
                 push!(xBFaceRegions,oldBFaceRegions[bface])
                 newnbfaces += 1
             end    
@@ -491,7 +497,11 @@ function uniform_refine(source_grid::ExtendableGrid{T,K}; store_parents = false)
             xgrid[BFaceNodes] = xBFaceNodes
         end
         xgrid[BFaceRegions] = xBFaceRegions
-        xgrid[BFaceGeometries] = xBFaceGeometries
+        if singleEG
+            xgrid[BFaceGeometries] = VectorOfConstants{ElementGeometries,Int}(BFEG[1],newnbfaces)
+        else
+            xgrid[BFaceGeometries] = xBFaceGeometries
+        end
     end    
 
     if store_parents
