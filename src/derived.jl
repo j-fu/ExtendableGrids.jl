@@ -917,7 +917,6 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{CellFa
     xgrid[CellFaceSigns]
 end
 
-
 function collectVolumes4Geometries(T::Type{<:Real}, xgrid::ExtendableGrid{Tc,Ti}, ItemType) where {Tc,Ti}
     # get links to other stuff
     xCoordinates = xgrid[Coordinates]
@@ -925,15 +924,17 @@ function collectVolumes4Geometries(T::Type{<:Real}, xgrid::ExtendableGrid{Tc,Ti}
     xItemNodes = xgrid[GridComponent4TypeProperty(ItemType,PROPERTY_NODES) ]
     xGeometries = xgrid[GridComponent4TypeProperty(ItemType,PROPERTY_GEOMETRY) ]
     nitems = num_sources(xItemNodes)
-
-    # init Volumes
     xVolumes = zeros(T,nitems)
 
-    # loop over items and call handlers
-    for item = 1 : nitems
-        xVolumes[item] = volume(xCoordinates, xItemNodes, item, xGeometries[item], xCoordinateSystem)
+    # Introduce a function barrier: this will be compiled for each differnent type
+    # of coordinate systems.
+    function barrier!(xVolumes,xCoordinateSystem)
+        for item = 1 : nitems
+            xVolumes[item] = volume(xCoordinates, xItemNodes, item, xGeometries[item], xCoordinateSystem)
+        end
     end
-
+    nalloc=@allocated barrier!(xVolumes,xCoordinateSystem)
+    nalloc >0 && @warn " $nalloc allocations during $ItemType volume calculation"
     xVolumes
 end
 
