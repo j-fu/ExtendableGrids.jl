@@ -173,10 +173,6 @@ function geomspace(a, b, ha, hb ; tol=1.0e-10, maxiterations=100)
     return X
 end
 
-
-
-collect_or_assign(X)=X
-collect_or_assign(X::AbstractRange)=collect(X)
 is_monotone(X)=all(X[2:end]-X[1:end-1].>0)
 
 """
@@ -187,12 +183,13 @@ of `a` shall be equal (up to tol) to the first element of b.
 The result fulfills `length(c)=length(a)+length(b)-1`
 """
 function glue(_a::AbstractVector, _b::AbstractVector; tol=1.0e-10)
-    a=collect_or_assign(_a)
-    b=collect_or_assign(_b)
+    is_monotone(_a) || error("non-monotonous first argument of glue")
+    is_monotone(_b) || error("non-monotonous second argument of glue")
+    Tv=promote_type(eltype(_a),eltype(_b))
 
-    is_monotone(a) || error("non-monotonous first argument of glue")
-    is_monotone(b) || error("non-monotonous second argument of glue")
-    Tv=promote_type(eltype(a),eltype(b))
+    a=convert(Vector{Tv},_a)
+    b=convert(Vector{Tv},_b)
+
     na=length(a)
     nb=length(b)
     

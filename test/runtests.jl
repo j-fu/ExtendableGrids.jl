@@ -273,7 +273,7 @@ function tglue(;dim=2,breg=0)
         g2=simplexgrid(X2,Y2,Z2)
     end
     
-    glue(g1,g2,breg=breg)
+    glue(g1,g2,interface=breg)
 end
 
 @testset "Glue" begin

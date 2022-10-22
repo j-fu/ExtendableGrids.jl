@@ -2,19 +2,28 @@
 ````
 function simplexgrid(coord::Array{Tc,2},
                      cellnodes::Array{Ti,2},
-                     cellregions::Array{Ti,1},
-                     bfacenodes::Array{Ti,2},
-                     bfaceregions::Array{Ti,1}
+                     cellregions,
+                     bfacenodes,
+                     bfaceregions
                      ) where {Tc,Ti}
 ````
 
-    Create simplex grid from five arrays.
+Create  d-dimensional simplex grid from five arrays.
+
+-    coord: d ``\\times`` n_points matrix of coordinates
+-    cellnodes: d+1 ``\\times`` n_tri matrix of triangle - point incidence
+-  cellregions: n_tri vector of cell region markers
+-   bfacenodes: d ``\\times`` n_bf matrix of boundary facet - point incidences
+- bfaceregions: n_bf vector of boundary facet  region markers
+
+Coordinate type `Tc` index type `Ti` are detected from the first two parameters.
+`cellregions`, `bfaceregions`, `bfacenodes` are converted to have the same element type as `cellnodes`.
 """
-function simplexgrid(coord::Array{Tc,2},
-                     cellnodes::Array{Ti,2},
-                     cellregions::Array{Ti,1},
-                     bfacenodes::Array{Ti,2},
-                     bfaceregions::Array{Ti,1}
+function simplexgrid(coord::AbstractArray{Tc,2},
+                     cellnodes::AbstractArray{Ti,2},
+                     cellregions,
+                     bfacenodes,
+                     bfaceregions
                      ) where {Tc,Ti}
     @assert size(coord,2)>0
     dim=size(coord,1)
@@ -33,50 +42,52 @@ function simplexgrid(coord::Array{Tc,2},
     end
     
     grid=ExtendableGrid{Tc,Ti}()
-    grid[Coordinates]=coord
-    grid[CellNodes]=cellnodes
-    grid[CellRegions]=cellregions
+    grid[Coordinates]=convert(Matrix{Tc},coord)
+    grid[CellNodes]=convert(Matrix{Ti},cellnodes)
+    grid[CellRegions]=convert(Vector{Ti},cellregions)
     grid[CellGeometries]=VectorOfConstants{ElementGeometries,Int}(eltype,length(cellregions))
-    grid[BFaceNodes]=bfacenodes
-    grid[BFaceRegions]=bfaceregions
+    grid[BFaceNodes]=convert(Matrix{Ti},bfacenodes)
+    grid[BFaceRegions]=convert(Vector{Ti},bfaceregions)
     grid[BFaceGeometries]=VectorOfConstants{ElementGeometries,Int}(btype,length(bfaceregions))
     grid[CoordinateSystem]=csys
     return grid
 end
 
 
+
+
 """
 ````
 function simplexgrid(coord::Array{Tc,2},
                      cellnodes::Array{Ti,2},
-                     cellregions::Array{Ti,1},
-                     bfacenodes::Array{Ti,2},
-                     bfaceregions::Array{Ti,1}
-                     bedgenodes::Array{Ti,2},
-                     bedgeregions::Array{Ti,1}
+                     cellregions,
+                     bfacenodes,
+                     bfaceregions,
+                     bedgenodes,
+                     bedgeregions
                      ) where {Tc,Ti}
 ````
 
-    Create simplex grid from coordinates, cell-nodes-adjancency, cell-region-numbers,
-    boundary-face-nodes adjacency, boundary-face-region-numbers, boundary-edge-nodes, and
-    boundary-edge-region-numbers arrays.
+Create simplex grid from coordinates, cell-nodes-adjancency, cell-region-numbers,
+boundary-face-nodes adjacency, boundary-face-region-numbers, boundary-edge-nodes, and
+boundary-edge-region-numbers arrays.
+
+The index type `Ti` is detected from `cellnodes`, all other arrays besides `coord`
+are converted to this index type.
 """
 function simplexgrid(coord::Array{Tc,2},
                      cellnodes::Array{Ti,2},
-                     cellregions::Array{Ti,1},
-                     bfacenodes::Array{Ti,2},
-                     bfaceregions::Array{Ti,1},
-                     bedgenodes::Array{Ti,2},
-                     bedgeregions::Array{Ti,1}
+                     cellregions,
+                     bfacenodes,
+                     bfaceregions,
+                     bedgenodes,
+                     bedgeregions
                      ) where {Tc,Ti}
     grid = simplexgrid(coord, cellnodes, cellregions, bfacenodes, bfaceregions)
-    grid[BEdgeNodes]   = bedgenodes
-    grid[BEdgeRegions] = bedgeregions
+    grid[BEdgeNodes]   = convert(Matrix{Ti},bedgenodes)
+    grid[BEdgeRegions] = convert(Vector{Ti},bedgeregions)
     return grid
 end
-
-
-simplexgrid(C,CN,CR,BFN,BFR)=simplexgrid(collect(C),collect(CN),collect(CR),collect(BFN), collect(BFR))
 
 
 ##########################################################
@@ -86,13 +97,15 @@ abstract type ZCoordinates <: AbstractGridFloatArray1D end
 
 
 """
-$(TYPEDSIGNATURES)
+    simplexgrid(X; bregions=[1,2],cellregion=1)
 
 Constructor for 1D grid.
 
 Construct 1D grid from an array of node cordinates.
 It creates two boundary regions with index 1 at the left end and
-index 2 at the right end.
+index 2 at the right end by default.
+
+The keyword arguments allow to overwrite the default region numbers.
 
 Primal grid holding unknowns: marked by `o`, dual
 grid marking control volumes: marked by `|`.
@@ -102,8 +115,8 @@ grid marking control volumes: marked by `|`.
  |--|-----|-----|-----|-----|-----|-----|-----|--|
 ```
 """
-function simplexgrid(_X::AbstractVector)
-    X=collect_or_assign(_X)
+function simplexgrid(_X::AbstractVector; bregions=[1,2],cellregion=1)
+    X=convert(Vector,_X)
     #    is_monotone(X) || error("X not monotone")
     coord=reshape(X,1,length(X))
     cellnodes=zeros(Cint,2,length(X)-1)
@@ -117,8 +130,8 @@ function simplexgrid(_X::AbstractVector)
     bfaceregions=zeros(Cint,2)
     bfacenodes[1,1]=1
     bfacenodes[1,2]=length(X)
-    bfaceregions[1]=1
-    bfaceregions[2]=2
+    bfaceregions[1]=bregions[1]
+    bfaceregions[2]=bregions[2]
     grid=simplexgrid(coord,
                      cellnodes,
                      cellregions,
@@ -131,10 +144,14 @@ end
 
 ##########################################################
 """
-$(TYPEDSIGNATURES)
+    simplexgrid(X,Y; bregions=[1,2,3,4],cellregion=1)
+
 
 Constructor for 2D grid
 from coordinate arrays. 
+
+
+
 Boundary region numbers count counterclockwise:
 
 | location  |  number |
@@ -144,15 +161,20 @@ Boundary region numbers count counterclockwise:
 | north     |       3 |
 | west      |       4 |
 
+The keyword arguments allow to overwrite the default region numbers.
+
+
 """
-function  simplexgrid(_X::AbstractVector, _Y::AbstractVector)
-    X=collect_or_assign(_X)
-    Y=collect_or_assign(_Y)
-    is_monotone(X) || error("X not monotone")
-    is_monotone(Y) || error("Y not monotone")
+function  simplexgrid(_X::AbstractVector, _Y::AbstractVector; bregions=[1,2,3,4], cellregion=1)
+    is_monotone(_X) || error("X not monotone")
+    is_monotone(_Y) || error("Y not monotone")
+
+    Tc=promote_type(eltype(_X),eltype(_Y))
+
+    X=convert(Vector{Tc},_X)
+    Y=convert(Vector{Tc},_Y)
     
     
-    Tc=promote_type(eltype(X),eltype(Y))
 
     function leq(x, x1, x2)
         if (x>x1)
@@ -205,22 +227,22 @@ function  simplexgrid(_X::AbstractVector, _Y::AbstractVector)
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
-	    bfaceregions[ibface]=4
+	    bfaceregions[ibface]=bregions[4]
         elseif (leq(xn,coord[1,n1],coord[1,n2]))
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
-	    bfaceregions[ibface]=2
+	    bfaceregions[ibface]=bregions[2]
         elseif (geq(y1,coord[2,n1],coord[2,n2]))
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
-	    bfaceregions[ibface]=1
+	    bfaceregions[ibface]=bregions[1]
         elseif (leq(yn,coord[2,n1],coord[2,n2]))
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
-	    bfaceregions[ibface]=3
+	    bfaceregions[ibface]=bregions[3]
         end
         ibface
     end
@@ -259,14 +281,14 @@ function  simplexgrid(_X::AbstractVector, _Y::AbstractVector)
             cellnodes[1,icell]=p00
             cellnodes[2,icell]=p10
             cellnodes[3,icell]=p11
-            cellregions[icell]=1
+            cellregions[icell]=cellregion
             
             
             icell=icell+1
             cellnodes[1,icell]=p11
             cellnodes[2,icell]=p01
             cellnodes[3,icell]=p00
-            cellregions[icell]=1
+            cellregions[icell]=cellregion
         end
     end
     @assert(icell==num_cells)
@@ -299,7 +321,8 @@ end
 
 ##########################################################
 """
-$(TYPEDSIGNATURES)
+    simplexgrid(X,Y,Z; bregions=[1,2,3,4,5,6],cellregion=1)
+
 
 Constructor for 3D grid
 from coordinate arrays. 
@@ -314,17 +337,19 @@ Boundary region numbers:
 | bottom    |       5 |
 | top       |       6 |
 
+
+The keyword arguments allow to overwrite the default region numbers.
 """
-function  simplexgrid(_X::AbstractVector,_Y::AbstractVector,_Z::AbstractVector)
-    X=collect_or_assign(_X)
-    Y=collect_or_assign(_Y)
-    Z=collect_or_assign(_Z)
+function  simplexgrid(_X::AbstractVector,_Y::AbstractVector,_Z::AbstractVector; bregions=[1,2,3,4,5,6],cellregion=1)
+    is_monotone(_X) || error("X not monotone")
+    is_monotone(_Y) || error("Y not monotone")
+    is_monotone(_Z) || error("Z not monotone")
 
-    is_monotone(X) || error("X not monotone")
-    is_monotone(Y) || error("Y not monotone")
-    is_monotone(Z) || error("Z not monotone")
+    Tc=promote_type(eltype(_X),eltype(_Y), eltype(_Z))
 
-    Tc=promote_type(eltype(X),eltype(Y),eltype(Z))
+    X=convert(Vector{Tc},_X)
+    Y=convert(Vector{Tc},_Y)
+    Z=convert(Vector{Tc},_Z)
 
     
     leq(x, x1, x2, x3)=x≤x1 && x≤x2 && x≤x3
@@ -374,37 +399,37 @@ function  simplexgrid(_X::AbstractVector,_Y::AbstractVector,_Z::AbstractVector)
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
             bfacenodes[3,ibface]=n3
-	    bfaceregions[ibface]=4
+	    bfaceregions[ibface]=bregions[4]
         elseif leq(xn,coord[1,n1],coord[1,n2],coord[1,n3])
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
             bfacenodes[3,ibface]=n3
-	    bfaceregions[ibface]=2
+	    bfaceregions[ibface]=bregions[2]
         elseif geq(y1,coord[2,n1],coord[2,n2],coord[2,n3])
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
             bfacenodes[3,ibface]=n3
-	    bfaceregions[ibface]=1
+	    bfaceregions[ibface]=bregions[1]
         elseif leq(yn,coord[2,n1],coord[2,n2],coord[2,n3])
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
             bfacenodes[3,ibface]=n3
-	    bfaceregions[ibface]=3
+	    bfaceregions[ibface]=bregions[3]
         elseif geq(z1,coord[3,n1],coord[3,n2],coord[3,n3])
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
             bfacenodes[3,ibface]=n3
-	    bfaceregions[ibface]=5
+	    bfaceregions[ibface]=bregions[5]
         elseif leq(zn,coord[3,n1],coord[3,n2],coord[3,n3])
             ibface=ibface+1
             bfacenodes[1,ibface]=n1
             bfacenodes[2,ibface]=n2
             bfacenodes[3,ibface]=n3
-	    bfaceregions[ibface]=6
+	    bfaceregions[ibface]=bregions[6]
         end
         ibface
     end
@@ -416,7 +441,7 @@ function  simplexgrid(_X::AbstractVector,_Y::AbstractVector,_Z::AbstractVector)
     Ti=Cint
     coord=zeros(Tc,3,num_nodes)
     cellnodes=zeros(Ti,4,num_cells)
-    cellregions=zeros(Ti,num_cells)
+    cellregions=fill(cellregion,num_cells)
     bfacenodes=zeros(Ti,3,num_bfacenodes)
     bfaceregions=zeros(Ti,num_bfacenodes)
     
@@ -451,12 +476,12 @@ function  simplexgrid(_X::AbstractVector,_Y::AbstractVector,_Z::AbstractVector)
 	        p011 = ip  +nx+nxy;
 	        p111 = ip+1+nx+nxy;
 
-                icell=icell+1; cellregions[icell]=1; @. cellnodes[:,icell]=(p000,p100,p110,p111)
-                icell=icell+1; cellregions[icell]=1; @. cellnodes[:,icell]=(p000,p100,p101,p111)
-                icell=icell+1; cellregions[icell]=1; @. cellnodes[:,icell]=(p000,p010,p011,p111)
-                icell=icell+1; cellregions[icell]=1; @. cellnodes[:,icell]=(p000,p010,p110,p111)
-                icell=icell+1; cellregions[icell]=1; @. cellnodes[:,icell]=(p000,p001,p101,p111)
-                icell=icell+1; cellregions[icell]=1; @. cellnodes[:,icell]=(p000,p001,p011,p111)
+                icell=icell+1;  @. cellnodes[:,icell]=(p000,p100,p110,p111)
+		icell=icell+1;	@. cellnodes[:,icell]=(p000,p100,p101,p111)
+		icell=icell+1;	@. cellnodes[:,icell]=(p000,p010,p011,p111)
+		icell=icell+1;	@. cellnodes[:,icell]=(p000,p010,p110,p111)
+		icell=icell+1;	@. cellnodes[:,icell]=(p000,p001,p101,p111)
+		icell=icell+1;	@. cellnodes[:,icell]=(p000,p001,p011,p111)
             end
         end
     end
@@ -492,27 +517,36 @@ end
 
 
 """
-$(TYPEDSIGNATURES)
-Create tensor product of 2D  grid and 1D coordinate arrays.
+    simplexgrid(grid2d::ExtendableGrid, coordZ; bot_offset=0,cell_offset=0,top_offset=0, bface_offset=0)
+
+Create tensor product of 2D  grid and 1D coordinate array.
 
 Cellregions and outer facet regions are taken over from 2D grid
-and added to `cell_offset`
+and added to `cell_offset` and `bface_offset`, respectively.
 Top an bottom facet regions are detected from the cell regions and
 added to `bot_offset` resp. `top_offset`.
 """
 function simplexgrid(grid2::ExtendableGrid, coordZ; bot_offset=0,cell_offset=0,top_offset=0)
-    Ti=Cint
     coord2=grid2[Coordinates]
     nnodes2=size(coord2,2)
     nnodesZ=length(coordZ)
     nnodes3=nnodes2*nnodesZ
     coord3=zeros(3,nnodes3)
+
+
     
     cells2=grid2[CellNodes]
     ncells2=size(cells2,2)
     ncells3=ncells2*3*(nnodesZ-1)
+
+    Ti=eltype(cells2)
+
+
     cells3=zeros(Ti, 4,ncells3)
 
+
+
+    
     cellregions2=grid2[CellRegions]
     cellregions3=zeros(Ti, ncells3)
 
@@ -614,7 +648,7 @@ end
 """
 $(TYPEDSIGNATURES)
   
-Read grid from file. Currently for pdelib sg format only
+Read grid from file. Currently for pdelib sg format only.
 """
 function simplexgrid(file::String;format="")
     Ti=Cint
