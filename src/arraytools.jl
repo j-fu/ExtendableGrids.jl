@@ -175,6 +175,11 @@ end
 
 is_monotone(X)=all(X[2:end]-X[1:end-1].>0)
 
+# See https://discourse.julialang.org/t/how-to-execute-code-depending-on-julia-version/75029/3
+@static if VERSION < v"1.6"
+    is_monotone(X::UnitRange)=all(collect(X[2:end])-collect(X[1:end-1]).>0) 
+end
+
 """
     c=glue(a,b)
 
