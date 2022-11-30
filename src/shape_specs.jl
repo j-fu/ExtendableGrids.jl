@@ -11,8 +11,8 @@ num_edges(grid::ExtendableGrid)=haskey(grid,EdgeNodes) ?  num_sources(grid[EdgeN
 # VERTEX0D <: AbstractElementGeometry0D #       [1]
 #########################################
 
-const _refcoords_for_geometry_Vertex0D = reshape([0],1,1)
-const _local_celledgenodes_Vertex0D = reshape([1],1,1)
+const _refcoords_for_geometry_Vertex0D = reshape([0],1,1) |> Matrix
+const _local_celledgenodes_Vertex0D = reshape([1],1,1) |> Matrix
 
 """
 $(SIGNATURES)
@@ -55,9 +55,9 @@ local_celledgenodes(::Type{Vertex0D}) = _local_celledgenodes_Vertex0D
 # EDGE1D <: AbstractElementGeometry1D #     [1]-----[2]        [1] = 0, [2] = 1
 #######################################      
 
-const _refcoords_for_geometry_Edge1D = reshape([0; 1]',1,2)
-const _local_cellfacenodes_Edge1D = reshape([1; 2],1,2)
-const _local_celledgenodes_Edge1D = reshape([1; 2],2,1)
+const _refcoords_for_geometry_Edge1D = reshape([0; 1]',1,2) |> Matrix
+const _local_cellfacenodes_Edge1D = reshape([1; 2],1,2) |> Matrix
+const _local_celledgenodes_Edge1D = reshape([1; 2],2,1) |> Matrix
 
 """
 $(SIGNATURES)
@@ -131,8 +131,8 @@ xrefFACE2xrefOFACE(::Type{<:AbstractElementGeometry1D}) = [(xref4FACE) -> xref4F
 #                   [1]--------[2]
 
 
-const _refcoords_for_geometry_Triangle2D = [0 0; 1 0; 0 1]'
-const _local_cellfacenodes_Triangle2D = [1 2; 2 3; 3 1]' # local edgenodes are the same
+const _refcoords_for_geometry_Triangle2D = [0 0; 1 0; 0 1]' |> Matrix
+const _local_cellfacenodes_Triangle2D = [1 2; 2 3; 3 1]' |> Matrix # local edgenodes are the same
 
 """
 $(SIGNATURES)
@@ -205,8 +205,8 @@ xrefFACE2xrefOFACE(::Type{<:Triangle2D}) = [(xref4FACE) -> xref4FACE,           
 #                        [1]--------[2]
 
 
-const _refcoords_for_geometry_Quadrilateral2D = [0 0; 1 0; 1 1; 0 1]'
-const _local_cellfacenodes_Quadrilateral2D = [1 2; 2 3; 3 4; 4 1]' # local edgenodes are the same
+const _refcoords_for_geometry_Quadrilateral2D = [0 0; 1 0; 1 1; 0 1]' |> Matrix
+const _local_cellfacenodes_Quadrilateral2D = [1 2; 2 3; 3 4; 4 1]' |> Matrix # local edgenodes are the same
 
 """
 $(SIGNATURES)
@@ -274,9 +274,9 @@ xrefFACE2xrefCELL(::Type{<:Quadrilateral2D}) = [ (xref4FACE) -> [xref4FACE[1],0]
 #                      [1]--------[2]
 
 
-const _refcoords_for_geometry_Tetrahedron3D = [0 0 0; 1 0 0; 0 1 0; 0 0 1]'
-const _local_cellfacenodes_Tetrahedron3D = [1 3 2; 1 2 4; 2 3 4; 1 4 3]'
-const _local_celledgenodes_Tetrahedron3D = [1 2; 1 3; 1 4; 2 3; 2 4; 3 4]'
+const _refcoords_for_geometry_Tetrahedron3D = [0 0 0; 1 0 0; 0 1 0; 0 0 1]' |> Matrix
+const _local_cellfacenodes_Tetrahedron3D = [1 3 2; 1 2 4; 2 3 4; 1 4 3]' |> Matrix
+const _local_celledgenodes_Tetrahedron3D = [1 2; 1 3; 1 4; 2 3; 2 4; 3 4]' |> Matrix
 
 """
 $(SIGNATURES)
@@ -348,9 +348,9 @@ xrefFACE2xrefCELL(::Type{<:Tetrahedron3D}) = [ (xref4FACE) -> [xref4FACE[2],xref
 #                     [1]--------[2]             [8] = (0,1,1)
 
 
-const _refcoords_for_geometry_Hexahedron3D = [0 0 0; 1 0 0; 1 1 0; 0 1 0; 0 0 1; 1 0 1; 1 1 1; 0 1 1]'
-const _local_cellfacenodes_Hexahedron3D = [4 3 2 1; 1 2 6 5; 2 3 7 6; 3 4 8 7; 4 1 5 8; 5 6 7 8]'
-const _local_celledgenodes_Hexahedron3D = [1 2; 2 3; 3 4; 4 1; 1 5; 2 6; 3 7; 4 8; 5 6; 6 7; 7 8; 8 5]'
+const _refcoords_for_geometry_Hexahedron3D = [0 0 0; 1 0 0; 1 1 0; 0 1 0; 0 0 1; 1 0 1; 1 1 1; 0 1 1]' |> Matrix
+const _local_cellfacenodes_Hexahedron3D = [4 3 2 1; 1 2 6 5; 2 3 7 6; 3 4 8 7; 4 1 5 8; 5 6 7 8]' |> Matrix
+const _local_celledgenodes_Hexahedron3D = [1 2; 2 3; 3 4; 4 1; 1 5; 2 6; 3 7; 4 8; 5 6; 6 7; 7 8; 8 5]' |> Matrix
 
 """
 $(SIGNATURES)
