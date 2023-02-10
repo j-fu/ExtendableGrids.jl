@@ -69,3 +69,36 @@ function rect2d_bregion_function()
     
 end
 # ![](rect2d_bregion_function.svg)
+
+
+
+
+function sorted_subgrid(; maxvolume=0.01)
+    
+    builder=SimplexGridBuilder(Generator=Triangulate)
+    
+    p1=point!(builder,0,0)
+    p2=point!(builder,1,0)
+    p3=point!(builder,1,2)
+    p4=point!(builder,0,1)
+    p5=point!(builder,-1,2)
+
+    facetregion!(builder,1)
+    facet!(builder,p1,p2)
+    facetregion!(builder,2)
+    facet!(builder,p2,p3)
+    facetregion!(builder,3)
+    facet!(builder,p3,p4)
+    facetregion!(builder,4)
+    facet!(builder,p4,p5)
+    facetregion!(builder,5)
+    facet!(builder,p5,p1)
+
+    g=simplexgrid(builder;maxvolume)
+    sg=subgrid(g,[2],boundary=true,transform=(a,b)->a[1]=b[2])
+    f=map( (x,y)->sin(3x)*cos(3y),g)
+    sf=view(f,sg)
+    g,sg,sf
+end
+# ![](sorted_subgrid.svg)
+

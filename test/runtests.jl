@@ -1,6 +1,6 @@
 ENV["MPLBACKEND"]="agg"
 
-using Test, ExtendableGrids, GridVisualize, SHA
+using Test, ExtendableGrids, GridVisualize, SHA, SimplexGridFactory, Triangulate
 import PyPlot
 
 
@@ -180,6 +180,12 @@ end
     @test testgrid(rectangle_subgrid(),(360, 600, 120))
     @test testgrid(rect2d(),(121,200,52))
     @test testgrid(rect2d_bregion_function(),(79,112,44))
+
+    g,sg,sf=sorted_subgrid()
+    @test testgrid(g,(187,306,66))
+    @test testgrid(sg,(17,16,0))
+    @test issorted(view(sg[Coordinates],1,:))
+
 end
 
 @testset "3D" begin
@@ -244,6 +250,7 @@ if !Sys.isapple() && !Sys.iswindows()
         @test makeplot("rectangle_multiregion",picdir)
         @test makeplot("rectangle_subgrid",picdir)
         @test makeplot("quadrilateral",picdir)        
+        @test makeplotx("sorted_subgrid",picdir)        
     end
 end
 

@@ -23,6 +23,16 @@ function _copytransform!(a::AbstractArray,b::AbstractArray)
     end
 end
 
+struct XIPair{Tv, Ti}
+    x::Tv
+    i::Ti
+end
+
+# Comparison method for sorting
+Base.isless(x::XIPair, y::XIPair) = (x.x < y.x)
+
+
+
 """
 $(TYPEDSIGNATURES)
 
@@ -34,6 +44,7 @@ Create subgrid from list of regions.
    grid and subgrid coordinates acting on one point.
    Default: `copytransform`
 - `boundary`: if true, create codimension 1 subgrid from boundary region.
+- `project`: project coordinates onto  subgrid dimension
 
 A subgrid is of type `ExtendableGrid` and stores two additional components:
 [`ParentGrid`](@ref) and [`NodeInParent`](@ref)
@@ -120,6 +131,7 @@ function subgrid(parent,
     else
         sub_coord=zeros(Tc,dim_space(parent),nsubnodes)
     end
+
     coord=parent[Coordinates]
     @views for inode=1:nsubnodes
         transform(sub_coord[:,inode],coord[:,sub_nip[inode]])
@@ -133,6 +145,10 @@ function subgrid(parent,
     subgrid[NodeInParent]=sub_nip
 
     if boundary
+        subgrid[NumBFaceRegions]=0
+        subgrid[BFaceRegions]=Ti[]
+        subgrid[BFaceGeometries]=ElementGeometries[]
+        subgrid[BFaceNodes]=Matrix{Ti}(undef,sub_gdim,0)
         subgrid[NumBFaceRegions]=0
     else
         bfacenodes=parent[BFaceNodes]
@@ -182,6 +198,20 @@ function subgrid(parent,
         subgrid[NumBFaceRegions]=maximum(sub_bfaceregions)
     end
     subgrid[CoordinateSystem]=parent[CoordinateSystem]
+
+    if sub_gdim == 1
+        # Sort nodes of grid for easy plotting
+        X=view(subgrid[Coordinates],1,:)
+        nx=length(X)
+        I=subgrid[NodeInParent]
+        xipairs=[XIPair{Tc,Ti}(X[i],I[i]) for i=1:nx]
+        sort!(xipairs, 1,nx, Base.QuickSort, Base.Forward)
+        for i=1:nx
+            X[i]=xipairs[i].x
+            I[i]=xipairs[i].i
+        end
+    end
+    
     subgrid
 end
 

@@ -10,7 +10,7 @@ $(TYPEDSIGNATURES)
 
 List possible coordinate systems. These describe the meaning of the grid coordinates.
 """
-coordinatesystems()=AbstractTrees.print_tree(AbstractCoordinateSystem,5,indicate_truncation=false)
+coordinatesystems()=AbstractTrees.print_tree(AbstractCoordinateSystem)
 
 
 """

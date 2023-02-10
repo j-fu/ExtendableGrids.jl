@@ -8,6 +8,19 @@ function makeplot(func,picdir)
     isfile(fname)
 end
 
+function makeplotx(func,picdir)
+    PyPlot.clf()
+    f=getfield(Main,Symbol(func))
+    g,sg,sf=f()
+    vis=GridVisualizer(Plotter=PyPlot, layout=(1,3),resolution=(600,200))
+    gridplot!(vis[1,1],g)
+    gridplot!(vis[1,2],sg)
+    scalarplot!(vis[1,3],sg,sf)
+    fname=joinpath(picdir,func*".svg")
+    PyPlot.savefig(fname)
+    isfile(fname)
+end
+
 function makeplots(picdir)
 
     makeplot("interval_from_vector",picdir)
