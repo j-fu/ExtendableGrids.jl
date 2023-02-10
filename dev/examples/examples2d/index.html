@@ -34,4 +34,30 @@ end</code></pre><p><img src="../rectangle_subgrid.svg" alt/></p><h2 id="Rect2d-w
 
     subgrid(grid,[2])
 
-end</code></pre><p><img src="../rect2d_bregion_function.svg" alt/></p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../examples1d/">« 1D Grid examples</a><a class="docs-footer-nextpage" href="../examples3d/">3D Grid examples »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Thursday 1 December 2022 09:00">Thursday 1 December 2022</span>. Using Julia version 1.8.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end</code></pre><p><img src="../rect2d_bregion_function.svg" alt/></p><pre><code class="language-julia hljs">function sorted_subgrid(; maxvolume=0.01)
+
+    builder=SimplexGridBuilder(Generator=Triangulate)
+
+    p1=point!(builder,0,0)
+    p2=point!(builder,1,0)
+    p3=point!(builder,1,2)
+    p4=point!(builder,0,1)
+    p5=point!(builder,-1,2)
+
+    facetregion!(builder,1)
+    facet!(builder,p1,p2)
+    facetregion!(builder,2)
+    facet!(builder,p2,p3)
+    facetregion!(builder,3)
+    facet!(builder,p3,p4)
+    facetregion!(builder,4)
+    facet!(builder,p4,p5)
+    facetregion!(builder,5)
+    facet!(builder,p5,p1)
+
+    g=simplexgrid(builder;maxvolume)
+    sg=subgrid(g,[2],boundary=true,transform=(a,b)-&gt;a[1]=b[2])
+    f=map( (x,y)-&gt;sin(3x)*cos(3y),g)
+    sf=view(f,sg)
+    g,sg,sf
+end</code></pre><p><img src="../sorted_subgrid.svg" alt/></p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../examples1d/">« 1D Grid examples</a><a class="docs-footer-nextpage" href="../examples3d/">3D Grid examples »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Friday 10 February 2023 18:20">Friday 10 February 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
