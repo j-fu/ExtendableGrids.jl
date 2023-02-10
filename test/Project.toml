@@ -1,5 +1,7 @@
 [deps]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 GridVisualize = "5eed8a63-0fb0-45eb-886d-8d5a387d12b8"
-PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 SHA = "ea8e919c-243c-51af-8825-aaa63cd721ce"
+SimplexGridFactory = "57bfcd06-606e-45d6-baf4-4ba06da0efd5"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Triangulate = "f7e6ffb2-c36d-4f8f-a77e-16e897189344"

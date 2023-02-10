@@ -1,7 +1,7 @@
 ENV["MPLBACKEND"]="agg"
 
-using Test, ExtendableGrids, GridVisualize, SHA
-import PyPlot
+using Test, ExtendableGrids, GridVisualize, SHA, SimplexGridFactory, Triangulate
+import CairoMakie
 
 
 
@@ -180,6 +180,12 @@ end
     @test testgrid(rectangle_subgrid(),(360, 600, 120))
     @test testgrid(rect2d(),(121,200,52))
     @test testgrid(rect2d_bregion_function(),(79,112,44))
+
+    g,sg,sf=sorted_subgrid()
+    @test testgrid(g,(187,306,66))
+    @test testgrid(sg,(17,16,0))
+    @test issorted(view(sg[Coordinates],1,:))
+
 end
 
 @testset "3D" begin
@@ -230,21 +236,20 @@ end
 
 
 
-if !Sys.isapple() && !Sys.iswindows()
-    @testset "plotting examples" begin
-        include("../docs/makeplots.jl")
-        picdir=mktempdir()
-        
-        @test makeplot("interval_from_vector",picdir)
-        @test makeplot("interval_localref",picdir)
-        @test makeplot("interval_multiregion",picdir)
-        @test makeplot("interval_subgrid",picdir)
-        @test makeplot("rectangle",picdir)
-        @test makeplot("rectangle_localref",picdir)
-        @test makeplot("rectangle_multiregion",picdir)
-        @test makeplot("rectangle_subgrid",picdir)
-        @test makeplot("quadrilateral",picdir)        
-    end
+@testset "plotting examples" begin
+    include("../docs/makeplots.jl")
+    picdir=mktempdir()
+    
+    @test makeplot("interval_from_vector",picdir; Plotter=CairoMakie)
+    @test makeplot("interval_localref",picdir; Plotter=CairoMakie)
+    @test makeplot("interval_multiregion",picdir; Plotter=CairoMakie)
+    @test makeplot("interval_subgrid",picdir; Plotter=CairoMakie)
+    @test makeplot("rectangle",picdir; Plotter=CairoMakie)
+    @test makeplot("rectangle_localref",picdir; Plotter=CairoMakie)
+    @test makeplot("rectangle_multiregion",picdir; Plotter=CairoMakie)
+    @test makeplot("rectangle_subgrid",picdir; Plotter=CairoMakie)
+    @test makeplot("quadrilateral",picdir; Plotter=CairoMakie)        
+    @test makeplotx("sorted_subgrid",picdir; Plotter=CairoMakie)        
 end
 
 

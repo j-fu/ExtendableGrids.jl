@@ -1,6 +1,6 @@
 ENV["MPLBACKEND"]="agg"
-using Documenter, ExtendableGrids, Literate, GridVisualize
-import PyPlot
+using Documenter, ExtendableGrids, Literate, GridVisualize, SimplexGridFactory
+import CairoMakie, Triangulate
 
 
 example_md_dir  = joinpath(@__DIR__,"src","examples")
@@ -24,7 +24,7 @@ function mkdocs()
     
     generated_examples=joinpath.("examples",filter(x->endswith(x, ".md"),readdir(example_md_dir)))
 
-    makeplots(example_md_dir)
+    makeplots(example_md_dir, Plotter=CairoMakie)
     
     makedocs(sitename="ExtendableGrids.jl",
              modules = [ExtendableGrids],

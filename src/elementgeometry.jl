@@ -8,7 +8,7 @@ $(TYPEDSIGNATURES)
 
 List supported element geometries.
 """
-elementgeometries()=AbstractTrees.print_tree(AbstractElementGeometry,5,indicate_truncation=false)
+elementgeometries()=AbstractTrees.print_tree(AbstractElementGeometry)
 
 
 """

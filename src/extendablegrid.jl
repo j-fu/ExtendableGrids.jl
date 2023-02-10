@@ -335,7 +335,7 @@ $(TYPEDSIGNATURES)
 Print the hierarchy of grid component key types (subtypes of [`AbstractGridComponent`](@ref). 
 This includes additionally user defined subptypes.
 """
-gridcomponents()=AbstractTrees.print_tree(AbstractGridComponent,5,indicate_truncation=false)
+gridcomponents()=AbstractTrees.print_tree(AbstractGridComponent)
 
 
 

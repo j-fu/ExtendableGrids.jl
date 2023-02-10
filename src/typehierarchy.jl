@@ -18,7 +18,7 @@ $(TYPEDSIGNATURES)
 
 Print complete type hierachy for ExtendableGrids
 """
-typehierarchy()=AbstractTrees.print_tree(AbstractExtendableGridApexType,5,indicate_truncation=false)
+typehierarchy()=AbstractTrees.print_tree(AbstractExtendableGridApexType)
 
 
 function leaftypes(TApex)
