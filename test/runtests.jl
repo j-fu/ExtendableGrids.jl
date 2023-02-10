@@ -1,7 +1,7 @@
 ENV["MPLBACKEND"]="agg"
 
 using Test, ExtendableGrids, GridVisualize, SHA, SimplexGridFactory, Triangulate
-import PyPlot
+import CairoMakie
 
 
 
@@ -236,22 +236,20 @@ end
 
 
 
-if !Sys.isapple() && !Sys.iswindows()
-    @testset "plotting examples" begin
-        include("../docs/makeplots.jl")
-        picdir=mktempdir()
-        
-        @test makeplot("interval_from_vector",picdir)
-        @test makeplot("interval_localref",picdir)
-        @test makeplot("interval_multiregion",picdir)
-        @test makeplot("interval_subgrid",picdir)
-        @test makeplot("rectangle",picdir)
-        @test makeplot("rectangle_localref",picdir)
-        @test makeplot("rectangle_multiregion",picdir)
-        @test makeplot("rectangle_subgrid",picdir)
-        @test makeplot("quadrilateral",picdir)        
-        @test makeplotx("sorted_subgrid",picdir)        
-    end
+@testset "plotting examples" begin
+    include("../docs/makeplots.jl")
+    picdir=mktempdir()
+    
+    @test makeplot("interval_from_vector",picdir; Plotter=CairoMakie)
+    @test makeplot("interval_localref",picdir; Plotter=CairoMakie)
+    @test makeplot("interval_multiregion",picdir; Plotter=CairoMakie)
+    @test makeplot("interval_subgrid",picdir; Plotter=CairoMakie)
+    @test makeplot("rectangle",picdir; Plotter=CairoMakie)
+    @test makeplot("rectangle_localref",picdir; Plotter=CairoMakie)
+    @test makeplot("rectangle_multiregion",picdir; Plotter=CairoMakie)
+    @test makeplot("rectangle_subgrid",picdir; Plotter=CairoMakie)
+    @test makeplot("quadrilateral",picdir; Plotter=CairoMakie)        
+    @test makeplotx("sorted_subgrid",picdir; Plotter=CairoMakie)        
 end
 
 
