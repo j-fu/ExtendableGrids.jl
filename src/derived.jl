@@ -34,6 +34,7 @@ abstract type CellFaceOrientations <: AbstractGridAdjacency end
 abstract type CellEdgeSigns <: AbstractGridAdjacency end
 abstract type CellVolumes <: AbstractGridFloatArray1D end
 abstract type UniqueCellGeometries <: AbstractElementGeometries end
+abstract type CellGeometryGroups <: AbstractGridAdjacency end
 
 abstract type FaceNodes <: AbstractGridAdjacency end
 abstract type FaceVolumes <: AbstractGridFloatArray1D end
@@ -1225,4 +1226,15 @@ end
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{UniqueBEdgeGeometries}) where {Tc,Ti}
     xUniqueBEdgeGeometries = ElementGeometries[unique(xgrid[BEdgeGeometries])...]
+end
+
+
+function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{CellGeometryGroups}) where {Tc,Ti}
+    xGeometryGroups = VariableTargetAdjacency(Ti)
+    xCellGeometries = xgrid[CellGeometries]
+    xUniqueCellGeometries = xgrid[UniqueCellGeometries]
+    for EG in xUniqueCellGeometries
+        append!(xGeometryGroups, findall(==(EG), xCellGeometries))
+    end
+    xGeometryGroups
 end
