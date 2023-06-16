@@ -86,4 +86,5 @@ GridComponentVolumes4AssemblyType(AT::Type{<:AssemblyType}) = GridComponent4Type
 GridComponentGeometries4AssemblyType(AT::Type{<:AssemblyType}) = GridComponent4TypeProperty(ItemType4AssemblyType(AT),PROPERTY_GEOMETRY)
 GridComponentUniqueGeometries4AssemblyType(AT::Type{<:AssemblyType}) = GridComponent4TypeProperty(ItemType4AssemblyType(AT),PROPERTY_UNIQUEGEOMETRY)
 GridComponentRegions4AssemblyType(AT::Type{<:AssemblyType}) = GridComponent4TypeProperty(ItemType4AssemblyType(AT),PROPERTY_REGION)
+GridComponentGeometryGroups4AssemblyType(AT::Type{<:AssemblyType}) = GridComponent4TypeProperty(ItemType4AssemblyType(AT),PROPERTY_GEOMETRYGROUPS)
 
