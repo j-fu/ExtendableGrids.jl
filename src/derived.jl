@@ -1138,7 +1138,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeRe
 end
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BEdgeRegions}) where {Tc,Ti}
-    return VectorOfConstants(Ti(0),num_sources(xgrid[BEdgeNodes]))
+    return Array{Int32,1}(1:num_bedges(xgrid))
 end
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeGeometries}) where {Tc,Ti}
