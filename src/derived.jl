@@ -34,7 +34,7 @@ abstract type CellFaceOrientations <: AbstractGridAdjacency end
 abstract type CellEdgeSigns <: AbstractGridAdjacency end
 abstract type CellVolumes <: AbstractGridFloatArray1D end
 abstract type UniqueCellGeometries <: AbstractElementGeometries end
-abstract type CellGeometryGroups <: AbstractGridAdjacency end
+abstract type CellAssemblyGroups <: AbstractGridAdjacency end
 
 abstract type FaceNodes <: AbstractGridAdjacency end
 abstract type FaceVolumes <: AbstractGridFloatArray1D end
@@ -45,13 +45,13 @@ abstract type FaceNormals <: AbstractGridFloatArray2D end
 abstract type FaceGeometries <: AbstractElementGeometries end
 abstract type FaceRegions <: AbstractElementRegions end
 abstract type UniqueFaceGeometries <: AbstractElementGeometries end
-abstract type FaceGeometryGroups <: AbstractGridAdjacency end
+abstract type FaceAssemblyGroups <: AbstractGridAdjacency end
 
 abstract type BFaceFaces <: AbstractGridIntegerArray1D end
 abstract type BFaceCellPos <: AbstractGridIntegerArray1D end # position of bface in adjacent cell
 abstract type BFaceVolumes <: AbstractGridFloatArray1D end
 abstract type UniqueBFaceGeometries <: AbstractElementGeometries end
-abstract type BFaceGeometryGroups <: AbstractGridAdjacency end
+abstract type BFaceAssemblyGroups <: AbstractGridAdjacency end
 
 abstract type EdgeNodes <: AbstractGridAdjacency end
 abstract type EdgeVolumes <: AbstractGridFloatArray1D end
@@ -60,7 +60,7 @@ abstract type EdgeTangents <: AbstractGridFloatArray2D end
 abstract type EdgeRegions <: AbstractElementRegions end
 abstract type EdgeGeometries <: AbstractElementGeometries end
 abstract type UniqueEdgeGeometries <: AbstractElementGeometries end
-abstract type EdgeGeometryGroups <: AbstractGridAdjacency end
+abstract type EdgeAssemblyGroups <: AbstractGridAdjacency end
 
 abstract type BEdgeNodes <: AbstractGridAdjacency end
 abstract type BEdgeEdges <: AbstractGridIntegerArray1D end
@@ -69,7 +69,7 @@ abstract type BEdgeVolumes <: AbstractGridFloatArray1D end
 abstract type BEdgeRegions <: AbstractElementRegions end
 abstract type BEdgeGeometries <: AbstractElementGeometries end
 abstract type UniqueBEdgeGeometries <: AbstractElementGeometries end
-abstract type BEdgeGeometryGroups <: AbstractGridAdjacency end
+abstract type BEdgeAssemblyGroups <: AbstractGridAdjacency end
 
 abstract type NodePatchGroups <: AbstractGridIntegerArray1D end
 
@@ -87,14 +87,14 @@ abstract type PROPERTY_VOLUME end
 abstract type PROPERTY_REGION end
 abstract type PROPERTY_GEOMETRY end
 abstract type PROPERTY_UNIQUEGEOMETRY end
-abstract type PROPERTY_GEOMETRYGROUPS end
+abstract type PROPERTY_ASSEMBLYGROUP end
 
 GridComponent4TypeProperty(::Type{ITEMTYPE_CELL},::Type{PROPERTY_NODES}) = CellNodes
 GridComponent4TypeProperty(::Type{ITEMTYPE_CELL},::Type{PROPERTY_VOLUME}) = CellVolumes
 GridComponent4TypeProperty(::Type{ITEMTYPE_CELL},::Type{PROPERTY_REGION}) = CellRegions
 GridComponent4TypeProperty(::Type{ITEMTYPE_CELL},::Type{PROPERTY_GEOMETRY}) = CellGeometries
 GridComponent4TypeProperty(::Type{ITEMTYPE_CELL},::Type{PROPERTY_UNIQUEGEOMETRY}) = UniqueCellGeometries
-GridComponent4TypeProperty(::Type{ITEMTYPE_CELL},::Type{PROPERTY_GEOMETRYGROUPS}) = CellGeometryGeometries
+GridComponent4TypeProperty(::Type{ITEMTYPE_CELL},::Type{PROPERTY_ASSEMBLYGROUP}) = CellAssemblyGroups
 
 
 GridComponent4TypeProperty(::Type{ITEMTYPE_FACE},::Type{PROPERTY_NODES}) = FaceNodes
@@ -102,28 +102,28 @@ GridComponent4TypeProperty(::Type{ITEMTYPE_FACE},::Type{PROPERTY_VOLUME}) = Face
 GridComponent4TypeProperty(::Type{ITEMTYPE_FACE},::Type{PROPERTY_REGION}) = FaceRegions
 GridComponent4TypeProperty(::Type{ITEMTYPE_FACE},::Type{PROPERTY_GEOMETRY}) = FaceGeometries
 GridComponent4TypeProperty(::Type{ITEMTYPE_FACE},::Type{PROPERTY_UNIQUEGEOMETRY}) = UniqueFaceGeometries
-GridComponent4TypeProperty(::Type{ITEMTYPE_FACE},::Type{PROPERTY_GEOMETRYGROUPS}) = FaceGeometryGeometries
+GridComponent4TypeProperty(::Type{ITEMTYPE_FACE},::Type{PROPERTY_ASSEMBLYGROUP}) = FaceAssemblyGroups
 
 GridComponent4TypeProperty(::Type{ITEMTYPE_BFACE},::Type{PROPERTY_NODES}) = BFaceNodes
 GridComponent4TypeProperty(::Type{ITEMTYPE_BFACE},::Type{PROPERTY_VOLUME}) = BFaceVolumes
 GridComponent4TypeProperty(::Type{ITEMTYPE_BFACE},::Type{PROPERTY_REGION}) = BFaceRegions
 GridComponent4TypeProperty(::Type{ITEMTYPE_BFACE},::Type{PROPERTY_GEOMETRY}) = BFaceGeometries
 GridComponent4TypeProperty(::Type{ITEMTYPE_BFACE},::Type{PROPERTY_UNIQUEGEOMETRY}) = UniqueBFaceGeometries
-GridComponent4TypeProperty(::Type{ITEMTYPE_BFACE},::Type{PROPERTY_GEOMETRYGROUPS}) = BFaceGeometryGeometries
+GridComponent4TypeProperty(::Type{ITEMTYPE_BFACE},::Type{PROPERTY_ASSEMBLYGROUP}) = BFaceAssemblyGroups
 
 GridComponent4TypeProperty(::Type{ITEMTYPE_EDGE},::Type{PROPERTY_NODES}) = EdgeNodes
 GridComponent4TypeProperty(::Type{ITEMTYPE_EDGE},::Type{PROPERTY_VOLUME}) = EdgeVolumes
 GridComponent4TypeProperty(::Type{ITEMTYPE_EDGE},::Type{PROPERTY_REGION}) = EdgeRegions
 GridComponent4TypeProperty(::Type{ITEMTYPE_EDGE},::Type{PROPERTY_GEOMETRY}) = EdgeGeometries
 GridComponent4TypeProperty(::Type{ITEMTYPE_EDGE},::Type{PROPERTY_UNIQUEGEOMETRY}) = UniqueEdgeGeometries
-GridComponent4TypeProperty(::Type{ITEMTYPE_EDGE},::Type{PROPERTY_GEOMETRYGROUPS}) = EdgeGeometryGeometries
+GridComponent4TypeProperty(::Type{ITEMTYPE_EDGE},::Type{PROPERTY_ASSEMBLYGROUP}) = EdgeAssemblyGroups
 
 GridComponent4TypeProperty(::Type{ITEMTYPE_BEDGE},::Type{PROPERTY_NODES}) = BEdgeNodes
 GridComponent4TypeProperty(::Type{ITEMTYPE_BEDGE},::Type{PROPERTY_VOLUME}) = BEdgeVolumes
 GridComponent4TypeProperty(::Type{ITEMTYPE_BEDGE},::Type{PROPERTY_REGION}) = BEdgeRegions
 GridComponent4TypeProperty(::Type{ITEMTYPE_BEDGE},::Type{PROPERTY_GEOMETRY}) = BEdgeGeometries
 GridComponent4TypeProperty(::Type{ITEMTYPE_BEDGE},::Type{PROPERTY_UNIQUEGEOMETRY}) = UniqueBEdgeGeometries
-GridComponent4TypeProperty(::Type{ITEMTYPE_BEDGE},::Type{PROPERTY_GEOMETRYGROUPS}) = BEdgeGeometryGeometries
+GridComponent4TypeProperty(::Type{ITEMTYPE_BEDGE},::Type{PROPERTY_ASSEMBLYGROUP}) = BEdgeAssemblyGroups
 
 
 function get_facegrid(source_grid::ExtendableGrid{Tc,Ti}) where {Tc,Ti}
@@ -1244,7 +1244,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{Unique
 end
 
 
-function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{CellGeometryGroups}) where {Tc,Ti}
+function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{CellAssemblyGroups}) where {Tc,Ti}
     xGeometryGroups = VariableTargetAdjacency(Ti)
     xCellGeometries = xgrid[CellGeometries]
     xUniqueCellGeometries = xgrid[UniqueCellGeometries]
@@ -1254,7 +1254,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{CellGe
     xGeometryGroups
 end
 
-function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceGeometryGroups}) where {Tc,Ti}
+function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceAssemblyGroups}) where {Tc,Ti}
     xGeometryGroups = VariableTargetAdjacency(Ti)
     xFaceGeometries = xgrid[FaceGeometries]
     xUniqueFaceGeometries = xgrid[UniqueFaceGeometries]
@@ -1264,7 +1264,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceGe
     xGeometryGroups
 end
 
-function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BFaceGeometryGroups}) where {Tc,Ti}
+function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BFaceAssemblyGroups}) where {Tc,Ti}
     xGeometryGroups = VariableTargetAdjacency(Ti)
     xBFaceGeometries = xgrid[BFaceGeometries]
     xUniqueBFaceGeometries = xgrid[UniqueBFaceGeometries]
@@ -1275,7 +1275,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BFaceG
 end
 
 
-function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeGeometryGroups}) where {Tc,Ti}
+function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeAssemblyGroups}) where {Tc,Ti}
     xGeometryGroups = VariableTargetAdjacency(Ti)
     xEdgeGeometries = xgrid[EdgeGeometries]
     xUniqueEdgeGeometries = xgrid[UniqueEdgeGeometries]
@@ -1285,7 +1285,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeGe
     xGeometryGroups
 end
 
-function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BEdgeGeometryGroups}) where {Tc,Ti}
+function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BEdgeAssemblyGroups}) where {Tc,Ti}
     xGeometryGroups = VariableTargetAdjacency(Ti)
     xBEdgeGeometries = xgrid[BEdgeGeometries]
     xUniqueBEdgeGeometries = xgrid[UniqueBEdgeGeometries]

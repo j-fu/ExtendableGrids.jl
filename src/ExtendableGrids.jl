@@ -110,10 +110,10 @@ export BFaceFaces, BFaceCellPos, BFaceVolumes
 export BEdgeNodes, BEdgeEdges, BEdgeVolumes, BEdgeGeometries
 export NodePatchGroups
 export unique, UniqueCellGeometries, UniqueFaceGeometries, UniqueBFaceGeometries, UniqueEdgeGeometries, UniqueBEdgeGeometries
-export CellGeometryGroups, FaceGeometryGroups, BFaceGeometryGroups, EdgeGeometryGroups, BEdgeGeometryGroups
+export CellAssemblyGroups, FaceAssemblyGroups, BFaceAssemblyGroups, EdgeAssemblyGroups, BEdgeAssemblyGroups
 export GridComponent4TypeProperty
 export ITEMTYPE_CELL, ITEMTYPE_FACE, ITEMTYPE_BFACE, ITEMTYPE_EDGE, ITEMTYPE_BEDGE
-export PROPERTY_NODES, PROPERTY_REGION, PROPERTY_VOLUME, PROPERTY_UNIQUEGEOMETRY, PROPERTY_GEOMETRY
+export PROPERTY_NODES, PROPERTY_REGION, PROPERTY_VOLUME, PROPERTY_UNIQUEGEOMETRY, PROPERTY_GEOMETRY, PROPERTY_ASSEMBLYGROUP
 export get_facegrid, get_bfacegrid, get_edgegrid
 export GridEGTypes
 export GridRegionTypes
