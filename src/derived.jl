@@ -244,13 +244,10 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceNo
         xFaceNodes = VariableTargetAdjacency(Ti)
         xFaceGeometries::Array{ElementGeometries,1} = []
     end
+    xCellFaces::Union{VariableTargetAdjacency{Ti}, Matrix{Ti}} = singleEG*singleFEG ? zeros(Ti,num_faces(EG[1]),ncells) : VariableTargetAdjacency(Ti)
+    xCellFaceSigns::Union{VariableTargetAdjacency{Ti}, Matrix{Ti}} = singleEG*singleFEG ? zeros(Ti,num_faces(EG[1]),ncells) : VariableTargetAdjacency(Ti)
     if singleEG == true && singleFEG == true
-        # only one geometry type allows for much faster code
-        xCellFaces = zeros(Ti,num_faces(EG[1]),ncells)
-        xCellFaceSigns = zeros(Ti,num_faces(EG[1]),ncells)
     else
-        xCellFaces = VariableTargetAdjacency(Ti)
-        xCellFaceSigns = VariableTargetAdjacency(Ti)
         # pre-allocate xCellFaces
         cellEG = xCellGeometries[1]
         for cell = 1 : ncells

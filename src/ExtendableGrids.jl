@@ -146,6 +146,7 @@ export GridComponentVolumes4AssemblyType
 export GridComponentGeometries4AssemblyType
 export GridComponentRegions4AssemblyType
 export GridComponentUniqueGeometries4AssemblyType
+export GridComponentAssemblyGroups4AssemblyType
 
 include("l2gtransformations.jl");
 export L2GTransformer, update_trafo!, eval_trafo!, mapderiv!
