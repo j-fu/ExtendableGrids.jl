@@ -68,6 +68,7 @@ Access adjacency as if it is a 2D Array
 """
 Base.getindex(adj::VariableTargetAdjacency,i,isource)=adj.colentries[adj.colstart[isource]+i-1]
 Base.getindex(adj::VariableTargetAdjacency,::Colon,isource)=adj.colentries[adj.colstart[isource]:adj.colstart[isource+1]-1]
+Base.view(adj::VariableTargetAdjacency,::Colon,isource)=view(adj.colentries,adj.colstart[isource]:adj.colstart[isource+1]-1)
 
 """
 $(TYPEDSIGNATURES)
