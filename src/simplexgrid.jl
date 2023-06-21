@@ -656,6 +656,11 @@ function simplexgrid(file::String;format="")
     if format==""
         format=fext[2:end]
     end
+
+    if format=="msh"
+        return simplexgrid_from_msh(file)
+    end
+        
     @assert format=="sg"
     
     tks=TokenStream(file)
@@ -729,6 +734,9 @@ function simplexgrid(file::String;format="")
     end
     simplexgrid(coord,cells,regions,faces,bregions);
 end
+
+# Method to be extended
+function simplexgrid_from_msh end
 
 """
 $(TYPEDSIGNATURES)
