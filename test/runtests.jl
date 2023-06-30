@@ -4,6 +4,7 @@ using Test, ExtendableGrids, GridVisualize, SHA, SimplexGridFactory, Triangulate
 using Gmsh # trigger extension
 import CairoMakie
 
+CairoMakie.activate!(type="svg",visible=false)
 
 
 @testset "Geomspace" begin

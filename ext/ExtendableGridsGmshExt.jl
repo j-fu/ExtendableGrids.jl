@@ -1,11 +1,17 @@
 module ExtendableGridsGmshExt
 
+if isdefined(Base, :get_extension)
+    ###!!! you imported GridapGMSH in order to get gmsh from there. We do only need gmsh directly
+    import Gmsh: gmsh
+else
+    import ..Gmsh: gmsh
+end
+
 import ExtendableGrids: ExtendableGrid, simplexgrid
 import ExtendableGrids: Coordinates, CellNodes, CellRegions, BFaceNodes, BFaceRegions
 import ExtendableGrids: simplexgrid_from_msh, write_msh
 
-###!!! you imported GridapGMSH in order to get gmsh from there. We do only need gmsh directly
-import Gmsh: gmsh
+
 
 ###??? Do we really need this dependency here ? I would rather like to live without, the more that it seems to make some problems.
 using StatsBase: countmap
