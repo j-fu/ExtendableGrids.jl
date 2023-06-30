@@ -1,5 +1,6 @@
 [deps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+Gmsh = "705231aa-382f-11e9-3f0c-b7cb4346fdeb"
 GridVisualize = "5eed8a63-0fb0-45eb-886d-8d5a387d12b8"
 SHA = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 SimplexGridFactory = "57bfcd06-606e-45d6-baf4-4ba06da0efd5"

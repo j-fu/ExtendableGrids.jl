@@ -651,7 +651,6 @@ $(TYPEDSIGNATURES)
 Read grid from file. Currently for pdelib sg format only.
 """
 function simplexgrid(file::String;format="")
-    Ti=Cint
     (fbase,fext)=splitext(file)
     if format==""
         format=fext[2:end]
@@ -659,10 +658,15 @@ function simplexgrid(file::String;format="")
 
     if format=="msh"
         return simplexgrid_from_msh(file)
+    elseif format=="sg"
+        return simplexgrid_from_sg(file)
+    else
+        error("Format extension $(format) not supported")
     end
+end
         
-    @assert format=="sg"
-    
+function  simplexgrid_from_sg(file)
+    Ti=Cint
     tks=TokenStream(file)
     expecttoken(tks,"SimplexGrid")
     version=parse(Float64,gettoken(tks))
@@ -735,8 +739,10 @@ function simplexgrid(file::String;format="")
     simplexgrid(coord,cells,regions,faces,bregions);
 end
 
-# Method to be extended
+# Implementation in Gmsh ext
 function simplexgrid_from_msh end
+
+function write_msh end
 
 """
 $(TYPEDSIGNATURES)
@@ -748,8 +754,16 @@ function Base.write(fname::String, g::ExtendableGrid; format="")
     if format==""
         format=fext[2:end]
     end
-    @assert format=="sg"
-
+    if format=="sg"
+        write_sg(fname,g)
+    elseif format=="msh"
+        write_msh(fname,g)
+    else
+        error("Format extension $(format) not supported")
+    end
+end
+        
+function write_sg(fname,g)
     dim_g=dim_grid(g)
     dim_s=dim_space(g)
     nn=num_nodes(g)
