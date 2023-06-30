@@ -1,6 +1,7 @@
 ENV["MPLBACKEND"]="agg"
 
 using Test, ExtendableGrids, GridVisualize, SHA, SimplexGridFactory, Triangulate
+using Gmsh # trigger extension
 import CairoMakie
 
 
@@ -122,21 +123,25 @@ end
     
 end
 
+function testrw(grid,format)
+    ftmp=tempname()*"."*format
+    write(ftmp,grid)
+    grid1=simplexgrid(ftmp)
+    seemingly_equal(grid1,grid)
+end
 
 
-
-
-@testset "Read/Write" begin
-    function testrw(grid)
-        ftmp=tempname()
-        write(ftmp,grid,format="sg")
-        grid1=simplexgrid(ftmp,format="sg")
-        seemingly_equal(grid1,grid)
-    end
+@testset "Read/Write sg" begin
     X=collect(0:0.05:1)
-    @test testrw(simplexgrid(X))
-    @test testrw(simplexgrid(X,X))
-    @test testrw(simplexgrid(X,X,X))
+    @test testrw(simplexgrid(X),"sg")
+    @test testrw(simplexgrid(X,X),"sg")
+    @test testrw(simplexgrid(X,X,X),"sg")
+end
+
+@testset "Read/Write msh" begin
+    X=collect(0:0.05:1)
+    @test testrw(simplexgrid(X,X),"msh")
+    @test testrw(simplexgrid(X,X,X),"msh")
 end
 
 function testgrid(grid,testdata)
