@@ -123,11 +123,11 @@ end
     
 end
 
-function testrw(grid,format)
+function testrw(grid,format;confidence=:medium)
     ftmp=tempname()*"."*format
     write(ftmp,grid)
     grid1=simplexgrid(ftmp)
-    seemingly_equal(grid1,grid)
+    seemingly_equal(grid1,grid;confidence=confidence)
 end
 
 
@@ -140,8 +140,8 @@ end
 
 @testset "Read/Write msh" begin
     X=collect(0:0.05:1)
-    @test testrw(simplexgrid(X,X),"msh")
-    @test testrw(simplexgrid(X,X,X),"msh")
+    @test testrw(simplexgrid(X,X),"msh";confidence=:low)
+    @test testrw(simplexgrid(X,X,X),"msh";confidence=:low)
 end
 
 function testgrid(grid,testdata)

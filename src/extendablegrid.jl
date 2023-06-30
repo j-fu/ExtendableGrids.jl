@@ -474,19 +474,32 @@ end
 """
 $(SIGNATURES)
 
-Recursively check seeming equality of two grids. Seemingly means 
-that long arrays are only compared via random samples
+Recursively check seeming equality of two grids (for CI tests).
+
+Confidence level:
+- :low : Point numbers etc are the same
+- :medium :  long arrays are only compared via random samples
+- :full : (TBD) all arrays are equal
 """
-function seemingly_equal(grid1::ExtendableGrid, grid2::ExtendableGrid)
-    for key in keys(grid1)
-        if !haskey(grid2,key)
-            return false
+function seemingly_equal(grid1::ExtendableGrid, grid2::ExtendableGrid; confidence=:medium)
+    if confidence==:medium
+        for key in keys(grid1)
+            if !haskey(grid2,key)
+                return false
+            end
+            if !seemingly_equal(grid1[key],grid2[key])
+                return false
+            end
         end
-        if !seemingly_equal(grid1[key],grid2[key])
-            return false
-        end
+        return true
+    elseif confidence==:low
+        grid1_data=(num_nodes(grid1),num_cells(grid1), num_bfaces(grid1))
+        grid2_data=(num_nodes(grid2),num_cells(grid2), num_bfaces(grid2))
+        return grid1_data==grid2_data
+    else
+        error("Confidence level $(confidence) not implemented")
+        return false
     end
-    return true
 end
 
 """
