@@ -657,7 +657,7 @@ function simplexgrid(file::String;format="")
     end
 
     if format=="msh"
-        return simplexgrid_from_msh(file)
+        return simplexgrid_from_gmsh(file)
     elseif format=="sg"
         return simplexgrid_from_sg(file)
     else
@@ -740,9 +740,13 @@ function  simplexgrid_from_sg(file)
 end
 
 # Implementation in Gmsh ext
-function simplexgrid_from_msh end
+function simplexgrid_from_gmsh end
 
-function write_msh end
+function write_gmsh end
+
+function simplexgrid(mod::Module)
+
+end
 
 """
 $(TYPEDSIGNATURES)
@@ -757,7 +761,7 @@ function Base.write(fname::String, g::ExtendableGrid; format="")
     if format=="sg"
         write_sg(fname,g)
     elseif format=="msh"
-        write_msh(fname,g)
+        write_gmsh(fname,g)
     else
         error("Format extension $(format) not supported")
     end

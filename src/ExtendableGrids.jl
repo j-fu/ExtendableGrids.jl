@@ -185,7 +185,7 @@ export writeVTK
 
 #
 # Extension support for Julia <1.9 
-# This fails to check the gmsh version
+# This works but fails to verify the gmsh version
 #
 if  !isdefined(Base, :get_extension)
     using Requires

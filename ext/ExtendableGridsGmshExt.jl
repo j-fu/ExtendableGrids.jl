@@ -1,7 +1,7 @@
 module ExtendableGridsGmshExt
 
 if isdefined(Base, :get_extension)
-    ###!!! you imported GridapGMSH in order to get gmsh from there. We do only need gmsh directly
+    ###!!! We do only need gmsh directly, no Gridap stuff
     import Gmsh: gmsh
 else
     import ..Gmsh: gmsh
@@ -9,9 +9,9 @@ end
 
 import ExtendableGrids: ExtendableGrid, simplexgrid
 import ExtendableGrids: Coordinates, CellNodes, CellRegions, BFaceNodes, BFaceRegions
-import ExtendableGrids: simplexgrid_from_msh, write_msh
+import ExtendableGrids: simplexgrid_from_gmsh, write_gmsh
 
-
+#!!! Make a license warning at initialization ? Gmsh is GPL - mention this in the readme.
 
 ###??? Do we really need this dependency here ? I would rather like to live without, the more that it seems to make some problems.
 using StatsBase: countmap
@@ -20,12 +20,18 @@ using Bijections
 ###!!! I am still thinking about the architecture here. May be we should end up with grid_from_msh
 
 # ExtendableGrids method extensions
-function simplexgrid_from_msh(filename::String)
+function simplexgrid_from_gmsh(filename::String)
     gmshfile_to_grid(filename, 0)
 end
 
+
+# ExtendableGrids method extensions
+function simplexgrid_from_gmsh(mod::Module)
+    mod_to_grid(mod, 0)
+end
+
 ###!!! maybe grid_to_msh, not sure yet
-function write_msh(filename, g)
+function write_gmsh(filename, g)
     grid_to_file(g, filename)
 end
 
@@ -151,6 +157,9 @@ function decode(y, nn, dim)
     return x #[y%nn, Int(round(y/nn-0.5)%nn), Int(round(y/nn^2-0.5))]
 end
 
+#!!!
+#!!! I think this could really part of the main extendablegrids module.
+#!!! 
 function assemble_bfaces(simplices, dim, nn)
     m = size(simplices, 2)
     poss_faces = zeros(Int64, (dim + 1) * m)
@@ -326,23 +335,24 @@ function gmshfile_to_grid(filename::String, manualset::Int64)
     # 			1 -> manual = true
     # 			2 -> if there are any elements with dim-1, then manual=false,
     # 				 else: manual=true
-    gmsh.initialize()
+    # gmsh.initialize() #!!! this should be somewehere else ?
     gmsh.open(filename)
 
     grid = mod_to_grid(gmsh.model, manualset)
 
-    gmsh.finalize()
+    #gmsh.finalize() #!!! this should be somewehere else
 
     return grid
 end
 
 
 ### this function writes an ExtendableGrid into a gmsh file with the name "filename"
-
+### !!! split this - make an extra ExtendableGridToGmsh call
 function grid_to_file(grid::ExtendableGrid, filename::String)
-    gmsh.initialize()
+    # gmsh.initialize()
     gmsh.option.setNumber("General.Terminal", 1)
-    gmsh.model.add("name")
+    (fbase,fext)=splitext(filename)
+    gmsh.model.add("fbase")
 
 
     # formatting the coordinates correctly
@@ -421,7 +431,7 @@ function grid_to_file(grid::ExtendableGrid, filename::String)
 
     gmsh.write(filename)
 
-    gmsh.finalize()
+    # gmsh.finalize()
 
 end
 

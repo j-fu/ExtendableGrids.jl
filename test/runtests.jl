@@ -1,7 +1,7 @@
 ENV["MPLBACKEND"]="agg"
 
 using Test, ExtendableGrids, GridVisualize, SHA, SimplexGridFactory, Triangulate
-using Gmsh # trigger extension
+import Gmsh: gmsh # trigger extension
 import CairoMakie
 
 CairoMakie.activate!(type="svg",visible=false)
@@ -139,10 +139,12 @@ end
     @test testrw(simplexgrid(X,X,X),"sg")
 end
 
-@testset "Read/Write msh" begin
+@testset "Read/Write gmsh" begin
     X=collect(0:0.05:1)
+    gmsh.initialize()
     @test testrw(simplexgrid(X,X),"msh";confidence=:low)
     @test testrw(simplexgrid(X,X,X),"msh";confidence=:low)
+    gmsh.finalize()
 end
 
 function testgrid(grid,testdata)
