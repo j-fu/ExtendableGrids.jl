@@ -35,3 +35,15 @@ function leaftypes(TApex)
     end
     leaftypes!(Type[],TApex)
 end
+
+function allsubtypes(TApex)
+    function allsubtypes!(st,t)
+        for tsub in subtypes(t)
+            push!(st,tsub)
+            allsubtypes!(st,tsub)
+        end
+        st
+    end
+    allsubtypes!(Type[],TApex)
+end
+
