@@ -45,6 +45,7 @@ Access adjacency as if it is a 2D Array
 """
 Base.getindex(adj::SerialVariableTargetAdjacency,i,isource)=adj.colstart[isource]+i-1
 Base.getindex(adj::SerialVariableTargetAdjacency,::Colon,isource)=adj.colstart[isource]:adj.colstart[isource+1]-1
+Base.view(adj::SerialVariableTargetAdjacency{Ti},::Colon,isource) where {Ti} = adj.colstart[isource]:adj.colstart[isource+1]-1
 
 """
 $(TYPEDSIGNATURES)

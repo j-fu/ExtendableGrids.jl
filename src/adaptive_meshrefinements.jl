@@ -1,4 +1,4 @@
-function bulk_mark(xgrid::ExtendableGrid{Tv,Ti}, refinement_indicators::Vector{T}, theta = 0.5; indicator_AT = ON_CELLS) where {T,Tv,Ti}
+function bulk_mark(xgrid::ExtendableGrid{Tv,Ti}, refinement_indicators::AbstractVector{T}, theta = 0.5; indicator_AT = ON_CELLS) where {T,Tv,Ti}
 
     xFaceCells = xgrid[FaceCells]
     xFaceNodes = xgrid[FaceNodes]
