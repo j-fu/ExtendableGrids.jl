@@ -42,10 +42,10 @@ export AbstractElementGeometry1D
 export Edge1D
 
 export AbstractElementGeometry2D
-export Polygon2D,Triangle2D,Quadrilateral2D,Pentagon2D,Hexagon2D,Parallelogram2D,Circle2D
+export Polygon2D,Triangle2D,Quadrilateral2D,Pentagon2D,Hexagon2D,Parallelogram2D,Rectangle2D,Circle2D
 
 export AbstractElementGeometry3D
-export Polyhedron3D,Tetrahedron3D, Hexahedron3D,Parallelepiped3D,Prism3D,TrianglePrism3D,Sphere3D
+export Polyhedron3D,Tetrahedron3D, Hexahedron3D,Parallelepiped3D,RectangularCuboid3D,Prism3D,TrianglePrism3D,Sphere3D
 
 export AbstractElementGeometry4D
 export Polychoron4D,HyperCube4D

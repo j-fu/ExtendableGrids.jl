@@ -70,6 +70,11 @@ abstract type Parallelogram2D <: Quadrilateral2D end
 """
 $(TYPEDEF)
 """
+abstract type Rectangle2D <: Parallelogram2D end
+
+"""
+$(TYPEDEF)
+"""
 abstract type Circle2D <: AbstractElementGeometry2D end
 
 """
@@ -88,6 +93,10 @@ abstract type Hexahedron3D <: Polyhedron3D end
 $(TYPEDEF)
 """
 abstract type Parallelepiped3D <: Hexahedron3D end
+"""
+$(TYPEDEF)
+"""
+abstract type RectangularCuboid3D <: Parallelepiped3D end
 """
 $(TYPEDEF)
 """
@@ -132,6 +141,9 @@ $(TYPEDSIGNATURES)
 dim_element(::Type{<:AbstractElementGeometry4D})=4
 
 
+const allgeometrytypes=vcat(allsubtypes(AbstractElementGeometry0D),
+                            allsubtypes(AbstractElementGeometry1D),
+                            allsubtypes(AbstractElementGeometry2D),
+                            allsubtypes(AbstractElementGeometry3D))
 
-
-const ElementGeometries=Union{[Type{t} for t in leaftypes(AbstractElementGeometry)]...}
+const ElementGeometries=Union{[Type{t} for t in allgeometrytypes]...}
