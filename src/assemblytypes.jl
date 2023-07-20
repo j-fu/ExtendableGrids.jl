@@ -56,6 +56,9 @@ causes assembly/interpolation on boundary edges of the grid (only in 3D)
 """
 abstract type ON_BEDGES <: AssemblyType end # on boundary edges
 
+function Base.show(io::Core.IO, ::Type{AT_NODES})
+    print(io,"AT_NODES")
+end
 function Base.show(io::Core.IO, ::Type{ON_CELLS})
     print(io,"ON_CELLS")
 end
