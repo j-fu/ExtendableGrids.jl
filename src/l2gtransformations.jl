@@ -39,7 +39,10 @@ function L2GTransformer(EG::Union{Type{<:Tetrahedron3D}, Type{<:Parallelepiped3D
     return L2GTransformer{Tv,Ti,EG,grid[CoordinateSystem]}(0,false,grid[Coordinates],grid[GridComponentNodes4AssemblyType(AT)],grid[GridComponentVolumes4AssemblyType(AT)],A,b,zeros(Tv,3,3),0)
 end
 
-
+function update_trafo!(T::L2GTransformer{<:Real,<:Integer,<:Vertex0D,Cartesian1D}, item::Int)
+    T.b[1] = T.Coords[1,T.Nodes[1,item]]
+    return nothing
+end
 
 function update_trafo!(T::L2GTransformer{<:Real,<:Integer,<:Edge1D,Cartesian1D}, item::Int)
     if T.citem != item
@@ -177,6 +180,11 @@ function update_trafo!(T::L2GTransformer{<:Real,<:Integer,<:Parallelepiped3D,Car
         T.A[3,3] = T.Coords[3,T.Nodes[5,item]] - T.b[3]
         T.det = T.ItemVolumes[item]
     end    
+    return nothing
+end
+
+function eval_trafo!(x::Vector, T::L2GTransformer{<:Real,<:Integer,<:Vertex0D,Cartesian1D}, xref)
+    x[1] = T.b[1]
     return nothing
 end
 
