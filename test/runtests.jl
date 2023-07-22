@@ -3,6 +3,7 @@ ENV["MPLBACKEND"]="agg"
 using Test, ExtendableGrids, GridVisualize, SHA, SimplexGridFactory, Triangulate
 import CairoMakie
 
+CairoMakie.activate!(type="svg",visible=false)
 
 
 @testset "Geomspace" begin
