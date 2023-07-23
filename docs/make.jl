@@ -2,6 +2,7 @@ ENV["MPLBACKEND"]="agg"
 using Documenter, ExtendableGrids, Literate, GridVisualize, SimplexGridFactory
 import CairoMakie, Triangulate
 
+CairoMakie.activate!(type="svg",visible=false)
 
 example_md_dir  = joinpath(@__DIR__,"src","examples")
 

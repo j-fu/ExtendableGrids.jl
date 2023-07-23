@@ -242,7 +242,27 @@ end
     @test testgrid(cross3d(),(189,480,344))
 end
 
-
+@testset "quadmeshes" begin
+    function try_Quad()
+        Tc = Float32
+        Ti = Int32
+        grid = ExtendableGrid{Tc, Ti}()
+        
+        grid[Coordinates] = convert(Matrix{Tc}, [0.0 0.0; 0.0 1.0; 1.0 0.0; 1.0 1.0]')
+        grid[CellNodes]   = convert(Matrix{Ti}, [1 3 4 2]')
+        
+        grid[CellRegions] = convert(Vector{Ti}, [1])
+    
+        
+        grid[CellGeometries] = VectorOfConstants{ElementGeometries,Ti}(Quadrilateral2D,length(grid[CellRegions]))
+        
+        grid[BFaceNodes]  = convert(Matrix{Ti}, [1 3; 3 4; 4 2; 2 1]')
+        grid[BFaceRegions] = convert(Vector{Ti}, [1, 1, 2, 2])
+        
+        grid
+    end
+    @test isa(try_Quad(), ExtendableGrid)
+end
 
 @testset "plotting examples" begin
     include("../docs/makeplots.jl")
