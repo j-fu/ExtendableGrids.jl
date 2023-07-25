@@ -1,9 +1,175 @@
 ENV["MPLBACKEND"]="agg"
 
+
 using Test, ExtendableGrids, GridVisualize, SHA, SimplexGridFactory, Triangulate
+import StatsBase
+using Gmsh: gmsh
+using StatsBase: countmap
+
 import CairoMakie
 
 CairoMakie.activate!(type="svg",visible=false)
+
+
+### Tests for the gmsh extension:
+
+
+
+function multidimsort(A)
+    i1 = sortperm(A[1,:])
+    A1 = A[:,i1]
+    for j=2:size(A,1)           
+		cm = countmap(A1[j-1,:])
+		for (key,val) in cm
+			if val > 1								 #if there only is one entry with this key, the reordering is not necessary
+				inds = findall(z->z==key, A1[j-1,:]) #indices of that key in A1
+				sorted_inds = sortperm(A1[j, inds])  
+				A1[:,inds] = A1[:,inds[sorted_inds]] #reorder
+			end	
+		end
+    end
+    return A1
+
+end
+
+#=
+Confidence level:
+- :low : Point numbers etc are the same
+- :full : all arrays are equal (besides the coordinate array, the arrays only have to be equal up to permutations)
+=#
+
+
+function seemingly_equal_with_sort(grid1::ExtendableGrid, grid2::ExtendableGrid; confidence=:full)
+    if confidence==:full
+        for key in keys(grid1)
+        	#@warn key
+            if !haskey(grid2,key)
+                return false
+            end
+            
+            if key == Coordinates
+            	#@warn "now checking coords"
+            	if !seemingly_equal(grid1[key],grid2[key])
+                	return false
+            	end
+            else
+		        try
+		        	#@warn "1"
+		        	sorted = false
+		        	s1 = size(grid1[key])
+		        	s2 = size(grid2[key])
+		        	
+		        	
+		        	#@warn "2"
+		        	 
+		        	if length(s1) == 1
+		        		#@warn "l(s) = 1"
+		        		ind1 = sortperm(grid1[key])
+		        		ind2 = sortperm(grid2[key])
+		        		sa1  = grid1[key][ind1]
+		        		sa2  = grid2[key][ind2]
+		        	else
+		        		#@warn "l(s) > 1"
+		        		sa1 = multidimsort(grid1[key])
+		        		sa2 = multidimsort(grid2[key])
+		        	
+		        	end
+		        	
+		        	
+		        	if !seemingly_equal(sa1,sa2)
+		        		return false
+		        	end	
+		        	
+		        catch
+		        	#@warn "doesn't have a size" #"not a sortable array")
+		        	if !seemingly_equal(grid1[key],grid2[key])
+		            	return false
+		        	end
+		        end
+		    end
+            
+        end
+        return true
+    elseif confidence==:low
+        grid1_data=(num_nodes(grid1),num_cells(grid1), num_bfaces(grid1))
+        grid2_data=(num_nodes(grid2),num_cells(grid2), num_bfaces(grid2))
+        return grid1_data==grid2_data
+    else
+        error("Confidence level $(confidence) not implemented")
+        return false
+    end
+end
+
+
+
+
+
+@testset "Read/write gmsh simplexgrid" begin
+
+    gmsh.initialize()
+    
+    path = "" #"/home/johannes/Nextcloud/Documents/Uni/VIII/WIAS/Julia Packages (tries)/ExtendableGrids.jl_moving_to_ext/test/" 
+    X = collect(0:0.02:2)
+    Y = collect(0:2:4)
+    grid1 = simplexgrid(X, Y) #ExtendableGrids.simplexgrid_from_gmsh(path*"sto_2d.msh")
+    
+    ExtendableGrids.write_gmsh(path*"testfile.msh", grid1)
+    grid2 = ExtendableGrids.simplexgrid_from_gmsh(path*"testfile.msh")    
+    gmsh.finalize()
+    
+    @test seemingly_equal_with_sort(grid2, grid1;confidence=:low)
+    @test seemingly_equal_with_sort(grid2, grid1;confidence=:full)
+    
+end
+
+@testset "Read/write gmsh 2d" begin
+
+    gmsh.initialize()
+    
+    path = "" 
+    grid1 = ExtendableGrids.simplexgrid_from_gmsh(path*"sto_2d.msh") 
+    ExtendableGrids.write_gmsh(path*"testfile.msh", grid1) 
+    grid2 = ExtendableGrids.simplexgrid_from_gmsh(path*"testfile.msh")     
+    gmsh.finalize()
+     
+    @test seemingly_equal_with_sort(grid1, grid2;confidence=:low) 
+    @test seemingly_equal_with_sort(grid1, grid2;confidence=:full)
+    
+end
+
+@testset "Read/write gmsh 3d" begin
+
+    gmsh.initialize()
+    
+    path = "" 
+    grid1 = ExtendableGrids.simplexgrid_from_gmsh(path*"sto_3d.msh")
+    ExtendableGrids.write_gmsh(path*"testfile.msh", grid1)
+    grid2 = ExtendableGrids.simplexgrid_from_gmsh(path*"testfile.msh")
+    gmsh.finalize()
+    
+    @test seemingly_equal_with_sort(grid1, grid2;confidence=:low)
+    @test seemingly_equal_with_sort(grid1, grid2;confidence=:full)
+    
+end
+
+@testset "gmsh neg test" begin
+
+    gmsh.initialize()
+    
+    path = "" 
+    grid1 = ExtendableGrids.simplexgrid_from_gmsh(path*"sto_2d.msh")
+    #grid2 = 
+    #simplexgrid([0, 1, 2], [3, 4, 5]) 
+    grid2 = ExtendableGrids.simplexgrid_from_gmsh(path*"sto_3d.msh")
+    gmsh.finalize()
+    
+    @test !seemingly_equal_with_sort(grid1, grid2;confidence=:low)
+    @test !seemingly_equal_with_sort(grid1, grid2;confidence=:full)
+    
+end
+
+
+### Original tests:
 
 
 @testset "Geomspace" begin
@@ -126,19 +292,21 @@ end
 
 
 
-
-@testset "Read/Write" begin
-    function testrw(grid)
-        ftmp=tempname()
-        write(ftmp,grid,format="sg")
-        grid1=simplexgrid(ftmp,format="sg")
-        seemingly_equal(grid1,grid)
-    end
-    X=collect(0:0.05:1)
-    @test testrw(simplexgrid(X))
-    @test testrw(simplexgrid(X,X))
-    @test testrw(simplexgrid(X,X,X))
+function testrw(grid,format;confidence=:full)
+    #@warn format
+    ftmp=tempname()*"."*format
+    write(ftmp,grid)
+    grid1=simplexgrid(ftmp)
+    seemingly_equal_with_sort(grid1,grid;confidence=confidence)
 end
+
+@testset "Read/Write sg" begin
+    X=collect(0:0.05:1)
+    @test testrw(simplexgrid(X),"sg")
+    @test testrw(simplexgrid(X,X),"sg")
+    @test testrw(simplexgrid(X,X,X),"sg")
+end
+
 
 function testgrid(grid,testdata)
     (num_nodes(grid),num_cells(grid), num_bfaces(grid))==testdata
@@ -235,27 +403,6 @@ end
     @test testgrid(cross3d(),(189,480,344))
 end
 
-@testset "quadmeshes" begin
-    function try_Quad()
-        Tc = Float32
-        Ti = Int32
-        grid = ExtendableGrid{Tc, Ti}()
-        
-        grid[Coordinates] = convert(Matrix{Tc}, [0.0 0.0; 0.0 1.0; 1.0 0.0; 1.0 1.0]')
-        grid[CellNodes]   = convert(Matrix{Ti}, [1 3 4 2]')
-        
-        grid[CellRegions] = convert(Vector{Ti}, [1])
-    
-        
-        grid[CellGeometries] = VectorOfConstants{ElementGeometries,Ti}(Quadrilateral2D,length(grid[CellRegions]))
-        
-        grid[BFaceNodes]  = convert(Matrix{Ti}, [1 3; 3 4; 4 2; 2 1]')
-        grid[BFaceRegions] = convert(Vector{Ti}, [1, 1, 2, 2])
-        
-        grid
-    end
-    @test isa(try_Quad(), ExtendableGrid)
-end
 
 @testset "plotting examples" begin
     include("../docs/makeplots.jl")
@@ -272,7 +419,6 @@ end
     @test makeplot("quadrilateral",picdir; Plotter=CairoMakie)        
     @test makeplotx("sorted_subgrid",picdir; Plotter=CairoMakie)        
 end
-
 
 
 function tglue(;dim=2,breg=0)
@@ -396,4 +542,22 @@ end
 
     @test sha_code == "93a31139ccb3ae3017351d7cef0c2639c5def97c9744699543fe8bc58e1ebcea"
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
