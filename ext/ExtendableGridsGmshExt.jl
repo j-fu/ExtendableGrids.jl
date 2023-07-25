@@ -348,9 +348,14 @@ end
     (this function has to be called with an initialized gmsh environment)
 """
 function grid_to_gmshfile(grid::ExtendableGrid, filename::String)
-    
-    gmsh.model = grid_to_mod(grid)
 
+    if VERSION>=v"1.9"
+        # This possibility is new in 1.9, see
+        # https://github.com/JuliaLang/julia/blob/release-1.9/NEWS.md#new-language-features
+        gmsh.model = grid_to_mod(grid)
+    else
+        grid_to_mod(grid)
+    end
     gmsh.write(filename)
     
 end
