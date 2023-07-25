@@ -1,11 +1,10 @@
 module ExtendableGridsGmshExt
 
-#if isdefined(Base, :get_extension)
-#    ###!!! We do only need gmsh directly, no Gridap stuff
-#    import Gmsh: gmsh
-#else
-#    import ..Gmsh: gmsh
-#end
+if isdefined(Base, :get_extension)
+    import Gmsh: gmsh
+else
+    import ..Gmsh: gmsh
+end
 
 import ExtendableGrids: ExtendableGrid, simplexgrid
 import ExtendableGrids: Coordinates, CellNodes, CellRegions, BFaceNodes, BFaceRegions
@@ -15,7 +14,6 @@ import ExtendableGrids: simplexgrid_from_gmsh, write_gmsh
 #!!! Make a license warning at initialization ? Gmsh is GPL - mention this in the readme.
 
 ###??? Do we really need this dependency here ? I would rather like to live without, the more that it seems to make some problems.
-using Gmsh: gmsh
 using StatsBase: countmap
 using Bijections
 
@@ -350,9 +348,14 @@ end
     (this function has to be called with an initialized gmsh environment)
 """
 function grid_to_gmshfile(grid::ExtendableGrid, filename::String)
-    
-    gmsh.model = grid_to_mod(grid)
 
+    if VERSION>=v"1.9"
+        # This possibility is new in 1.9, see
+        # https://github.com/JuliaLang/julia/blob/release-1.9/NEWS.md#new-language-features
+        gmsh.model = grid_to_mod(grid)
+    else
+        grid_to_mod(grid)
+    end
     gmsh.write(filename)
     
 end
