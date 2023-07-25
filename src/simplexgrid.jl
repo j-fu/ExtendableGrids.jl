@@ -731,14 +731,11 @@ function simplexgrid(file::String;format="")
 end
 
 
-# Implementation in Gmsh ext
+# Implementations in Gmsh extension
 function simplexgrid_from_gmsh end
 
 function write_gmsh end
 
-function simplexgrid(mod::Module)
-
-end
 
 """
 $(TYPEDSIGNATURES)
