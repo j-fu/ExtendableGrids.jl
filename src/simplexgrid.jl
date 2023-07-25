@@ -730,6 +730,16 @@ function simplexgrid(file::String;format="")
     simplexgrid(coord,cells,regions,faces,bregions);
 end
 
+
+# Implementation in Gmsh ext
+function simplexgrid_from_gmsh end
+
+function write_gmsh end
+
+function simplexgrid(mod::Module)
+
+end
+
 """
 $(TYPEDSIGNATURES)
   
