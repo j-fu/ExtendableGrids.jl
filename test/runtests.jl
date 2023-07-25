@@ -5,6 +5,7 @@ using Test, ExtendableGrids, GridVisualize, SHA, SimplexGridFactory, Triangulate
 import StatsBase
 using Gmsh: gmsh
 using StatsBase: countmap
+
 import CairoMakie
 
 CairoMakie.activate!(type="svg",visible=false)
@@ -291,12 +292,12 @@ end
 
 
 
-function testrw(grid,format;confidence=:medium)
+function testrw(grid,format;confidence=:full)
     #@warn format
     ftmp=tempname()*"."*format
     write(ftmp,grid)
     grid1=simplexgrid(ftmp)
-    seemingly_equal(grid1,grid;confidence=confidence)
+    seemingly_equal_with_sort(grid1,grid;confidence=confidence)
 end
 
 @testset "Read/Write sg" begin
@@ -403,7 +404,6 @@ end
 end
 
 
-
 @testset "plotting examples" begin
     include("../docs/makeplots.jl")
     picdir=mktempdir()
@@ -419,7 +419,6 @@ end
     @test makeplot("quadrilateral",picdir; Plotter=CairoMakie)        
     @test makeplotx("sorted_subgrid",picdir; Plotter=CairoMakie)        
 end
-
 
 
 function tglue(;dim=2,breg=0)
@@ -543,7 +542,6 @@ end
 
     @test sha_code == "93a31139ccb3ae3017351d7cef0c2639c5def97c9744699543fe8bc58e1ebcea"
 end
-
 
 
 
