@@ -1,11 +1,10 @@
 module ExtendableGridsGmshExt
 
-#if isdefined(Base, :get_extension)
-#    ###!!! We do only need gmsh directly, no Gridap stuff
-#    import Gmsh: gmsh
-#else
-#    import ..Gmsh: gmsh
-#end
+if isdefined(Base, :get_extension)
+    import Gmsh: gmsh
+else
+    import ..Gmsh: gmsh
+end
 
 import ExtendableGrids: ExtendableGrid, simplexgrid
 import ExtendableGrids: Coordinates, CellNodes, CellRegions, BFaceNodes, BFaceRegions
@@ -15,7 +14,6 @@ import ExtendableGrids: simplexgrid_from_gmsh, write_gmsh
 #!!! Make a license warning at initialization ? Gmsh is GPL - mention this in the readme.
 
 ###??? Do we really need this dependency here ? I would rather like to live without, the more that it seems to make some problems.
-using Gmsh: gmsh
 using StatsBase: countmap
 using Bijections
 

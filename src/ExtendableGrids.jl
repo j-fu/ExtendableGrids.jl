@@ -14,6 +14,9 @@ using Dates
 using LinearAlgebra
 
 
+if  !isdefined(Base, :get_extension)
+    using Requires
+end
 
 
 include("adjacency.jl")
@@ -182,5 +185,16 @@ export TokenStream, gettoken, expecttoken,trytoken
 
 include("io.jl")
 export writeVTK
+
+
+@static if  !isdefined(Base, :get_extension)
+    function __init__()
+        @require Gmsh = "705231aa-382f-11e9-3f0c-b7cb4346fdeb"  begin
+            include("../ext/ExtendableGridsGmshExt.jl")
+        end
+    end
+end
+
+
 
 end # module
