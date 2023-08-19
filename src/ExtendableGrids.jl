@@ -186,6 +186,8 @@ export TokenStream, gettoken, expecttoken,trytoken
 include("io.jl")
 export writeVTK
 
+include("seal.jl")
+
 
 @static if  !isdefined(Base, :get_extension)
     function __init__()
