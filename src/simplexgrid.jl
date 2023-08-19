@@ -734,7 +734,7 @@ end
 # Implementations in Gmsh extension
 function simplexgrid_from_gmsh end
 
-function write_gmsh end
+function load_simplexgrid_to_gmsh end
 
 
 """
