@@ -3,7 +3,7 @@ ENV["MPLBACKEND"]="agg"
 
 using Test, ExtendableGrids, GridVisualize, SHA, SimplexGridFactory, Triangulate
 import StatsBase
-using Gmsh: gmsh
+using Gmsh #: gmsh
 using StatsBase: countmap
 
 import CairoMakie
@@ -70,8 +70,8 @@ function seemingly_equal_with_sort(grid1::ExtendableGrid, grid2::ExtendableGrid;
 		        		sa2  = grid2[key][ind2]
 		        	else
 		        		#@warn "l(s) > 1"
-		        		sa1 = multidimsort(grid1[key])
-		        		sa2 = multidimsort(grid2[key])
+		        		sa1 = multidimsort(sort(grid1[key], dims=1))
+		        		sa2 = multidimsort(sort(grid2[key], dims=1))
 		        	
 		        	end
 		        	
@@ -104,32 +104,110 @@ end
 
 
 
-@testset "Read/write gmsh simplexgrid" begin
+
+@testset "Read/write simplex gmsh 2d / 3d" begin
 
     gmsh.initialize()
+    gmsh.option.setNumber("General.Terminal", 0)
+	gmsh.option.setNumber("General.Verbosity", 0)
+	
+    path = "" 
     
-    path = "" #"/home/johannes/Nextcloud/Documents/Uni/VIII/WIAS/Julia Packages (tries)/ExtendableGrids.jl_moving_to_ext/test/" 
     X = collect(0:0.02:2)
     Y = collect(0:2:4)
     grid1 = simplexgrid(X, Y) #ExtendableGrids.simplexgrid_from_gmsh(path*"sto_2d.msh")
     
-    ExtendableGrids.write_gmsh(path*"testfile.msh", grid1)
+    ExtendableGrids.load_simplexgrid_to_gmsh(grid1; filename=path*"testfile.msh")
     grid2 = ExtendableGrids.simplexgrid_from_gmsh(path*"testfile.msh")    
-    gmsh.finalize()
+    #gmsh.finalize()
     
     @test seemingly_equal_with_sort(grid2, grid1;confidence=:low)
     @test seemingly_equal_with_sort(grid2, grid1;confidence=:full)
     
+    gmsh.clear()
+    
+    
+    grid1 = ExtendableGrids.simplexgrid_from_gmsh(path*"sto_2d.msh") 
+    gmsh.clear()
+	ExtendableGrids.load_simplexgrid_to_gmsh(grid1; filename=path*"testfile.msh") 
+    grid2 = ExtendableGrids.simplexgrid_from_gmsh(path*"testfile.msh")     
+    #gmsh.finalize()
+     
+    @test seemingly_equal_with_sort(grid1, grid2;confidence=:low) 
+    @test seemingly_equal_with_sort(grid1, grid2;confidence=:full)
+    
+    gmsh.clear()
+	
+	grid1 = ExtendableGrids.simplexgrid_from_gmsh(path*"sto_3d.msh")
+    gmsh.clear()
+	ExtendableGrids.load_simplexgrid_to_gmsh(grid1; filename=path*"testfile.msh")
+    grid2 = ExtendableGrids.simplexgrid_from_gmsh(path*"testfile.msh")
+    #gmsh.finalize()
+    
+    @test seemingly_equal_with_sort(grid1, grid2;confidence=:low)
+    @test seemingly_equal_with_sort(grid1, grid2;confidence=:full)
+    
+    gmsh.clear()
+    
+    grid1 = ExtendableGrids.simplexgrid_from_gmsh(path*"sto_2d.msh")
+    gmsh.clear()
+	#grid2 = 
+    #simplexgrid([0, 1, 2], [3, 4, 5]) 
+    grid2 = ExtendableGrids.simplexgrid_from_gmsh(path*"sto_3d.msh")
+    #gmsh.finalize()
+    
+    @test !seemingly_equal_with_sort(grid1, grid2;confidence=:low)
+    @test !seemingly_equal_with_sort(grid1, grid2;confidence=:full)
+    
+    gmsh.clear()
+    
+    grid1 = ExtendableGrids.simplexgrid_from_gmsh("testmesh.gmsh"; incomplete=true)
+	ExtendableGrids.seal!(grid1; encode=false)
+	gmsh.clear()
+	ExtendableGrids.load_simplexgrid_to_gmsh(grid1; filename="completed_testfile.msh") 
+    grid2 = ExtendableGrids.simplexgrid_from_gmsh("completed_testfile.msh")
+	
+	gmsh.clear()
+	
+	grid3 = ExtendableGrids.simplexgrid_from_gmsh("testmesh.gmsh"; incomplete=true)
+	ExtendableGrids.seal!(grid3; encode=true)
+	
+	gmsh.clear()
+    
+    @test seemingly_equal_with_sort(grid1, grid2;confidence=:low) 
+    @test seemingly_equal_with_sort(grid1, grid2;confidence=:full)
+    @test seemingly_equal_with_sort(grid1, grid3;confidence=:low) 
+    @test seemingly_equal_with_sort(grid1, grid3;confidence=:full)
+    
+    x = collect(LinRange(0,1,50))
+    grid1 = simplexgrid(x,x)
+    grid1[BFaceRegions] = ones(Int32, length(grid1[BFaceRegions])) #num_faces(grid1))
+    grid2 = simplexgrid(x,x)
+    grid3 = simplexgrid(x,x)
+    ExtendableGrids.seal!(grid2)
+    ExtendableGrids.seal!(grid3; encode=false)
+    
+    gmsh.finalize()
+    
+    @test seemingly_equal_with_sort(grid2, grid1;confidence=:low) 
+    @test seemingly_equal_with_sort(grid2, grid1;confidence=:full)
+    @test seemingly_equal_with_sort(grid3, grid1;confidence=:low) 
+    @test seemingly_equal_with_sort(grid3, grid1;confidence=:full)
+    
+    
 end
 
-@testset "Read/write gmsh 2d" begin
+@testset "Read/write mixed gmsh 2d" begin
 
     gmsh.initialize()
-    
+    gmsh.option.setNumber("General.Terminal", 0)
+	gmsh.option.setNumber("General.Verbosity", 0)
+	
     path = "" 
-    grid1 = ExtendableGrids.simplexgrid_from_gmsh(path*"sto_2d.msh") 
-    ExtendableGrids.write_gmsh(path*"testfile.msh", grid1) 
-    grid2 = ExtendableGrids.simplexgrid_from_gmsh(path*"testfile.msh")     
+    grid1 = ExtendableGrids.mixedgrid_from_gmsh(path*"mixedgrid_2d.msh") 
+    gmsh.clear()
+	ExtendableGrids.load_mixedgrid_to_gmsh(grid1; filename=path*"testfile.msh") 
+    grid2 = ExtendableGrids.mixedgrid_from_gmsh(path*"testfile.msh")     
     gmsh.finalize()
      
     @test seemingly_equal_with_sort(grid1, grid2;confidence=:low) 
@@ -137,36 +215,10 @@ end
     
 end
 
-@testset "Read/write gmsh 3d" begin
 
-    gmsh.initialize()
-    
-    path = "" 
-    grid1 = ExtendableGrids.simplexgrid_from_gmsh(path*"sto_3d.msh")
-    ExtendableGrids.write_gmsh(path*"testfile.msh", grid1)
-    grid2 = ExtendableGrids.simplexgrid_from_gmsh(path*"testfile.msh")
-    gmsh.finalize()
-    
-    @test seemingly_equal_with_sort(grid1, grid2;confidence=:low)
-    @test seemingly_equal_with_sort(grid1, grid2;confidence=:full)
-    
-end
 
-@testset "gmsh neg test" begin
 
-    gmsh.initialize()
-    
-    path = "" 
-    grid1 = ExtendableGrids.simplexgrid_from_gmsh(path*"sto_2d.msh")
-    #grid2 = 
-    #simplexgrid([0, 1, 2], [3, 4, 5]) 
-    grid2 = ExtendableGrids.simplexgrid_from_gmsh(path*"sto_3d.msh")
-    gmsh.finalize()
-    
-    @test !seemingly_equal_with_sort(grid1, grid2;confidence=:low)
-    @test !seemingly_equal_with_sort(grid1, grid2;confidence=:full)
-    
-end
+
 
 
 ### Original tests:
@@ -542,6 +594,7 @@ end
 
     @test sha_code == "93a31139ccb3ae3017351d7cef0c2639c5def97c9744699543fe8bc58e1ebcea"
 end
+
 
 
 
