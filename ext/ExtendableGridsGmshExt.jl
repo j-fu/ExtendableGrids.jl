@@ -101,7 +101,7 @@ end
 function load_mixedgrid_to_gmsh(g::ExtendableGrid; filename::String="")
 ````
 
-Then the ExtendableGrid 'g' is loaded into a gimcomplete_mod_to_simplexgridmsh module.
+Then the ExtendableGrid 'g' is loaded into a gmsh module.
 If a string (not "") is passed via 'filename', the mesh is written into this file.
 
 """
