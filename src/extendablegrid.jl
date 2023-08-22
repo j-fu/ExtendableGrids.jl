@@ -522,6 +522,3 @@ function bbox(grid)
     map(a->a[1],e),map(a->a[2],e)
 end
 
-function mixedgrid_from_gmsh end
-
-function load_mixedgrid_to_gmsh end
