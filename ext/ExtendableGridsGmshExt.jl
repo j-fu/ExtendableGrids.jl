@@ -25,62 +25,65 @@ using Bijections
 
 """
 ````
-function simplexgrid_from_gmsh(filename::String; incomplete=false)
+function simplexgrid_from_gmsh(filename::String; incomplete=false, Tc=Float32, Ti=Int32)
 ````
 
-Then the msh file is read and a SimplexGrid is created.
+The msh file is read and a SimplexGrid is created.
 The mesh can also contain an incomplete grid. For this, the function has to be called with ````incomplete=true````.
 'incomplete' means that the grid only consists of nodes and cells, it does not have a boundary. We also do not try to read the physical groups for those grids.
-
+`Tc` is the type of coordinates, `Ti` is the index type.
 
 """
-function simplexgrid_from_gmsh(filename::String; incomplete=false)
-	gmshfile_to_simplexgrid(filename; incomplete)
+function simplexgrid_from_gmsh(filename::String; incomplete=false, Tc=Float32, Ti=Int32)
+	gmshfile_to_simplexgrid(filename; incomplete, Tc, Ti)
 end
 
 """
 ````
-function mixedgrid_from_gmsh(filename::String)
+function mixedgrid_from_gmsh(filename::String; Tc=Float32, Ti=Int32)
 ````
 
-Then the msh file is read and an ExtendableGrid is created.
+The msh file is read and an ExtendableGrid is created.
 This only works for dim=2 grids and the orientation may be wrong.
+`Tc` is the type of coordinates, `Ti` is the index type.
 
 """
-function mixedgrid_from_gmsh(filename::String)
-	gmshfile_to_mixedgrid(filename)
+function mixedgrid_from_gmsh(filename::String; Tc=Float32, Ti=Int32)
+	gmshfile_to_mixedgrid(filename, Tc, Ti)
 end
 
 
 
 """
 ````
-simplexgrid_from_gmsh(mod::Module; incomplete=false)
+simplexgrid_from_gmsh(mod::Module; incomplete=false, Tc=Float32, Ti=Int32)
 ````
 
-Then the mesh contained in the gmsh module is converted to a SimplexGrid.
+The mesh contained in the gmsh module is converted to a SimplexGrid.
 The mesh can also contain an incomplete grid. For this, the function has to be called with ````incomplete=true````.
 'incomplete' means that the grid only consists of nodes and cells, it does not have a boundary. We also do not try to read the physical groups for those grids.
+`Tc` is the type of coordinates, `Ti` is the index type.
 
 """
-function simplexgrid_from_gmsh(mod::Module; incomplete=false)
+function simplexgrid_from_gmsh(mod::Module; incomplete=false, Tc=Float32, Ti=Int32)
     if !incomplete
-	    mod_to_simplexgrid(mod)
+	    mod_to_simplexgrid(mod, Tc, Ti)
 	else
-		incomplete_mod_to_simplexgrid(mod)
+		incomplete_mod_to_simplexgrid(mod, Tc, Ti)
 	end
 end
 
 """
 ````
-mixedgrid_from_gmsh(mod::Module)
+mixedgrid_from_gmsh(mod::Module; Tc=Float32, Ti=Int32)
 ````
 
-Then the mesh contained in the gmsh module is converted to an ExtendableGrid.
+The mesh contained in the gmsh module is converted to an ExtendableGrid.
+`Tc` is the type of coordinates, `Ti` is the index type.
 
 """
-function mixedgrid_from_gmsh(mod::Module)
-    mod_to_mixedgrid(mod)
+function mixedgrid_from_gmsh(mod::Module; Tc=Float32, Ti=Int32)
+    mod_to_mixedgrid(mod, Tc, Ti)
 end
 
 """
@@ -88,8 +91,9 @@ end
 function load_simplexgrid_to_gmsh(g::ExtendableGrid; filename::String="")
 ````
 
-Then the SimplexGrid 'g' is loaded into a gmsh module.
+The SimplexGrid 'g' is loaded into a gmsh module.
 If a string (not "") is passed via 'filename', the mesh is written into this file.
+
 
 """
 function load_simplexgrid_to_gmsh(g::ExtendableGrid; filename::String="")
@@ -101,7 +105,7 @@ end
 function load_mixedgrid_to_gmsh(g::ExtendableGrid; filename::String="")
 ````
 
-Then the ExtendableGrid 'g' is loaded into a gmsh module.
+The ExtendableGrid 'g' is loaded into a gmsh module.
 If a string (not "") is passed via 'filename', the mesh is written into this file.
 
 """
@@ -117,19 +121,20 @@ end
 
 """
 ````
-function gmshfile_to_simplexgrid(filename::String)
+function gmshfile_to_simplexgrid(filename::String, Tc, Ti)
 ````
 
 This function just reads an msh file, and creates a gmsh.model and then calls the 'mod_to_simplexgrid' function
 (This function has to be called with an initialized gmsh environment)
 This function is called in 'simplexgrid_from_gmsh'
+`Tc` is the type of coordinates, `Ti` is the index type.
 """
-function gmshfile_to_simplexgrid(filename::String; incomplete=false)
+function gmshfile_to_simplexgrid(filename::String; incomplete=false, Tc, Ti)
     gmsh.open(filename)
     if !incomplete
-	    return mod_to_simplexgrid(gmsh.model)
+	    return mod_to_simplexgrid(gmsh.model, Tc, Ti)
 	else
-		return incomplete_mod_to_simplexgrid(gmsh.model)
+		return incomplete_mod_to_simplexgrid(gmsh.model, Tc, Ti)
 			   
 	end
 end
@@ -137,16 +142,17 @@ end
 
 """
 ````
-function gmshfile_to_mixedgrid(filename::String)
+function gmshfile_to_mixedgrid(filename::String, Tc, Ti)
 ````
 
 This function just reads an msh file, and creates a gmsh.model and then calls the 'mod_to_mixedgrid' function
 (This function has to be called with an initialized gmsh environment)
 This function is called in 'mixedgrid_from_gmsh'
+`Tc` is the type of coordinates, `Ti` is the index type.
 """
-function gmshfile_to_mixedgrid(filename::String)
+function gmshfile_to_mixedgrid(filename::String, Tc, Ti)
     gmsh.open(filename)
-    return mod_to_mixedgrid(gmsh.model)   
+    return mod_to_mixedgrid(gmsh.model, Tc, Ti)   
 end
 
 
@@ -249,7 +255,8 @@ x is a list of 2-tuples, with an Int as second entry
 an array of the second entries is returned
 """
 function take_second(x)
-    y = zeros(Int64, length(x))
+	a,b = x[1]
+    y = zeros(typeof(b), length(x))
     for i = 1:length(x)
         _, t = x[i]
         y[i] = t
@@ -273,7 +280,7 @@ This function can be used, if you have the indices of cells, and you want to get
 """
 function multiply_indices(indices, n)
     m = length(indices)
-    ind_new = zeros(Int64, n * m)
+    ind_new = zeros(typeof(indices[1]), n * m)
     for i = 1:n
         ind_new[(i-1)*m+1:i*m] = n * indices .- (n - i)
     end
@@ -289,7 +296,7 @@ function use_vta(VTA, col_ids, num)
 If VTA were a matrix, the result would be equivalent to VTA[:, col_ids].
 Each column of the VTA contains the nodes of one cell.
 """
-function use_vta(VTA, col_ids, num)
+function use_vta(VTA, col_ids, num)  #note
 	result = zeros(Int64, num*length(col_ids))
 	count = 1
 	for j in col_ids
@@ -321,16 +328,17 @@ end
 
 """
 ````
-function mod_to_grid(model::Module)
+function mod_to_grid(model::Module, Tc, Ti)
 ````
     
 Function that tries to create an (simplex-) ExtendableGrid from a gmsh.model.
 Model has to be a gmsh.model.
 (This function has to be called with an initialized gmsh environment).
 This function is called in 'simplexgrid_from_gmsh'.
+`Tc` is the type of coordinates, `Ti` is the index type.
     
 """
-function mod_to_simplexgrid(model::Module)
+function mod_to_simplexgrid(model::Module, Tc, Ti)
     
 	dim = model.getDimension()
 
@@ -360,7 +368,7 @@ function mod_to_simplexgrid(model::Module)
     if dim == 3
         coords_new = reshape(coords, (3, Int(length(coords) / 3)))
     else
-        coords_new = zeros(Float64, 2, Int(length(coords) / 3))
+        coords_new = zeros(Tc, 2, Int(length(coords) / 3))
         for i = 1:Int(length(coords) / 3)
             coords_new[:, i] = coords[3*i-2:3*i-1]
         end
@@ -373,12 +381,12 @@ function mod_to_simplexgrid(model::Module)
 
     
     #the physicalnames are currently unused
-    cellregion_to_physicalname = Bijection{Int64,String}()
+    cellregion_to_physicalname = Bijection{Ti,String}()
     pgnum_to_physcialname = Dict()
     cr_count = 1
 
     #the cellregions correspond to the physical groups in which the cells are
-    cellregions = ones(Int64, m)
+    cellregions = ones(Ti, m)
     pgs = take_second(model.getPhysicalGroups(dim))
 
     for pg in pgs
@@ -411,10 +419,10 @@ function mod_to_simplexgrid(model::Module)
     bfaces = reshape(base_nodes_faces[1], (dim, k))
 
     # physical groups for bfaces
-    bfaceregions = ones(Int64, k)
+    bfaceregions = ones(Ti, k)
     pgs = take_second(model.getPhysicalGroups(dim - 1))
 
-    bfaceregion_to_physicalname = Bijection{Int64,String}()
+    bfaceregion_to_physicalname = Bijection{Ti,String}()
     pgnum_to_physcialname = Dict()
     fr_count = 1
 
@@ -445,15 +453,16 @@ end
 
 """
 ````
-function incomplete_mod_to_simplexgrid(model::Module)
+function incomplete_mod_to_simplexgrid(model::Module, Tc, Ti)
 ````
 
 Loads an incomplete mesh from a msh file.
 Then converts into an ExtendableGrids.
 'incomplete' in this context means the boundary is missing.
 With the 'ExtendableGrids.seal!(grid::ExtendableGrid)' the boundary can be added.
+`Tc` is the type of coordinates, `Ti` is the index type.
 """
-function incomplete_mod_to_simplexgrid(model::Module)
+function incomplete_mod_to_simplexgrid(model::Module, Tc, Ti)
 	dim = gmsh.model.getDimension()
 
     node_names, coords, _ = gmsh.model.mesh.getNodes()
@@ -482,7 +491,7 @@ function incomplete_mod_to_simplexgrid(model::Module)
     if dim == 3
         coords_new = reshape(coords, (3, Int(length(coords) / 3)))
     else
-        coords_new = zeros(Float64, 2, Int(length(coords) / 3))
+        coords_new = zeros(Tc, 2, Int(length(coords) / 3))
         for i = 1:Int(length(coords) / 3)
             coords_new[:, i] = coords[3*i-2:3*i-1]
         end
@@ -493,19 +502,17 @@ function incomplete_mod_to_simplexgrid(model::Module)
     #the nodes making up the cells is stored in "base_nodes_cells", just in the wrong format
     simplices = reshape(base_nodes_cells[1], (dim + 1, m))
 
-	Ti = Int64
-	Tc = Float64
 	grid = ExtendableGrid{Tc, Ti}()
 	grid[Coordinates] = convert(Matrix{Tc}, coords_new)
 	grid[CellNodes]   = convert(Matrix{Ti}, simplices)
-	grid[CellRegions] = ones(Int64, size(simplices)[2]) #parse(Ti, lines[elems1+1]))
+	grid[CellRegions] = ones(Ti, size(simplices)[2]) #parse(Ti, lines[elems1+1]))
 
 	if dim == 2
 		grid[CoordinateSystem] = Cartesian2D
-		grid[CellGeometries]   = VectorOfConstants{ElementGeometries,Int}(Triangle2D, num_cells(grid))
+		grid[CellGeometries]   = VectorOfConstants{ElementGeometries,Ti}(Triangle2D, num_cells(grid))
 	else
 		grid[CoordinateSystem] = Cartesian3D
-		grid[CellGeometries]   = VectorOfConstants{ElementGeometries,Int}(Tetrahedron3D, num_cells(grid))
+		grid[CellGeometries]   = VectorOfConstants{ElementGeometries,Ti}(Tetrahedron3D, num_cells(grid))
 	end
 
 		
@@ -519,15 +526,16 @@ end
 
 """
 ````
-function mod_to_mixedgrid(model::Module)
+function mod_to_mixedgrid(model::Module, Tc, Ti)
 ````
 
 Function that tries to create a (mixed-) ExtendableGrid from a gmsh.model.
 Model has to be a gmsh.model.
 (This function has to be called with an initialized gmsh environment).
 This function is called in 'mixedgrid_from_gmsh'.
+`Tc` is the type of coordinates, `Ti` is the index type.
 """
-function mod_to_mixedgrid(model::Module)
+function mod_to_mixedgrid(model::Module, Tc, Ti)
     elementtypes_nn_2d = Dict(2=>3, 3=>4) #key=elementtype id, val=num nodes
 	elementtypes_na_2d = Dict(2=>Triangle2D, 3=>Quadrilateral2D)
 	#elementtypes_na_2d = Dict(2=>ExtendableGrids.Triangle2D, 3=>ExtendableGrids.Quadrangle2D)
@@ -549,13 +557,12 @@ function mod_to_mixedgrid(model::Module)
     cell_types, element_names_cells, base_nodes_cells = model.mesh.getElements(dim, -1)
     face_types, element_names_faces, base_nodes_faces = model.mesh.getElements(dim - 1, -1)
     
-    Tc = Float64
-	Ti = Int64
-	grid = ExtendableGrid{Tc, Ti}();
+    grid = ExtendableGrid{Tc, Ti}();
    
 	
-	VTA = VariableTargetAdjacency()
-    cellgeom = 0 #[]
+	VTA = VariableTargetAdjacency(Ti)
+    #cellgeom = 0 #[]
+    cellgeom = VectorOfConstants{ElementGeometries,Ti}(Triangle2D, 0)
     
     if dim == 3
     	@warn "dim=3 is not supported yet"
@@ -563,16 +570,19 @@ function mod_to_mixedgrid(model::Module)
 		#@warn "dim=2"
 		#cells
 		for (ti, cell_type) in enumerate(cell_types)
+			#global cellgeom
+			
+			#@warn ti, cellgeom
 			nn = elementtypes_nn_2d[cell_type]
 			na = elementtypes_na_2d[cell_type]
 			
 			temp_cellgeom = VectorOfConstants{ElementGeometries,Ti}(na, length(element_names_cells[ti]))
 			
-			if ti==1
-				cellgeom = temp_cellgeom
-			else
+			#if ti==1
+			#	cellgeom = temp_cellgeom
+			#else
 				cellgeom = vcat(cellgeom, temp_cellgeom)
-			end
+			#end
 			
 			#@warn nn, na
 			for (ci, cell) in enumerate(element_names_cells[ti])
@@ -582,7 +592,7 @@ function mod_to_mixedgrid(model::Module)
 		end
 		
 		
-		coords_new = zeros(Float64, 2, Int(length(coords) / 3))
+		coords_new = zeros(Tc, 2, Int(length(coords) / 3))
         for i = 1:Int(length(coords) / 3)
             coords_new[:, i] = coords[3*i-2:3*i-1]
         end
@@ -590,19 +600,18 @@ function mod_to_mixedgrid(model::Module)
 		
 	end
 	
-	
-	
+	#@warn cellgeom
 	
 	grid[CellGeometries] = cellgeom 
 	grid[CellNodes] = VTA
-	grid[CellRegions] = ones(Int64, num_sources(VTA))
+	grid[CellRegions] = ones(Ti, num_sources(VTA))
 	
 	grid[BFaceGeometries] = VectorOfConstants{ElementGeometries,Ti}(Edge1D, length(element_names_faces[1]))
 	#@warn element_names_faces
 	
 	k = length(element_names_faces[1])
     grid[BFaceNodes] = convert(Matrix{Ti}, reshape(base_nodes_faces[1], (dim, k)))
-	grid[BFaceRegions] = ones(Int64, k)
+	grid[BFaceRegions] = ones(Ti, k)
 	
 	if dim == 2
 		grid[CoordinateSystem] = Cartesian2D
@@ -630,6 +639,9 @@ function simplexgrid_to_mod(grid::ExtendableGrid)
     gmsh.option.setNumber("General.Terminal", 1)
     #(fbase,fext)=splitext(filename)
     gmsh.model.add("fbase")
+    
+    Tc = typeof(grid[Coordinates][1,1])
+    Ti = typeof(grid[CellNodes][1,1])
 
 
     # formatting the coordinates correctly
@@ -643,7 +655,7 @@ function simplexgrid_to_mod(grid::ExtendableGrid)
         elementtype_cell = 4 #tetrahedron
         elementtype_face = 2 #triangle
     else
-        coords3d = vcat(coords, zeros(Float64, (1, num_nodes)))
+        coords3d = vcat(coords, zeros(Tc, (1, num_nodes)))
         coords3d = reshape(coords3d, 3 * num_nodes)
         elementtype_cell = 2 #triangle
         elementtype_face = 1 #line
@@ -764,7 +776,7 @@ function mixedgrid_to_mod(grid::ExtendableGrid)
     gmsh.model.addDiscreteEntity(dim, 1)
     gmsh.model.mesh.addNodes(dim, 1, nodetags, coords3d, [])
     entitycount = 2
-
+	#@warn grid[CellGeometries]
     #Cells
     cellgeoms      = grid[CellGeometries]
     VTA            = grid[CellNodes]
