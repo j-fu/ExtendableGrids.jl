@@ -118,7 +118,7 @@ end
     grid1 = simplexgrid(X, Y) #ExtendableGrids.simplexgrid_from_gmsh(path*"sto_2d.msh")
     
     ExtendableGrids.load_simplexgrid_to_gmsh(grid1; filename=path*"testfile.msh")
-    grid2 = ExtendableGrids.simplexgrid_from_gmsh(path*"testfile.msh")    
+    grid2 = ExtendableGrids.simplexgrid_from_gmsh(path*"testfile.msh"; Tc=Float32, Ti=Int64)   
     #gmsh.finalize()
     
     @test seemingly_equal_with_sort(grid2, grid1;confidence=:low)
@@ -127,10 +127,10 @@ end
     gmsh.clear()
     
     
-    grid1 = ExtendableGrids.simplexgrid_from_gmsh(path*"sto_2d.msh") 
+    grid1 = ExtendableGrids.simplexgrid_from_gmsh(path*"sto_2d.msh"; Tc=Float64, Ti=Int64) 
     gmsh.clear()
 	ExtendableGrids.load_simplexgrid_to_gmsh(grid1; filename=path*"testfile.msh") 
-    grid2 = ExtendableGrids.simplexgrid_from_gmsh(path*"testfile.msh")     
+    grid2 = ExtendableGrids.simplexgrid_from_gmsh(path*"testfile.msh"; Tc=Float64, Ti=Int64)     
     #gmsh.finalize()
      
     @test seemingly_equal_with_sort(grid1, grid2;confidence=:low) 
@@ -138,10 +138,10 @@ end
     
     gmsh.clear()
 	
-	grid1 = ExtendableGrids.simplexgrid_from_gmsh(path*"sto_3d.msh")
+	grid1 = ExtendableGrids.simplexgrid_from_gmsh(path*"sto_3d.msh"; Tc=Float32, Ti=Int64)
     gmsh.clear()
 	ExtendableGrids.load_simplexgrid_to_gmsh(grid1; filename=path*"testfile.msh")
-    grid2 = ExtendableGrids.simplexgrid_from_gmsh(path*"testfile.msh")
+    grid2 = ExtendableGrids.simplexgrid_from_gmsh(path*"testfile.msh"; Tc=Float64, Ti=Int32)
     #gmsh.finalize()
     
     @test seemingly_equal_with_sort(grid1, grid2;confidence=:low)
@@ -153,7 +153,7 @@ end
     gmsh.clear()
 	#grid2 = 
     #simplexgrid([0, 1, 2], [3, 4, 5]) 
-    grid2 = ExtendableGrids.simplexgrid_from_gmsh(path*"sto_3d.msh")
+    grid2 = ExtendableGrids.simplexgrid_from_gmsh(path*"sto_3d.msh"; Tc=Float32, Ti=Int32)
     #gmsh.finalize()
     
     @test !seemingly_equal_with_sort(grid1, grid2;confidence=:low)
@@ -204,17 +204,16 @@ end
 	gmsh.option.setNumber("General.Verbosity", 0)
 	
     path = "" 
-    grid1 = ExtendableGrids.mixedgrid_from_gmsh(path*"mixedgrid_2d.msh") 
+    grid1 = ExtendableGrids.mixedgrid_from_gmsh(path*"mixedgrid_2d.msh"; Tc=Float64, Ti=Int64) 
     gmsh.clear()
 	ExtendableGrids.load_mixedgrid_to_gmsh(grid1; filename=path*"testfile.msh") 
-    grid2 = ExtendableGrids.mixedgrid_from_gmsh(path*"testfile.msh")     
+    grid2 = ExtendableGrids.mixedgrid_from_gmsh(path*"testfile.msh"; Tc=Float32, Ti=UInt64)     
     gmsh.finalize()
      
     @test seemingly_equal_with_sort(grid1, grid2;confidence=:low) 
     @test seemingly_equal_with_sort(grid1, grid2;confidence=:full)
     
 end
-
 
 
 
