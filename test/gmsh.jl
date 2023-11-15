@@ -43,7 +43,7 @@ end
     X = collect(0:0.02:2)
     Y = collect(0:2:4)
     grid1 = simplexgrid(X, Y) #ExtendableGrids.simplexgrid_from_gmsh(path*"sto_2d.msh")
-    ExtendableGrids.load_simplexgrid_to_gmsh(grid1; filename = path * "testfile.msh")
+    ExtendableGrids.simplexgrid_to_gmsh(grid1; filename = path * "testfile.msh")
     grid2 = ExtendableGrids.simplexgrid_from_gmsh(path * "testfile.msh"; Tc = Float32, Ti = Int64)
     #gmsh.finalize()
     @test seemingly_equal(grid2, grid1; sort = true, confidence = :low)
@@ -53,7 +53,7 @@ end
 
     grid1 = ExtendableGrids.simplexgrid_from_gmsh(path * "sto_2d.msh"; Tc = Float64, Ti = Int64)
     gmsh.clear()
-    ExtendableGrids.load_simplexgrid_to_gmsh(grid1; filename = path * "testfile.msh")
+    ExtendableGrids.simplexgrid_to_gmsh(grid1; filename = path * "testfile.msh")
     grid2 = ExtendableGrids.simplexgrid_from_gmsh(path * "testfile.msh"; Tc = Float64, Ti = Int64)
     #gmsh.finalize()
 
@@ -64,7 +64,7 @@ end
 
     grid1 = ExtendableGrids.simplexgrid_from_gmsh(path * "sto_3d.msh"; Tc = Float32, Ti = Int64)
     gmsh.clear()
-    ExtendableGrids.load_simplexgrid_to_gmsh(grid1; filename = path * "testfile.msh")
+    ExtendableGrids.simplexgrid_to_gmsh(grid1; filename = path * "testfile.msh")
     grid2 = ExtendableGrids.simplexgrid_from_gmsh(path * "testfile.msh"; Tc = Float64, Ti = Int32)
     #gmsh.finalize()
 
@@ -88,7 +88,7 @@ end
     grid1 = ExtendableGrids.simplexgrid_from_gmsh("testmesh.gmsh"; incomplete = true)
     ExtendableGrids.seal!(grid1; encode = false)
     gmsh.clear()
-    ExtendableGrids.load_simplexgrid_to_gmsh(grid1; filename = "completed_testfile.msh")
+    ExtendableGrids.simplexgrid_to_gmsh(grid1; filename = "completed_testfile.msh")
     grid2 = ExtendableGrids.simplexgrid_from_gmsh("completed_testfile.msh")
 
     gmsh.clear()
@@ -127,7 +127,7 @@ end
     path = ""
     grid1 = ExtendableGrids.mixedgrid_from_gmsh(path * "mixedgrid_2d.msh"; Tc = Float64, Ti = Int64)
     gmsh.clear()
-    ExtendableGrids.load_mixedgrid_to_gmsh(grid1; filename = path * "testfile.msh")
+    ExtendableGrids.mixedgrid_to_gmsh(grid1; filename = path * "testfile.msh")
     grid2 = ExtendableGrids.mixedgrid_from_gmsh(path * "testfile.msh"; Tc = Float32, Ti = UInt64)
     gmsh.finalize()
 
