@@ -189,7 +189,6 @@ function simplexgrid(file::String; format = "")
     simplexgrid(coord, cells, regions, faces, bregions)
 end
 
-# Implementations in Gmsh extension
 function simplexgrid_from_gmsh end
 
 function simplexgrid_to_gmsh end

@@ -20,6 +20,7 @@ import ExtendableGrids: Edge1D, Triangle2D, Quadrilateral2D, Tetrahedron3D, Hexa
 #using ExtendableGrids
 using StatsBase: countmap
 using Bijections
+using UUIDs: uuid1
 
 """
 ````
@@ -160,13 +161,15 @@ function simplexgrid_to_gmshfile(grid::ExtendableGrid; filename::String = "")
         # This possibility is new in 1.9, see
         # https://github.com/JuliaLang/julia/blob/release-1.9/NEWS.md#new-language-features
         gmsh.model = simplexgrid_to_mod(grid)
+        mod = gmsh.model
     else
-        simplexgrid_to_mod(grid)
+        mod = simplexgrid_to_mod(grid)
     end
 
     if filename != ""
         gmsh.write(filename)
     end
+    return mod
 end
 
 """
@@ -186,13 +189,15 @@ function mixedgrid_to_gmshfile(grid::ExtendableGrid; filename::String = "")
         # This possibility is new in 1.9, see
         # https://github.com/JuliaLang/julia/blob/release-1.9/NEWS.md#new-language-features
         gmsh.model = mixedgrid_to_mod(grid)
+        mod = gmsh.model
     else
-        mixedgrid_to_mod(grid)
+        mod = mixedgrid_to_mod(grid)
     end
 
     if filename != ""
         gmsh.write(filename)
     end
+    return mod
 end
 
 #---------------------------------------------------------------------------------------------
@@ -592,7 +597,7 @@ function simplexgrid_to_mod(grid::ExtendableGrid)
     # gmsh.initialize()
     gmsh.option.setNumber("General.Terminal", 1)
     #(fbase,fext)=splitext(filename)
-    gmsh.model.add("fbase")
+    gmsh.model.add("model" * string(uuid1())[1:8])
 
     Tc = typeof(grid[Coordinates][1, 1])
     Ti = typeof(grid[CellNodes][1, 1])
@@ -682,7 +687,7 @@ function mixedgrid_to_mod(grid::ExtendableGrid)
     # gmsh.initialize()
     gmsh.option.setNumber("General.Terminal", 1)
     #(fbase,fext)=splitext(filename)
-    gmsh.model.add("fbase")
+    gmsh.model.add("model" * string(uuid1())[1:8])
 
     # formatting the coordinates correctly
     coords = grid[Coordinates]
