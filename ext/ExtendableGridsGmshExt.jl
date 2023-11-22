@@ -24,7 +24,7 @@ using UUIDs: uuid1
 
 """
 ````
-function simplexgrid_from_gmsh(filename::String; incomplete=false, Tc=Float32, Ti=Int32)
+simplexgrid_from_gmsh(filename::String; incomplete=false, Tc=Float32, Ti=Int32)
 ````
 
 The msh file is read and a SimplexGrid is created.
@@ -39,7 +39,7 @@ end
 
 """
 ````
-function mixedgrid_from_gmsh(filename::String; Tc=Float32, Ti=Int32)
+mixedgrid_from_gmsh(filename::String; Tc=Float32, Ti=Int32)
 ````
 
 The msh file is read and an ExtendableGrid is created.
@@ -85,7 +85,7 @@ end
 
 """
 ````
-function simplexgrid_to_gmsh(g::ExtendableGrid; filename::String="")
+simplexgrid_to_gmsh(g::ExtendableGrid; filename::String="")
 ````
 
 The SimplexGrid 'g' is loaded into a gmsh module.
@@ -99,7 +99,7 @@ end
 
 """
 ````
-function mixedgrid_to_gmsh(g::ExtendableGrid; filename::String="")
+mixedgrid_to_gmsh(g::ExtendableGrid; filename::String="")
 ````
 
 The ExtendableGrid 'g' is loaded into a gmsh module.
@@ -114,7 +114,7 @@ end
 
 """
 ````
-function gmshfile_to_simplexgrid(filename::String, Tc, Ti)
+gmshfile_to_simplexgrid(filename::String, Tc, Ti)
 ````
 
 This function just reads an msh file, and creates a gmsh.model and then calls the 'mod_to_simplexgrid' function
@@ -133,7 +133,7 @@ end
 
 """
 ````
-function gmshfile_to_mixedgrid(filename::String, Tc, Ti)
+gmshfile_to_mixedgrid(filename::String, Tc, Ti)
 ````
 
 This function just reads an msh file, and creates a gmsh.model and then calls the 'mod_to_mixedgrid' function
@@ -174,7 +174,7 @@ end
 
 """
 ````
-function mixedgrid_to_gmshfile(grid::ExtendableGrid, filename::String)
+mixedgrid_to_gmshfile(grid::ExtendableGrid, filename::String)
 ````
 
 This function takes a mixed grid, uses 'grid_to_mod' to create a corresponding gmsh module
@@ -216,7 +216,7 @@ for "grid_to_mod" there also exists "grid_to_gmshfile" which loads the content o
 
 """
 ````
-function test_gmsh_init()
+test_gmsh_init()
 ````
 
 Very primitive function to test, via a try-catch-block, whether gmsh is already initialized.
@@ -234,7 +234,7 @@ end
 
 """
 ````
-function take_second(x)
+take_second(x)
 ````
 
 x is a list of 2-tuples, with an Int as second entry
@@ -252,7 +252,7 @@ end
 
 """
 ````
-function multiply_indices(indices, n)
+multiply_indices(indices, n)
 ````
 
 for n=3:
@@ -273,7 +273,7 @@ end
 
 """
 ````
-function use_vta(VTA, col_ids, num)
+use_vta(VTA, col_ids, num)
 ````
 
 
@@ -294,7 +294,7 @@ end
 
 """
 ````
-function use_geoms(cellgeoms, ids)
+use_geoms(cellgeoms, ids)
 ````
 
 If cellgeoms would just be an array/vector, the result would be equivalent to cellgeoms[ids].
@@ -309,7 +309,7 @@ end
 
 """
 ````
-function mod_to_grid(model::Module, Tc, Ti)
+mod_to_grid(model::Module, Tc, Ti)
 ````
     
 Function that tries to create an (simplex-) ExtendableGrid from a gmsh.model.
@@ -426,7 +426,7 @@ end
 
 """
 ````
-function incomplete_mod_to_simplexgrid(model::Module, Tc, Ti)
+incomplete_mod_to_simplexgrid(model::Module, Tc, Ti)
 ````
 
 Loads an incomplete mesh from a msh file.
@@ -492,7 +492,7 @@ end
 
 """
 ````
-function mod_to_mixedgrid(model::Module, Tc, Ti)
+mod_to_mixedgrid(model::Module, Tc, Ti)
 ````
 
 Function that tries to create a (mixed-) ExtendableGrid from a gmsh.model.
@@ -586,7 +586,7 @@ end
 
 """
 ````
-function grid_to_mod(grid::ExtendableGrid)
+grid_to_mod(grid::ExtendableGrid)
 ````
 
 This function writes an ExtendableGrid into a gmsh module.
