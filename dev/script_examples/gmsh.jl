@@ -39,7 +39,7 @@ function gmsh2d()
 end
 # ![](gmsh2d.svg)
 
-# ## CI callbacks
+# ## CI callbacks for [ExampleJuggler.jl](https://github.com/j-fu/ExampleJuggler.jl)
 # Unit tests
 using Test
 function runtests()
