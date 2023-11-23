@@ -1,5 +1,4 @@
-ENV["MPLBACKEND"] = "agg"
-using Documenter, ExtendableGrids, Literate, GridVisualize, SimplexGridFactory, Gmsh
+using Documenter, ExtendableGrids, Literate, GridVisualize, SimplexGridFactory, Gmsh, Test
 import CairoMakie, Triangulate
 
 CairoMakie.activate!(; type = "svg", visible = false)
