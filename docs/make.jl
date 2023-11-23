@@ -5,7 +5,8 @@ ExampleJuggler.verbose!(true)
 
 function mkdocs()
     cleanexamples()
-    generated_examples = @docscripts(joinpath(@__DIR__, "..", "examples"), ["examples1d.jl", "examples2d.jl", "examples3d.jl"],
+    generated_examples = @docscripts(joinpath(@__DIR__, "..", "examples"),
+                                     ["examples1d.jl", "examples2d.jl", "examples3d.jl", "gmsh.jl"],
                                      Plotter=CairoMakie)
     makedocs(; sitename = "ExtendableGrids.jl",
              modules = [ExtendableGrids, Base.get_extension(ExtendableGrids, :ExtendableGridsGmshExt)],

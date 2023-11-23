@@ -214,7 +214,7 @@ end
 end
 
 @testset "Examples" begin
-    @testscripts(joinpath(@__DIR__, "..", "examples"), ["examples1d.jl", "examples2d.jl", "examples3d.jl"])
+    @testscripts(joinpath(@__DIR__, "..", "examples"), ["examples1d.jl", "examples2d.jl", "examples3d.jl", "gmsh.jl"])
 end
 
 function voronoitest()
