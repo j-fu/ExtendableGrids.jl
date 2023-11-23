@@ -44,7 +44,7 @@ function interval_subgrid()
     subgrid(grid, [2, 3])
 end
 # ![](interval_subgrid.svg)
-# ## CI callbacks
+# ## CI callbacks  for [ExampleJuggler.jl](https://github.com/j-fu/ExampleJuggler.jl)
 # Unit tests
 using Test
 

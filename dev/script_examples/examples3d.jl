@@ -26,7 +26,7 @@ function cross3d()
     subgrid(grid, [2])
 end
 # ![](cross3d.svg)
-# ## CI callbacks
+# ## CI callbacks  for [ExampleJuggler.jl](https://github.com/j-fu/ExampleJuggler.jl)
 # Unit tests
 
 function mask_bedges()
