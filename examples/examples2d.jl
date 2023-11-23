@@ -93,7 +93,7 @@ function sorted_subgrid(; maxvolume = 0.01)
     g, sg, sf
 end
 # ![](sorted_subgrid.svg)
-# ## CI callbacks
+# ## CI callbacks  for [ExampleJuggler.jl](https://github.com/j-fu/ExampleJuggler.jl)
 # Unit tests
 using Test
 function runtests()

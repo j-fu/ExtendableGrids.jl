@@ -13,7 +13,7 @@ function mkdocs()
              clean = false,
              warnonly = true,
              doctest = true,
-             authors = "J. Fuhrmann, Ch. Merdon",
+             authors = "J. Fuhrmann, Ch. Merdon, J. Taraz",
              repo = "https://github.com/j-fu/ExtendableGrids.jl",
              pages = [
                  "Home" => "index.md",
