@@ -562,6 +562,12 @@ seemingly_equal(x1::Type, x2::Type) = (x1 == x2)
 seemingly_equal(x1::Number, x2::Number) = (x1 ≈ x2)
 seemingly_equal(x1::Any, x2::Any) = (x1 == x2)
 
+function numbers_match(grid, nn, nc, nb)
+    num_nodes(grid) == nn &&
+        num_cells(grid) == nc &&
+        num_bfaces(grid) == nb
+end
+
 Base.extrema(grid::ExtendableGrid) = Base.extrema(grid[Coordinates]; dims = 2)
 
 function bbox(grid)

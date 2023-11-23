@@ -1,6 +1,7 @@
 [deps]
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+ExampleJuggler = "3bbe58f8-ed81-4c4e-a134-03e85fcf4a1a"
 ExtendableGrids = "cfc395e8-590f-11e8-1f13-43a2532b2fa8"
 Gmsh = "705231aa-382f-11e9-3f0c-b7cb4346fdeb"
 GridVisualize = "5eed8a63-0fb0-45eb-886d-8d5a387d12b8"

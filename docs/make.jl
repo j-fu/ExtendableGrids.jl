@@ -1,29 +1,12 @@
-ENV["MPLBACKEND"] = "agg"
-using Documenter, ExtendableGrids, Literate, GridVisualize, SimplexGridFactory, Gmsh
-import CairoMakie, Triangulate
-
+using Documenter, ExtendableGrids, ExampleJuggler, Gmsh
+import CairoMakie
 CairoMakie.activate!(; type = "svg", visible = false)
-
-example_md_dir = joinpath(@__DIR__, "src", "examples")
-
-examples1d = joinpath(@__DIR__, "..", "examples", "examples1d.jl")
-include(examples1d)
-examples2d = joinpath(@__DIR__, "..", "examples", "examples2d.jl")
-include(examples2d)
-examples3d = joinpath(@__DIR__, "..", "examples", "examples3d.jl")
-include(examples3d)
-
-include("makeplots.jl")
+ExampleJuggler.verbose!(true)
 
 function mkdocs()
-    Literate.markdown(examples1d, example_md_dir; documenter = false, info = false)
-    Literate.markdown(examples2d, example_md_dir; documenter = false, info = false)
-    Literate.markdown(examples3d, example_md_dir; documenter = false, info = false)
-
-    generated_examples = joinpath.("examples", filter(x -> endswith(x, ".md"), readdir(example_md_dir)))
-
-    makeplots(example_md_dir; Plotter = CairoMakie)
-
+    cleanexamples()
+    generated_examples = @docscripts(joinpath(@__DIR__, "..", "examples"), ["examples1d.jl", "examples2d.jl", "examples3d.jl"],
+                                     Plotter=CairoMakie)
     makedocs(; sitename = "ExtendableGrids.jl",
              modules = [ExtendableGrids, Base.get_extension(ExtendableGrids, :ExtendableGridsGmshExt)],
              clean = false,

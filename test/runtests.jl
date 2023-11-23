@@ -1,15 +1,7 @@
-ENV["MPLBACKEND"] = "agg"
+using Test, ExampleJuggler
+using ExtendableGrids, SHA
 
-using Test, ExtendableGrids, GridVisualize, SHA, SimplexGridFactory, Triangulate
-import StatsBase
-using StatsBase: countmap
-
-import CairoMakie
-CairoMakie.activate!(; type = "svg", visible = false)
-
-function testgrid(grid, testdata)
-    (num_nodes(grid), num_cells(grid), num_bfaces(grid)) == testdata
-end
+ExampleJuggler.verbose!(true)
 
 @testset "Geomspace" begin
     function test_geomspace()
@@ -128,48 +120,32 @@ end
     @test testrw(simplexgrid(X, X, X), "sg")
 end
 
-examples1d = joinpath(@__DIR__, "..", "examples", "examples1d.jl")
-include(examples1d)
-examples2d = joinpath(@__DIR__, "..", "examples", "examples2d.jl")
-include(examples2d)
-examples3d = joinpath(@__DIR__, "..", "examples", "examples3d.jl")
-include(examples3d)
-
-@testset "1D" begin
+@testset "rectnd" begin
     function rect1d()
         X = collect(0:0.1:1)
         g = simplexgrid(X)
         rect!(g, [0.3], [0.6]; region = 2, bregions = [3, 4])
     end
 
-    @test testgrid(interval_from_vector(), (21, 20, 2))
-    @test testgrid(interval_localref(), (27, 26, 2))
-    @test testgrid(interval_multiregion(), (21, 20, 3))
-    @test testgrid(interval_subgrid(), (51, 50, 2))
-    @test testgrid(rect1d(), (11, 10, 4))
-end
-
-@testset "2D" begin
     function rect2d()
         X = collect(0:0.1:1)
         g = simplexgrid(X, X)
         rect!(g, [0.3, 0.3], [0.6, 0.6]; region = 2, bregions = [3, 4, 5, 6])
     end
 
-    @test testgrid(rectangle(), (441, 800, 80))
-    @test testgrid(rectangle_localref(), (729, 1352, 104))
-    @test testgrid(rectangle_multiregion(), (441, 800, 100))
-    @test testgrid(rectangle_subgrid(), (360, 600, 120))
-    @test testgrid(rect2d(), (121, 200, 52))
-    @test testgrid(rect2d_bregion_function(), (79, 112, 44))
+    function rect3d()
+        X = collect(0:0.1:1)
+        g = simplexgrid(X, X, X)
+        rect!(g, [0.3, 0.3, 0.4], [0.6, 0.6, 0.7]; region = 2, bregion = 8)
+        g
+    end
 
-    g, sg, sf = sorted_subgrid()
-    @test testgrid(g, (187, 306, 66))
-    @test testgrid(sg, (17, 16, 0))
-    @test issorted(view(sg[Coordinates], 1, :))
+    @test numbers_match(rect1d(), 11, 10, 4)
+    @test numbers_match(rect2d(), 121, 200, 52)
+    @test numbers_match(rect3d(), 1331, 6000, 1308)
 end
 
-@testset "3D" begin
+@testset "subgrid+extrusion" begin
     function subgen(; h = 0.2)
         X = collect(-1:h:2)
         Y = collect(0:h:1)
@@ -191,42 +167,14 @@ end
         # return subgrid of region 1
         subgrid(g, [1])
     end
-
-    function rect3d()
-        X = collect(0:0.1:1)
-        g = simplexgrid(X, X, X)
-        rect!(g, [0.3, 0.3, 0.4], [0.6, 0.6, 0.7]; region = 2, bregion = 8)
-        g
-    end
-
-    @test testgrid(quadrilateral(), (330, 1200, 440))
-    @test mask_bedges()
+    @test numbers_match(subgen(), 756, 3000, 950)
 
     X = collect(0:0.25:1)
     gxy = simplexgrid(X, X)
     gxyz = simplexgrid(gxy, X)
     g = simplexgrid(X, X, X)
-    @test testgrid(gxyz, (125, 384, 192))
+    @test numbers_match(gxyz, 125, 384, 192)
     @test g[Coordinates] ≈ gxyz[Coordinates]
-    @test testgrid(subgen(), (756, 3000, 950))
-    @test testgrid(rect3d(), (1331, 6000, 1308))
-    @test testgrid(cross3d(), (189, 480, 344))
-end
-
-@testset "plotting examples" begin
-    include("../docs/makeplots.jl")
-    picdir = mktempdir()
-
-    @test makeplot("interval_from_vector", picdir; Plotter = CairoMakie)
-    @test makeplot("interval_localref", picdir; Plotter = CairoMakie)
-    @test makeplot("interval_multiregion", picdir; Plotter = CairoMakie)
-    @test makeplot("interval_subgrid", picdir; Plotter = CairoMakie)
-    @test makeplot("rectangle", picdir; Plotter = CairoMakie)
-    @test makeplot("rectangle_localref", picdir; Plotter = CairoMakie)
-    @test makeplot("rectangle_multiregion", picdir; Plotter = CairoMakie)
-    @test makeplot("rectangle_subgrid", picdir; Plotter = CairoMakie)
-    @test makeplot("quadrilateral", picdir; Plotter = CairoMakie)
-    @test makeplotx("sorted_subgrid", picdir; Plotter = CairoMakie)
 end
 
 function tglue(; dim = 2, breg = 0)
@@ -257,12 +205,16 @@ function tglue(; dim = 2, breg = 0)
 end
 
 @testset "Glue" begin
-    @test testgrid(tglue(; dim = 1, breg = 0), (9, 8, 2))
-    @test testgrid(tglue(; dim = 1, breg = 1), (9, 8, 3))
-    @test testgrid(tglue(; dim = 2, breg = 0), (37, 48, 24))
-    @test testgrid(tglue(; dim = 2, breg = 1), (37, 48, 26))
-    @test testgrid(tglue(; dim = 3, breg = 0), (161, 480, 256))
-    @test testgrid(tglue(; dim = 3, breg = 1), (161, 480, 264))
+    @test numbers_match(tglue(; dim = 1, breg = 0), 9, 8, 2)
+    @test numbers_match(tglue(; dim = 1, breg = 1), 9, 8, 3)
+    @test numbers_match(tglue(; dim = 2, breg = 0), 37, 48, 24)
+    @test numbers_match(tglue(; dim = 2, breg = 1), 37, 48, 26)
+    @test numbers_match(tglue(; dim = 3, breg = 0), 161, 480, 256)
+    @test numbers_match(tglue(; dim = 3, breg = 1), 161, 480, 264)
+end
+
+@testset "Examples" begin
+    @testscripts(joinpath(@__DIR__, "..", "examples"), ["examples1d.jl", "examples2d.jl", "examples3d.jl"])
 end
 
 function voronoitest()
