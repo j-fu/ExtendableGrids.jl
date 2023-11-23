@@ -93,7 +93,8 @@ function sorted_subgrid(; maxvolume = 0.01)
     g, sg, sf
 end
 # ![](sorted_subgrid.svg)
-
+# ## CI callbacks
+# Unit tests
 using Test
 function runtests()
     @test numbers_match(rectangle(), 441, 800, 80)
@@ -106,4 +107,25 @@ function runtests()
     @test numbers_match(g, 187, 306, 66)
     @test numbers_match(sg, 17, 16, 0)
     @test issorted(view(sg[Coordinates], 1, :))
+end
+
+# Plot generation
+using GridVisualize
+function generateplots(picdir; Plotter = nothing)
+    if isdefined(Plotter, :Makie)
+        size = (300, 300)
+        Plotter.save(joinpath(picdir, "rectangle.svg"), gridplot(rectangle(); Plotter, size))
+        Plotter.save(joinpath(picdir, "rectangle_localref.svg"), gridplot(rectangle_localref(); Plotter, size))
+        Plotter.save(joinpath(picdir, "rectangle_multiregion.svg"), gridplot(rectangle_multiregion(); Plotter, size))
+        Plotter.save(joinpath(picdir, "rectangle_subgrid.svg"), gridplot(rectangle_subgrid(); Plotter, size))
+        Plotter.save(joinpath(picdir, "rect2d_bregion_function.svg"), gridplot(rect2d_bregion_function(); Plotter, size))
+
+        g, sg, sf = sorted_subgrid()
+        p = GridVisualizer(; Plotter, layout = (1, 3), size = (800, 300))
+        gridplot!(p[1, 1], g)
+        gridplot!(p[1, 2], sg)
+        scalarplot!(p[1, 3], sg, sf)
+        fname = joinpath(picdir, "sorted_subgrid.svg")
+        Plotter.save(fname, reveal(p))
+    end
 end

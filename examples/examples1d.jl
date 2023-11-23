@@ -11,7 +11,7 @@ end
 # ![](interval_from_vector.svg)
 
 # 
-# ##Interval with local refinement
+# ## Interval with local refinement
 # 
 function interval_localref()
     XLeft = geomspace(0.0, 0.5, 0.1, 0.01)
@@ -44,7 +44,8 @@ function interval_subgrid()
     subgrid(grid, [2, 3])
 end
 # ![](interval_subgrid.svg)
-
+# ## CI callbacks
+# Unit tests
 using Test
 
 function runtests()
@@ -52,4 +53,17 @@ function runtests()
     @test numbers_match(interval_localref(), 27, 26, 2)
     @test numbers_match(interval_multiregion(), 21, 20, 3)
     @test numbers_match(interval_subgrid(), 51, 50, 2)
+end
+
+# Plot generation
+using GridVisualize
+function generateplots(picdir; Plotter = nothing)
+    if isdefined(Plotter, :Makie)
+        size = (500, 200)
+        legend = :rt
+        Plotter.save(joinpath(picdir, "interval_from_vector.svg"), gridplot(interval_from_vector(); Plotter, size, legend))
+        Plotter.save(joinpath(picdir, "interval_localref.svg"), gridplot(interval_localref(); Plotter, size, legend))
+        Plotter.save(joinpath(picdir, "interval_multiregion.svg"), gridplot(interval_multiregion(); Plotter, size, legend))
+        Plotter.save(joinpath(picdir, "interval_subgrid.svg"), gridplot(interval_subgrid(); Plotter, size, legend))
+    end
 end
