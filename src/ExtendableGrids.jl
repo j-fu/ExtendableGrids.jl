@@ -182,5 +182,6 @@ include("seal.jl")
         end
     end
 end
+export simplexgrid_from_gmsh, simplexgrid_to_gmsh
 
 end # module

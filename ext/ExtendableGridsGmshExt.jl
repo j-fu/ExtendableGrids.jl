@@ -322,19 +322,26 @@ This function is called in 'simplexgrid_from_gmsh'.
 function mod_to_simplexgrid(model::Module, Tc, Ti)
     dim = model.getDimension()
 
-    node_names, coords, _ = model.mesh.getNodes()
-    cell_types, element_names_cells, base_nodes_cells = model.mesh.getElements(dim, -1)
-    face_types, element_names_faces, base_nodes_faces = model.mesh.getElements(dim - 1, -1)
+    node_tags, coords, _ = model.mesh.getNodes()
+    cell_types, element_tags_cells, cell_node_tags = model.mesh.getElements(dim, -1)
+    face_types, element_tags_faces, face_node_tags = model.mesh.getElements(dim - 1, -1)
 
+    unique_cell_types=unique(cell_types)
+    tag_nodes=invperm(node_tags)
+
+    if length(unique_cell_types)>1
+        @warn "mesh contains different cell types"
+    end
+    
     #check whether cells are tetrahedrons in 3d or triangles in 2d:
     if dim == 3
-        if cell_types[1] != 4
-            @warn "3-dim file, but not (just) tetrahedrons as cells!!!"
+        if unique_cell_types[1] != 4
+            @warn "3-dim file, but not tetrahedrons as cells!!!"
             return
         end
     elseif dim == 2
-        if cell_types[1] != 2
-            @warn "2-dim file, but not (just) triangles as cells!!!"
+        if unique_cell_types[1] != 2
+            @warn "2-dim file, but not triangles as cells!!!"
             return
         end
     else
@@ -344,83 +351,97 @@ function mod_to_simplexgrid(model::Module, Tc, Ti)
 
     #if dim=3, the coordinates (of the nodes) just have to be reshaped
     #for dim=2, the z-coordinate has to be deleted
+    ncoord=Int(length(coords) / 3)
     if dim == 3
-        coords_new = reshape(coords, (3, Int(length(coords) / 3)))
+        coords_new = Tc.(reshape(coords, (3,ncoord)))
     else
-        coords_new = zeros(Tc, 2, Int(length(coords) / 3))
-        for i = 1:Int(length(coords) / 3)
-            coords_new[:, i] = coords[(3 * i - 2):(3 * i - 1)]
-        end
+        coords_new = Tc.(reshape(coords, (3,ncoord))[1:2,:])
     end
 
     #number of cells
-    m = length(element_names_cells[1])
-    #the nodes making up the cells is stored in "base_nodes_cells", just in the wrong format
-    simplices = reshape(base_nodes_cells[1], (dim + 1, m))
+    ncells = Int(length(cell_node_tags[1])/(dim+1))
 
+    #the nodes making up the cells is stored in "cell_node_tags",
+    #just in the wrong format and permuted 
+    simplices=zeros(Ti,dim+1, ncells)
+
+    for i in eachindex(simplices)
+        simplices[i]=tag_nodes[cell_node_tags[1][i]]
+    end
+    
     #the physicalnames are currently unused
     cellregion_to_physicalname = Bijection{Ti, String}()
     pgnum_to_physcialname = Dict()
     cr_count = 1
 
     #the cellregions correspond to the physical groups in which the cells are
-    cellregions = ones(Ti, m)
-    pgs = take_second(model.getPhysicalGroups(dim))
-
-    for pg in pgs
-        name = model.getPhysicalName(dim, pg)
-        if length(name) == 0
-            name = "$pg"
-        end
-        pgnum_to_physcialname[pg] = name
-        cellregion_to_physicalname[cr_count] = name
-        cr_count += 1
-    end
-
-    for i = 1:m
-        _, _, _, entitytag = model.mesh.getElement(element_names_cells[1][i])
+    cellregions = ones(Ti, ncells)
+    
+    pgs_data=model.getPhysicalGroups(dim)
+    if length(pgs_data)>0
+        pgs = take_second(pgs_data)
+        
         for pg in pgs
-            if entitytag in model.getEntitiesForPhysicalGroup(dim, pg)
-                cellregions[i] = cellregion_to_physicalname(pgnum_to_physcialname[pg]) #pg
-                break
+            name = model.getPhysicalName(dim, pg)
+            if length(name) == 0
+                name = "$pg"
+            end
+            pgnum_to_physcialname[pg] = name
+            cellregion_to_physicalname[cr_count] = name
+            cr_count += 1
+        end
+
+        for i = 1:ncells
+            _, _, _, entitytag = model.mesh.getElement(element_tags_cells[1][i])
+            for pg in pgs
+                if entitytag in model.getEntitiesForPhysicalGroup(dim, pg)
+                    cellregions[i] = cellregion_to_physicalname(pgnum_to_physcialname[pg]) #pg
+                    break
+            end
             end
         end
     end
-
     # assemble the boundary faces, just reads the faces stored in the msh file
     # for incomplete boundaries, there will be a function to seal them
 
-    k = length(element_names_faces[1])
-    bfaces = reshape(base_nodes_faces[1], (dim, k))
+    nfaces = length(element_tags_faces[1])
+    bfaces=zeros(Ti,dim, nfaces)
 
-    # physical groups for bfaces
-    bfaceregions = ones(Ti, k)
-    pgs = take_second(model.getPhysicalGroups(dim - 1))
-
-    bfaceregion_to_physicalname = Bijection{Ti, String}()
-    pgnum_to_physcialname = Dict()
-    fr_count = 1
-
-    for pg in pgs
-        name = model.getPhysicalName(dim - 1, pg)
-        if length(name) == 0
-            name = "$pg"
-        end
-        pgnum_to_physcialname[pg] = name
-        bfaceregion_to_physicalname[fr_count] = name
-        fr_count += 1
+    for i in eachindex(bfaces)
+        bfaces[i]=tag_nodes[face_node_tags[1][i]]
     end
 
-    for i = 1:k
-        _, _, _, entitytag = model.mesh.getElement(element_names_faces[1][i])
+
+    # physical groups for bfaces
+    bfaceregions = ones(Ti, nfaces)
+    pgs_data=model.getPhysicalGroups(dim - 1)
+    if length(pgs_data)>0
+        pgs = take_second(pgs_data)
+        
+        bfaceregion_to_physicalname = Bijection{Ti, String}()
+        pgnum_to_physcialname = Dict()
+        fr_count = 1
+        
         for pg in pgs
-            if entitytag in model.getEntitiesForPhysicalGroup(dim - 1, pg)
-                bfaceregions[i] = bfaceregion_to_physicalname(pgnum_to_physcialname[pg])
-                break
+            name = model.getPhysicalName(dim - 1, pg)
+            if length(name) == 0
+                name = "$pg"
+            end
+            pgnum_to_physcialname[pg] = name
+            bfaceregion_to_physicalname[fr_count] = name
+            fr_count += 1
+        end
+        
+        for i = 1:nfaces
+            _, _, _, entitytag = model.mesh.getElement(element_tags_faces[1][i])
+            for pg in pgs
+                if entitytag in model.getEntitiesForPhysicalGroup(dim - 1, pg)
+                    bfaceregions[i] = bfaceregion_to_physicalname(pgnum_to_physcialname[pg])
+                    break
+                end
             end
         end
     end
-
     return simplexgrid(coords_new, simplices, cellregions, bfaces, bfaceregions)
 end
 
@@ -438,9 +459,9 @@ With the 'ExtendableGrids.seal!(grid::ExtendableGrid)' the boundary can be added
 function incomplete_mod_to_simplexgrid(model::Module, Tc, Ti)
     dim = gmsh.model.getDimension()
 
-    node_names, coords, _ = gmsh.model.mesh.getNodes()
-    cell_types, element_names_cells, base_nodes_cells = gmsh.model.mesh.getElements(dim, -1)
-    face_types, element_names_faces, base_nodes_faces = gmsh.model.mesh.getElements(dim - 1, -1)
+    node_tags, coords, _ = gmsh.model.mesh.getNodes()
+    cell_types, element_tags_cells, cell_node_tags = gmsh.model.mesh.getElements(dim, -1)
+    face_types, element_tags_faces, face_node_tags = gmsh.model.mesh.getElements(dim - 1, -1)
 
     #check whether cells are tetrahedrons in 3d or triangles in 2d:
     if dim == 3
@@ -470,9 +491,9 @@ function incomplete_mod_to_simplexgrid(model::Module, Tc, Ti)
     end
 
     #number of cells
-    m = length(element_names_cells[1])
-    #the nodes making up the cells is stored in "base_nodes_cells", just in the wrong format
-    simplices = reshape(base_nodes_cells[1], (dim + 1, m))
+    m = length(element_tags_cells[1])
+    #the nodes making up the cells is stored in "cell_node_tags", just in the wrong format
+    simplices = reshape(cell_node_tags[1], (dim + 1, m))
 
     grid = ExtendableGrid{Tc, Ti}()
     grid[Coordinates] = convert(Matrix{Tc}, coords_new)
@@ -516,9 +537,9 @@ function mod_to_mixedgrid(model::Module, Tc, Ti)
 
     dim = model.getDimension()
 
-    node_names, coords, _ = model.mesh.getNodes()
-    cell_types, element_names_cells, base_nodes_cells = model.mesh.getElements(dim, -1)
-    face_types, element_names_faces, base_nodes_faces = model.mesh.getElements(dim - 1, -1)
+    node_tags, coords, _ = model.mesh.getNodes()
+    cell_types, element_tags_cells, cell_node_tags = model.mesh.getElements(dim, -1)
+    face_types, element_tags_faces, face_node_tags = model.mesh.getElements(dim - 1, -1)
 
     grid = ExtendableGrid{Tc, Ti}()
 
@@ -538,7 +559,7 @@ function mod_to_mixedgrid(model::Module, Tc, Ti)
             nn = elementtypes_nn_2d[cell_type]
             na = elementtypes_na_2d[cell_type]
 
-            temp_cellgeom = VectorOfConstants{ElementGeometries, Ti}(na, length(element_names_cells[ti]))
+            temp_cellgeom = VectorOfConstants{ElementGeometries, Ti}(na, length(element_tags_cells[ti]))
 
             #if ti==1
             #	cellgeom = temp_cellgeom
@@ -547,8 +568,8 @@ function mod_to_mixedgrid(model::Module, Tc, Ti)
             #end
 
             #@warn nn, na
-            for (ci, cell) in enumerate(element_names_cells[ti])
-                Base.append!(VTA, base_nodes_cells[ti][(nn * (ci - 1) + 1):(nn * ci)])
+            for (ci, cell) in enumerate(element_tags_cells[ti])
+                Base.append!(VTA, cell_node_tags[ti][(nn * (ci - 1) + 1):(nn * ci)])
                 #push!(cellgeom, na)
             end
         end
@@ -566,11 +587,11 @@ function mod_to_mixedgrid(model::Module, Tc, Ti)
     grid[CellNodes] = VTA
     grid[CellRegions] = ones(Ti, num_sources(VTA))
 
-    grid[BFaceGeometries] = VectorOfConstants{ElementGeometries, Ti}(Edge1D, length(element_names_faces[1]))
-    #@warn element_names_faces
+    grid[BFaceGeometries] = VectorOfConstants{ElementGeometries, Ti}(Edge1D, length(element_tags_faces[1]))
+    #@warn element_tags_faces
 
-    k = length(element_names_faces[1])
-    grid[BFaceNodes] = convert(Matrix{Ti}, reshape(base_nodes_faces[1], (dim, k)))
+    k = length(element_tags_faces[1])
+    grid[BFaceNodes] = convert(Matrix{Ti}, reshape(face_node_tags[1], (dim, k)))
     grid[BFaceRegions] = ones(Ti, k)
 
     if dim == 2
