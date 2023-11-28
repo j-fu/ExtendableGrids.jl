@@ -42,12 +42,20 @@ end
 """
 $(TYPEDSIGNATURES)
   
-Write grid to file. Currently for pdelib sg format only
+Write grid to file. Currently for pdelib sg and Gmsh formats.
 """
 function Base.write(fname::String, g::ExtendableGrid; format = "")
     (fbase, fext) = splitext(fname)
     if format == ""
         format = fext[2:end]
+    end
+    if format == "msh"
+        try
+            simplexgrid_to_gmsh(g; filename = fname)
+        catch e
+            throw(ErrorException("Missing Gmsh extension. Add Gmsh.jl to your environment and import it to write $(fext) files."))
+        end
+        return
     end
     @assert format == "sg"
 
@@ -107,7 +115,7 @@ end
 """
 $(TYPEDSIGNATURES)
   
-Read grid from file. Currently for pdelib sg format only.
+Read grid from file. Currently for pdelib sg and Gmsh formats.
 """
 function simplexgrid(file::String; format = "")
     Ti = Cint
@@ -115,6 +123,16 @@ function simplexgrid(file::String; format = "")
     if format == ""
         format = fext[2:end]
     end
+    if format == "msh" || format == "geo"
+        grid = nothing
+        try
+            grid = simplexgrid_from_gmsh(file)
+        catch e
+            throw(ErrorException("Missing Gmsh extension. Add Gmsh.jl to your environment and import it to read $(fext) files."))
+        end
+        return grid
+    end
+
     @assert format == "sg"
 
     tks = TokenStream(file)

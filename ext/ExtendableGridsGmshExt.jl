@@ -117,18 +117,29 @@ end
 gmshfile_to_simplexgrid(filename::String, Tc, Ti)
 ````
 
-This function just reads an msh file, and creates a gmsh.model and then calls the 'mod_to_simplexgrid' function
-(This function has to be called with an initialized gmsh environment)
+This function reads a .msh or a .geo file, and creates a `gmsh.model`
+If it is a .geo file,   `gmsh.model.mesh.generate()` is called.
+Finally, it calls the 'mod_to_simplexgrid' function.
 This function is called in 'simplexgrid_from_gmsh'
 `Tc` is the type of coordinates, `Ti` is the index type.
+
+The function initializes and finalized the `gmsh` module.
+
 """
 function gmshfile_to_simplexgrid(filename::String; incomplete = false, Tc, Ti)
+    gmsh.initialize()
+    base, ext = splitext(filename)
     gmsh.open(filename)
-    if !incomplete
-        return mod_to_simplexgrid(gmsh.model, Tc, Ti)
-    else
-        return incomplete_mod_to_simplexgrid(gmsh.model, Tc, Ti)
+    if ext == ".geo"
+        gmsh.model.mesh.generate()
     end
+    if !incomplete
+        grid = mod_to_simplexgrid(gmsh.model, Tc, Ti)
+    else
+        grid = incomplete_mod_to_simplexgrid(gmsh.model, Tc, Ti)
+    end
+    gmsh.finalize()
+    return grid
 end
 
 """
@@ -137,13 +148,18 @@ gmshfile_to_mixedgrid(filename::String, Tc, Ti)
 ````
 
 This function just reads an msh file, and creates a gmsh.model and then calls the 'mod_to_mixedgrid' function
-(This function has to be called with an initialized gmsh environment)
 This function is called in 'mixedgrid_from_gmsh'
 `Tc` is the type of coordinates, `Ti` is the index type.
+
+This function initalizes and finalized gmsh.
+
 """
 function gmshfile_to_mixedgrid(filename::String, Tc, Ti)
+    gmsh.initialize()
     gmsh.open(filename)
-    return mod_to_mixedgrid(gmsh.model, Tc, Ti)
+    grid = mod_to_mixedgrid(gmsh.model, Tc, Ti)
+    gmsh.finalize()
+    return grid
 end
 
 """
@@ -152,11 +168,14 @@ function simplexgrid_to_gmshfile(grid::ExtendableGrid, filename::String)
 ````
 
 This function takes a simplexgrid, uses 'grid_to_mod' to create a corresponding gmsh module
-Then it writes the module to a file
-(this function has to be called with an initialized gmsh environment)
-This function is called in 'write_gmsh'
+Then it writes the module to a file.
+
+This function initalizes and finalized gmsh.
+
 """
 function simplexgrid_to_gmshfile(grid::ExtendableGrid; filename::String = "")
+    gmsh.initialize()
+
     if VERSION >= v"1.9"
         # This possibility is new in 1.9, see
         # https://github.com/JuliaLang/julia/blob/release-1.9/NEWS.md#new-language-features
@@ -169,7 +188,7 @@ function simplexgrid_to_gmshfile(grid::ExtendableGrid; filename::String = "")
     if filename != ""
         gmsh.write(filename)
     end
-    return mod
+    gmsh.finalize()
 end
 
 """
@@ -179,12 +198,12 @@ mixedgrid_to_gmshfile(grid::ExtendableGrid, filename::String)
 
 This function takes a mixed grid, uses 'grid_to_mod' to create a corresponding gmsh module
 Then it writes the module to a file
-(this function has to be called with an initialized gmsh environment)
-This function is called in 'write_gmsh'
 
 grid[CellNodes] must be a VariableTargetAdjacency structure
+This function initializes and finalized gmsh.
 """
 function mixedgrid_to_gmshfile(grid::ExtendableGrid; filename::String = "")
+    gmsh.initialize()
     if VERSION >= v"1.9"
         # This possibility is new in 1.9, see
         # https://github.com/JuliaLang/julia/blob/release-1.9/NEWS.md#new-language-features
@@ -197,7 +216,7 @@ function mixedgrid_to_gmshfile(grid::ExtendableGrid; filename::String = "")
     if filename != ""
         gmsh.write(filename)
     end
-    return mod
+    gmsh.finalize()
 end
 
 #---------------------------------------------------------------------------------------------
@@ -326,13 +345,13 @@ function mod_to_simplexgrid(model::Module, Tc, Ti)
     cell_types, element_tags_cells, cell_node_tags = model.mesh.getElements(dim, -1)
     face_types, element_tags_faces, face_node_tags = model.mesh.getElements(dim - 1, -1)
 
-    unique_cell_types=unique(cell_types)
-    tag_nodes=invperm(node_tags)
+    unique_cell_types = unique(cell_types)
+    tag_nodes = invperm(node_tags)
 
-    if length(unique_cell_types)>1
+    if length(unique_cell_types) > 1
         @warn "mesh contains different cell types"
     end
-    
+
     #check whether cells are tetrahedrons in 3d or triangles in 2d:
     if dim == 3
         if unique_cell_types[1] != 4
@@ -351,24 +370,24 @@ function mod_to_simplexgrid(model::Module, Tc, Ti)
 
     #if dim=3, the coordinates (of the nodes) just have to be reshaped
     #for dim=2, the z-coordinate has to be deleted
-    ncoord=Int(length(coords) / 3)
+    ncoord = Int(length(coords) / 3)
     if dim == 3
-        coords_new = Tc.(reshape(coords, (3,ncoord)))
+        coords_new = Tc.(reshape(coords, (3, ncoord)))
     else
-        coords_new = Tc.(reshape(coords, (3,ncoord))[1:2,:])
+        coords_new = Tc.(reshape(coords, (3, ncoord))[1:2, :])
     end
 
     #number of cells
-    ncells = Int(length(cell_node_tags[1])/(dim+1))
+    ncells = Int(length(cell_node_tags[1]) / (dim + 1))
 
     #the nodes making up the cells is stored in "cell_node_tags",
     #just in the wrong format and permuted 
-    simplices=zeros(Ti,dim+1, ncells)
+    simplices = zeros(Ti, dim + 1, ncells)
 
     for i in eachindex(simplices)
-        simplices[i]=tag_nodes[cell_node_tags[1][i]]
+        simplices[i] = tag_nodes[cell_node_tags[1][i]]
     end
-    
+
     #the physicalnames are currently unused
     cellregion_to_physicalname = Bijection{Ti, String}()
     pgnum_to_physcialname = Dict()
@@ -376,11 +395,11 @@ function mod_to_simplexgrid(model::Module, Tc, Ti)
 
     #the cellregions correspond to the physical groups in which the cells are
     cellregions = ones(Ti, ncells)
-    
-    pgs_data=model.getPhysicalGroups(dim)
-    if length(pgs_data)>0
+
+    pgs_data = model.getPhysicalGroups(dim)
+    if length(pgs_data) > 0
         pgs = take_second(pgs_data)
-        
+
         for pg in pgs
             name = model.getPhysicalName(dim, pg)
             if length(name) == 0
@@ -397,7 +416,7 @@ function mod_to_simplexgrid(model::Module, Tc, Ti)
                 if entitytag in model.getEntitiesForPhysicalGroup(dim, pg)
                     cellregions[i] = cellregion_to_physicalname(pgnum_to_physcialname[pg]) #pg
                     break
-            end
+                end
             end
         end
     end
@@ -405,23 +424,22 @@ function mod_to_simplexgrid(model::Module, Tc, Ti)
     # for incomplete boundaries, there will be a function to seal them
 
     nfaces = length(element_tags_faces[1])
-    bfaces=zeros(Ti,dim, nfaces)
+    bfaces = zeros(Ti, dim, nfaces)
 
     for i in eachindex(bfaces)
-        bfaces[i]=tag_nodes[face_node_tags[1][i]]
+        bfaces[i] = tag_nodes[face_node_tags[1][i]]
     end
-
 
     # physical groups for bfaces
     bfaceregions = ones(Ti, nfaces)
-    pgs_data=model.getPhysicalGroups(dim - 1)
-    if length(pgs_data)>0
+    pgs_data = model.getPhysicalGroups(dim - 1)
+    if length(pgs_data) > 0
         pgs = take_second(pgs_data)
-        
+
         bfaceregion_to_physicalname = Bijection{Ti, String}()
         pgnum_to_physcialname = Dict()
         fr_count = 1
-        
+
         for pg in pgs
             name = model.getPhysicalName(dim - 1, pg)
             if length(name) == 0
@@ -431,7 +449,7 @@ function mod_to_simplexgrid(model::Module, Tc, Ti)
             bfaceregion_to_physicalname[fr_count] = name
             fr_count += 1
         end
-        
+
         for i = 1:nfaces
             _, _, _, entitytag = model.mesh.getElement(element_tags_faces[1][i])
             for pg in pgs

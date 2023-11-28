@@ -213,6 +213,8 @@ end
     @test numbers_match(tglue(; dim = 3, breg = 1), 161, 480, 264)
 end
 
+include("gmsh.jl")
+
 @testset "Examples" begin
     @testscripts(joinpath(@__DIR__, "..", "examples"), ["examples1d.jl", "examples2d.jl", "examples3d.jl", "gmsh.jl"])
 end
@@ -300,4 +302,3 @@ end
     @test sha_code == "93a31139ccb3ae3017351d7cef0c2639c5def97c9744699543fe8bc58e1ebcea"
 end
 
-include("gmsh.jl")
