@@ -121,6 +121,8 @@ include("voronoi.jl")
 export tricircumcenter!, VoronoiFaceCenters
 
 include("meshrefinements.jl")
+export AbstractRefinementRule, UniformRefinement, BarycentricRefinement, SplitInto
+export refine_by_rule
 export split_grid_into
 export uniform_refine
 export barycentric_refine
