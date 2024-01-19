@@ -194,8 +194,13 @@ function subgrid(parent,
     
         subgrid[BFaceRegions]=sub_bfaceregions
         subgrid[BFaceGeometries]=sub_bfacetypes
-        subgrid[BFaceNodes]=tryfix(sub_bfacenodes)
-        subgrid[NumBFaceRegions]=maximum(sub_bfaceregions)
+        if length(sub_bfaceregions) > 1
+            subgrid[BFaceNodes]=tryfix(sub_bfacenodes)
+            subgrid[NumBFaceRegions]=maximum(sub_bfaceregions)
+        else
+            subgrid[BFaceNodes]=zeros(Ti, 2, 0)
+            subgrid[NumBFaceRegions]=0
+        end
     end
     subgrid[CoordinateSystem]=parent[CoordinateSystem]
 

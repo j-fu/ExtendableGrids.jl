@@ -146,7 +146,7 @@ end
 end
 
 @testset "subgrid+extrusion" begin
-    function subgen(; h = 0.2)
+    function subgen(; region = 1, h = 0.2)
         X = collect(-1:h:2)
         Y = collect(0:h:1)
         Z = collect(0:h:2)
@@ -158,6 +158,8 @@ end
         # Mark cut-out regions as 2
         cellmask!(g, [-1, 0, 0], [0, 1, 1], 2)
         cellmask!(g, [1, 0, 0], [2, 1, 1], 2)
+        # Mark interior region 3 with region 2
+        cellmask!(g, [-0.75,0.25,0.25], [-0.25,0.75,0.75], 3)
 
         # add new interface elements
         bfacemask!(g, [-1, 0, 1], [2, 1, 1], 3; allow_new = true)
@@ -165,8 +167,10 @@ end
         bfacemask!(g, [1, 0, 0], [1, 1, 1], 3; allow_new = true)
 
         # return subgrid of region 1
-        subgrid(g, [1])
+        subgrid(g, [region])
     end
+    sub2 = subgen(; region = 3)
+    
     @test numbers_match(subgen(), 756, 3000, 950)
 
     X = collect(0:0.25:1)
