@@ -256,7 +256,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceNo
             end
             pcell2scell = zeros(Ti, npcells)
             pcell2scell[pcells] = 1:length(pcells)
-            xgrid[CellFaces] = pgrid[CellFaces][:, pcells]
+            xgrid[CellFaces] = PCellFaces[:, pcells]
             xgrid[CellFaceSigns] = pgrid[CellFaceSigns][:, pcells]
             SFaceCells = pgrid[FaceCells][:, pfaces]
             for face = 1 : 1:length(pfaces)
