@@ -82,7 +82,7 @@ export seemingly_equal, numbers_match
 include("subgrid.jl")
 export subgrid
 export ParentGrid
-export NodeInParent, CellParents, FaceParents
+export NodeInParent, CellParents, FaceParents, BFaceParents, EdgeParents, BEdgeParents
 export ParentGridRelation, SubGrid, BoundarySubGrid, RefinedGrid
 
 include("shape_specs.jl")
