@@ -42,6 +42,7 @@ function split_grid_into(source_grid::ExtendableGrid{T,K}, targetgeometry::Type{
     itemEG = EG[1]
     iEG::Int = 1
     split_rule::Array{Int,2} = split_rules[iEG]
+    xCellParents::Array{K,1} = zeros(K,0)
     for cell = 1 : num_sources(oldCellNodes)
         if !singleEG
             nnodes4item = num_targets(oldCellNodes,cell)
@@ -54,6 +55,7 @@ function split_grid_into(source_grid::ExtendableGrid{T,K}, targetgeometry::Type{
         end    
         for j = 1 : size(split_rule,2)
             push!(xCellRegions,oldCellRegions[cell])
+            push!(xCellParents,cell)
         end
         ncells += size(split_rule,2)
     end
@@ -126,6 +128,10 @@ function split_grid_into(source_grid::ExtendableGrid{T,K}, targetgeometry::Type{
         xgrid[BFaceRegions]=newBFaceRegions
         xgrid[BFaceGeometries]=VectorOfConstants{ElementGeometries,Int}(facetype_of_cellface(targetgeometry,1),newnbfaces)
     end
+
+    xgrid[ParentGrid] = source_grid
+    xgrid[ParentGridRelation] = RefinedGrid
+    xgrid[CellParents] = xCellParents
 
     return xgrid
 end
