@@ -8,9 +8,60 @@ abstract type NodeInParent <: AbstractGridIntegerArray1D end
 """
 $(TYPEDEF)
 
+Grid component key type for storing parent faces
+(only for SubGrid relation when FaceNodes is instantiated)
+"""
+abstract type FaceParents <: AbstractGridIntegerArray1D end
+
+"""
+$(TYPEDEF)
+
+Grid component key type for storing parent bfaces
+"""
+abstract type BFaceParents <: AbstractGridIntegerArray1D end
+
+"""
+$(TYPEDEF)
+
+Grid component key type for storing parent cells
+"""
+abstract type CellParents <: AbstractGridIntegerArray1D end
+
+"""
+$(TYPEDEF)
+
 Grid component key type for storing parent grid
 """
 abstract type ParentGrid <: AbstractGridComponent end
+
+"""
+$(TYPEDEF)
+
+Grid component key type for storing parent grid relationship
+"""
+abstract type ParentGridRelation <: AbstractGridComponent end
+
+"""
+$(TYPEDEF)
+
+Grid component key type for indicating that grid is a subgrid of the parentgrid
+"""
+abstract type SubGrid <: ParentGridRelation end
+
+"""
+$(TYPEDEF)
+
+Grid component key type for indicating that grid is a boundary subgrid of the parentgrid
+"""
+abstract type BoundarySubGrid <: ParentGridRelation end
+
+"""
+$(TYPEDEF)
+
+Grid component key type for indicating that grid is a refinement of the parentgrid
+"""
+abstract type RefinedGrid <: ParentGridRelation end
+
 
 """
 $(TYPEDSIGNATURES)
@@ -89,6 +140,7 @@ function subgrid(parent,
     
     nsubcells=0
     nsubnodes=0
+    cellparents=zeros(Ti,0)
     for icell in eachindex(xregions)
         if insubregions(xregions[icell])
             nsubcells+=1
@@ -99,6 +151,7 @@ function subgrid(parent,
                     nodemark[ipnode]=nsubnodes
                 end
             end
+            push!(cellparents, icell)
         end
     end
     
@@ -143,6 +196,8 @@ function subgrid(parent,
     subgrid[CellNodes]=tryfix(sub_xnodes)
     subgrid[ParentGrid]=parent
     subgrid[NodeInParent]=sub_nip
+    subgrid[CellParents]=cellparents
+    subgrid[ParentGridRelation]=boundary ? BoundarySubGrid : SubGrid
 
     if boundary
         subgrid[NumBFaceRegions]=0
@@ -155,6 +210,7 @@ function subgrid(parent,
         bfaceregions=parent[BFaceRegions]
         bfacetypes=parent[BFaceGeometries]
         bfacecells=parent[BFaceCells]
+        bfaceparents=zeros(Ti,0)
         
         sub_bfacenodes=VariableTargetAdjacency(Ti)
         sub_bfaceregions=Vector{Ti}(undef,0)
@@ -189,9 +245,10 @@ function subgrid(parent,
                 append!(sub_bfacenodes,col)
                 push!(sub_bfacetypes,bfacetypes[ibface])
                 push!(sub_bfaceregions,bfaceregions[ibface])
+                push!(bfaceparents, ibface)
             end
         end
-    
+        subgrid[BFaceParents] = bfaceparents
         subgrid[BFaceRegions]=sub_bfaceregions
         subgrid[BFaceGeometries]=sub_bfacetypes
         if length(sub_bfaceregions) > 1
