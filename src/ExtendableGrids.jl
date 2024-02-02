@@ -81,6 +81,9 @@ export seemingly_equal, numbers_match
 
 include("subgrid.jl")
 export subgrid
+export ParentGrid
+export NodeInParent, CellParents, FaceParents
+export ParentGridRelation, SubGrid, BoundarySubGrid, RefinedGrid
 
 include("shape_specs.jl")
 export refcoords_for_geometry
@@ -124,7 +127,6 @@ include("meshrefinements.jl")
 export split_grid_into
 export uniform_refine
 export barycentric_refine
-export CellParents
 
 include("adaptive_meshrefinements.jl")
 export bulk_mark

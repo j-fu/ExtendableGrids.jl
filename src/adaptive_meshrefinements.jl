@@ -104,6 +104,7 @@ function RGB_refine(source_grid::ExtendableGrid{T,K}, facemarkers::Array{Bool,1}
     oldFaceNodes = source_grid[FaceNodes]
     nfaces = num_sources(oldFaceNodes)
     ncells = num_sources(oldCellNodes)
+    xCellParents::Array{K,1} = zeros(K,0)
 
     # closuring
     # @logmsg MoreInfo "RGB refinement with $(sum(facemarkers)) marked faces"
@@ -189,6 +190,7 @@ function RGB_refine(source_grid::ExtendableGrid{T,K}, facemarkers::Array{Bool,1}
             append!(xCellNodes,view(subitemnodes,:))
             push!(xCellGeometries,Triangle2D)
             push!(xCellRegions,oldCellRegions[cell])
+            push!(xCellParents,cell)
         end    
         ncells += nnewcells
     end
@@ -249,6 +251,9 @@ function RGB_refine(source_grid::ExtendableGrid{T,K}, facemarkers::Array{Bool,1}
     xgrid[BFaceNodes] = reshape(xBFaceNodes,(2,nbfaces+newbfaces))
     xgrid[BFaceRegions] = xBFaceRegions
     xgrid[BFaceGeometries] = VectorOfConstants{ElementGeometries,Int}(Edge1D,nbfaces+newbfaces)
+    xgrid[ParentGrid] = source_grid
+    xgrid[ParentGridRelation] = RefinedGrid
+    xgrid[CellParents] = xCellParents 
 
     return xgrid
 end

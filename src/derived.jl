@@ -197,6 +197,89 @@ end
 # FaceNodes = nodes for each face (implicitly defines the enumerations of faces)
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceNodes}) where {Tc,Ti}
 
+    if haskey(xgrid, ParentGrid) && haskey(xgrid, ParentGridRelation)
+        if xgrid[ParentGridRelation] === SubGrid
+            ## get FaceNodes from ParentGrid to keep ordering and orientation
+            pgrid = xgrid[ParentGrid]
+            pnodes = xgrid[NodeInParent]
+            nscells = num_cells(xgrid)
+            PFaceNodes = pgrid[FaceNodes]
+            PCellFaces = deepcopy(pgrid[CellFaces])
+            pcells = xgrid[CellParents]
+            nfaces = size(PFaceNodes, 2)
+            is_subface = false
+            FNT = typeof(PFaceNodes)
+            if FNT <: Matrix
+                singleEG = true
+            else
+                singleEG = false
+            end
+            SFaceNodes::Union{VariableTargetAdjacency{Ti}, Matrix{Ti}} = singleEG ? zeros(Ti,size(PFaceNodes,1), 0) : VariableTargetAdjacency(Ti)
+        
+            pnode2snode = zeros(Ti, num_nodes(pgrid))
+            pnode2snode[pnodes] .= 1 : length(pnodes)
+            pfaces = Ti[]
+            for face = 1 : nfaces
+                is_subface = true
+                for k = 1 : num_targets(PFaceNodes, face)
+                    if !(PFaceNodes[k, face] in pnodes)
+                        is_subface = false
+                        break;
+                    end
+                end
+                if is_subface
+                    push!(pfaces, face)
+                end
+            end
+            pface2sface = zeros(Ti, nfaces)
+            pface2sface[pfaces] = 1:length(pfaces)
+            SFaceNodes = PFaceNodes[:, pfaces]
+            for face = 1:length(pfaces)
+                for k = 1 : num_targets(SFaceNodes, face)
+                    SFaceNodes[k, face] = pnode2snode[SFaceNodes[k, face]]
+                end
+            end
+            xgrid[FaceNodes] = SFaceNodes
+            if typeof(pgrid[FaceGeometries]) <: VectorOfConstants
+                xgrid[FaceGeometries] = VectorOfConstants{ElementGeometries,Int}(pgrid[FaceGeometries][1], length(pfaces))
+            else
+                xgrid[FaceGeometries] = pgrid[FaceGeometries][pfaces]
+            end
+            xgrid[FaceRegions] = pgrid[FaceRegions][pfaces]
+
+            npcells = num_cells(pgrid)
+            for cell = 1 : npcells
+                is_subcell = true
+                for k = 1 : num_targets(PCellFaces, cell)
+                    PCellFaces[k, cell] = pface2sface[PCellFaces[k, cell]]
+                end
+            end
+            pcell2scell = zeros(Ti, npcells)
+            pcell2scell[pcells] = 1:length(pcells)
+            xgrid[CellFaces] = pgrid[CellFaces][:, pcells]
+            xgrid[CellFaceSigns] = pgrid[CellFaceSigns][:, pcells]
+            SFaceCells = pgrid[FaceCells][:, pfaces]
+            for face = 1 : 1:length(pfaces)
+                for k = 1 : num_targets(SFaceCells, face)
+                    if SFaceCells[k, face] > 0
+                        SFaceCells[k, face] = pcell2scell[SFaceCells[k, face]]
+                    else
+                        SFaceCells[k, face] = 0
+                    end
+                end
+                if SFaceCells[1,face] == 0 && SFaceCells[2,face] > 0
+                    SFaceCells[1,face] = SFaceCells[2,face]
+                    SFaceCells[2,face] = 0
+                end
+            end
+            xgrid[FaceCells] = SFaceCells
+            xgrid[FaceParents] = pfaces
+            xgrid[CellParents] = pcells
+
+            return SFaceNodes
+        end
+    end
+
     xCellNodes = xgrid[CellNodes]
     ncells = num_sources(xCellNodes)
     nnodes = num_sources(xgrid[Coordinates])

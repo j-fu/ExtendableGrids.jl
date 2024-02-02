@@ -1,15 +1,3 @@
-
-
-# refinements can store parent informations
-abstract type CellParents <: AbstractGridIntegerArray1D end
-
-function ExtendableGrids.instantiate(xgrid::ExtendableGrid, ::Type{CellParents})
-    ncells = num_sources(xgrid[CellNodes]) 
-    VectorOfConstants{ElementGeometries,Int}(K,ncells)
-end
-
-
-
 # functions that tell how to split one ElementGeometry into another
 const _split_rule_Triangle2D = reshape([1,2,3],3,1)
 const _split_rule_Tetrahedron3D = reshape([1,2,3,4],4,1)
@@ -508,6 +496,8 @@ function uniform_refine(source_grid::ExtendableGrid{T,K}; store_parents = false)
         xgrid[CellParents] = xCellParents
     end
 
+    xgrid[ParentGrid] = source_grid
+    xgrid[ParentGridRelation] = RefinedGrid
 
     return xgrid
 end
@@ -524,6 +514,8 @@ function uniform_refine(source_grid::ExtendableGrid{T,K}, nrefinements::Int; sto
     end
     if store_parents
         xgrid[CellParents] = parents
+        xgrid[ParentGrid] = source_grid
+        xgrid[ParentGridRelation] = RefinedGrid
     end
     return xgrid
 end
@@ -546,7 +538,7 @@ barycentric refinement is available for these ElementGeometries
 - Quadrilateral2D (first split into Triangle2D)
 - Triangle2D
 """
-function barycentric_refine(source_grid::ExtendableGrid{T,K}) where {T,K}
+function barycentric_refine(source_grid::ExtendableGrid{T,K}; store_parents = false) where {T,K}
     # @logmsg MoreInfo "Barycentric refinement of $(num_sources(source_grid[CellNodes])) cells"
     
     # split first into triangles
@@ -588,6 +580,7 @@ function barycentric_refine(source_grid::ExtendableGrid{T,K}) where {T,K}
     m::Int = 0
     newvertex::Array{T,1} = zeros(T,size(xCoordinates,1))
     refine_rule::Array{Int,2} = refine_rules[iEG]
+    xCellParents::Array{K,1} = zeros(K,0)
     for cell = 1 : num_sources(oldCellNodes)
         
         # add cell midpoint to Coordinates
@@ -612,6 +605,9 @@ function barycentric_refine(source_grid::ExtendableGrid{T,K}) where {T,K}
             end    
             append!(xCellNodes,view(subitemnodes,1:size(refine_rule,1)))
             push!(xCellRegions, oldCellRegions[cell])
+            if store_parents
+                push!(xCellParents,cell)
+            end
         end    
         ncells += size(refine_rule,2)
     end
@@ -629,5 +625,10 @@ function barycentric_refine(source_grid::ExtendableGrid{T,K}) where {T,K}
     xgrid[BFaceRegions]=source_grid[BFaceRegions]
     xgrid[BFaceGeometries]=source_grid[BFaceGeometries]
     xgrid[CoordinateSystem]=source_grid[CoordinateSystem]
+    xgrid[ParentGrid] = source_grid
+    xgrid[ParentGridRelation] = RefinedGrid
+    if store_parents
+        xgrid[CellParents] = xCellParents
+    end
     return xgrid
 end
