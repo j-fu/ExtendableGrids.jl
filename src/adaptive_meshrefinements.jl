@@ -81,7 +81,7 @@ Constr Approx 20, 549–564 (2004). https://doi.org/10.1007/s00365-003-0550-5
 The bool array facemarkers determines which faces should be bisected. Note, that a closuring is performed
 such that the first face in every triangle with a marked face is also refined.
 """
-function RGB_refine(source_grid::ExtendableGrid{T,K}, facemarkers::Array{Bool,1}) where {T,K}
+function RGB_refine(source_grid::ExtendableGrid{T,K}, facemarkers::Array{Bool,1}; store_parents = true) where {T,K}
     
     xgrid = ExtendableGrid{T,K}()
     xgrid[CoordinateSystem]=source_grid[CoordinateSystem]
@@ -190,7 +190,9 @@ function RGB_refine(source_grid::ExtendableGrid{T,K}, facemarkers::Array{Bool,1}
             append!(xCellNodes,view(subitemnodes,:))
             push!(xCellGeometries,Triangle2D)
             push!(xCellRegions,oldCellRegions[cell])
-            push!(xCellParents,cell)
+            if store_parents
+                push!(xCellParents,cell)
+            end
         end    
         ncells += nnewcells
     end
@@ -223,6 +225,7 @@ function RGB_refine(source_grid::ExtendableGrid{T,K}, facemarkers::Array{Bool,1}
     refine_rule = uniform_refine_rule(Edge1D)
 
     newbfaces = 0
+    xBFaceParents::Array{K,1} = zeros(K,0) 
     for bface = 1 : nbfaces
         face = oldBFaceFaces[bface]
         if facemarkers[face] == true
@@ -239,11 +242,17 @@ function RGB_refine(source_grid::ExtendableGrid{T,K}, facemarkers::Array{Bool,1}
                 end
                 append!(xBFaceNodes,view(subitemnodes,1:2))
                 push!(xBFaceRegions,oldBFaceRegions[bface])
+                if store_parents
+                    push!(xBFaceParents, bface)
+                end
             end    
             newbfaces +=1
         else
             append!(xBFaceNodes,view(oldBFaceNodes,:,bface))
             push!(xBFaceRegions,oldBFaceRegions[bface])
+            if store_parents
+                push!(xBFaceParents, bface)
+            end
         end
     end
     @debug "bisected bfaces = $newbfaces"
@@ -253,7 +262,11 @@ function RGB_refine(source_grid::ExtendableGrid{T,K}, facemarkers::Array{Bool,1}
     xgrid[BFaceGeometries] = VectorOfConstants{ElementGeometries,Int}(Edge1D,nbfaces+newbfaces)
     xgrid[ParentGrid] = source_grid
     xgrid[ParentGridRelation] = RefinedGrid
-    xgrid[CellParents] = xCellParents 
+
+    if store_parents
+        xgrid[CellParents] = xCellParents 
+        xgrid[BFaceParents] = xBFaceParents
+    end
 
     return xgrid
 end
