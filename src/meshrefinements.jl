@@ -19,7 +19,7 @@ split rules exist for
 - Quadrilateral2D into Triangle2D
 - Hexahedron3D into Tetrahedron3D
 """
-function split_grid_into(source_grid::ExtendableGrid{T,K}, targetgeometry::Type{<:AbstractElementGeometry}) where {T,K}
+function split_grid_into(source_grid::ExtendableGrid{T,K}, targetgeometry::Type{<:AbstractElementGeometry}; store_parents = true) where {T,K}
     xgrid=ExtendableGrid{T,K}()
     xgrid[Coordinates]=source_grid[Coordinates]
     oldCellGeometries = source_grid[CellGeometries]
@@ -55,7 +55,9 @@ function split_grid_into(source_grid::ExtendableGrid{T,K}, targetgeometry::Type{
         end    
         for j = 1 : size(split_rule,2)
             push!(xCellRegions,oldCellRegions[cell])
-            push!(xCellParents,cell)
+            if store_parents
+                push!(xCellParents,cell)
+            end
         end
         ncells += size(split_rule,2)
     end
@@ -70,10 +72,14 @@ function split_grid_into(source_grid::ExtendableGrid{T,K}, targetgeometry::Type{
     end
 
     # find new boundary faces (easy in 2D, not so easy in 3D)
+    xBFaceParents::Array{K,1} = zeros(K,0)
     if dim_element(targetgeometry) == 2 # BFaces are Edge1D wich stay the same
         xgrid[BFaceNodes]=source_grid[BFaceNodes]
         xgrid[BFaceRegions]=source_grid[BFaceRegions]
         xgrid[BFaceGeometries]=VectorOfConstants{ElementGeometries,Int}(facetype_of_cellface(targetgeometry,1),num_sources(xgrid[BFaceNodes]))
+        if store_parents
+            xBFaceParents = Array{K,1}(1:num_bfaces(source_grid))
+        end
     elseif dim_element(targetgeometry) == 3 
         # BFaces may be split into different shapes, e.g. from Quadrilateral2D to two Triangle2D
         # and it is hard to predict how they are splitted
@@ -114,6 +120,9 @@ function split_grid_into(source_grid::ExtendableGrid{T,K}, targetgeometry::Type{
                     append!(newBFaceNodes,newFaceNodes[:,face])
                     push!(newBFaceRegions,oldBFaceRegions[bface])
                     newnbfaces += 1
+                    if store_parents
+                        push!(xBFaceParents, bface)
+                    end
                 end
             end
 
@@ -131,7 +140,10 @@ function split_grid_into(source_grid::ExtendableGrid{T,K}, targetgeometry::Type{
 
     xgrid[ParentGrid] = source_grid
     xgrid[ParentGridRelation] = RefinedGrid
-    xgrid[CellParents] = xCellParents
+    if store_parents
+        xgrid[CellParents] = xCellParents
+        xgrid[BFaceParents] = xBFaceParents
+    end
 
     return xgrid
 end
@@ -201,7 +213,7 @@ if multiple geometries are in the mesh uniform refinement will only work
 if all refinement rules refine faces and edges (in 3D) equally
 (so no hanging nodes are created)
 """
-function uniform_refine(source_grid::ExtendableGrid{T,K}; store_parents = false) where {T,K}
+function uniform_refine(source_grid::ExtendableGrid{T,K}; store_parents = true) where {T,K}
     # @logmsg MoreInfo "Uniform refinement of $(num_sources(source_grid[CellNodes])) cells"
     
     xgrid = ExtendableGrid{T,K}()
@@ -396,11 +408,15 @@ function uniform_refine(source_grid::ExtendableGrid{T,K}; store_parents = false)
     oldBFaceFaces::Array{K,1} = source_grid[BFaceFaces]
     oldBFaceRegions = source_grid[BFaceRegions]
     oldBFaceGeometries = source_grid[BFaceGeometries]
+    xBFaceParents::Array{K,1} = zeros(K,0)
     
     if dim == 1
         xgrid[BFaceNodes] = oldBFaceNodes
         xgrid[BFaceRegions] = oldBFaceRegions
         xgrid[BFaceGeometries] = oldBFaceGeometries
+        if store_parents
+            xBFaceParents = Array{K,1}(1:num_bfaces(source_grid))
+        end
     else
         xBFaceRegions = zeros(K,0)
         BFEG = Base.unique(oldBFaceGeometries)
@@ -482,6 +498,9 @@ function uniform_refine(source_grid::ExtendableGrid{T,K}; store_parents = false)
                     push!(xBFaceGeometries,itemEG)
                 end
                 push!(xBFaceRegions,oldBFaceRegions[bface])
+                if store_parents
+                    push!(xBFaceParents, bface)
+                end
                 newnbfaces += 1
             end    
         end
@@ -500,6 +519,7 @@ function uniform_refine(source_grid::ExtendableGrid{T,K}; store_parents = false)
 
     if store_parents
         xgrid[CellParents] = xCellParents
+        xgrid[BFaceParents] = xBFaceParents
     end
 
     xgrid[ParentGrid] = source_grid
@@ -544,7 +564,7 @@ barycentric refinement is available for these ElementGeometries
 - Quadrilateral2D (first split into Triangle2D)
 - Triangle2D
 """
-function barycentric_refine(source_grid::ExtendableGrid{T,K}; store_parents = false) where {T,K}
+function barycentric_refine(source_grid::ExtendableGrid{T,K}; store_parents = true) where {T,K}
     # @logmsg MoreInfo "Barycentric refinement of $(num_sources(source_grid[CellNodes])) cells"
     
     # split first into triangles
@@ -635,6 +655,7 @@ function barycentric_refine(source_grid::ExtendableGrid{T,K}; store_parents = fa
     xgrid[ParentGridRelation] = RefinedGrid
     if store_parents
         xgrid[CellParents] = xCellParents
+        xgrid[BFaceParents] = Array{K,1}(1:num_bfaces(source_grid))
     end
     return xgrid
 end

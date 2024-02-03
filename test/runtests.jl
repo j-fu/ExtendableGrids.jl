@@ -181,6 +181,50 @@ end
     @test g[Coordinates] ≈ gxyz[Coordinates]
 end
 
+
+@testset "ParentGridRelation-SubGrid" begin
+    ## generate a subgrid
+    grid = grid_unitsquare(Triangle2D)
+    grid[CellRegions] = Int32[1,2,2,1]
+    sgrid = subgrid(grid, [1])
+    @test sgrid[ParentGridRelation] == SubGrid
+
+    ## check if CellParents are assigned correctly
+    @test sgrid[CellParents] == [1,4]
+
+    ## check if FaceNodes couple correctly with FaceNodes in parent grid
+    facenodes = sgrid[FaceNodes]
+    bfacenodes = sgrid[BFaceNodes]
+    parentnodes = sgrid[NodeInParent]
+    parentfaces = sgrid[FaceParents]
+    parentbfaces = sgrid[BFaceParents]
+    @test all(parentnodes[facenodes] .== grid[FaceNodes][:, parentfaces])
+    @test all(parentnodes[bfacenodes] .== grid[BFaceNodes][:,parentbfaces])
+end
+
+@testset "ParentGridRelation-RefinedGrid" begin
+    ## generate a refined 
+    grid = grid_unitsquare(Triangle2D)
+    
+    ## check uniform refinement
+    rgrid = uniform_refine(grid)
+    @test rgrid[ParentGridRelation] == RefinedGrid
+
+    ## check if CellParents and BFaceParents are set
+    @test length(rgrid[CellParents]) == 4*num_cells(grid)
+    @test length(rgrid[BFaceParents]) == 2*num_bfaces(grid)
+
+    ## check barycentric refinement
+    rgrid = barycentric_refine(grid)
+    @test rgrid[ParentGridRelation] == RefinedGrid
+
+    ## check if CellParents and BFaceParents are set
+    @test length(rgrid[CellParents]) == 3*num_cells(grid)
+    @test length(rgrid[BFaceParents]) == num_bfaces(grid)
+
+
+end
+
 function tglue(; dim = 2, breg = 0)
     X1 = linspace(0, 1, 5)
     Y1 = linspace(0, 1, 5)
