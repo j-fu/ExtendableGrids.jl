@@ -82,7 +82,7 @@ export seemingly_equal, numbers_match
 include("subgrid.jl")
 export subgrid
 export ParentGrid
-export NodeInParent, CellParents, FaceParents, BFaceParents, EdgeParents, BEdgeParents
+export NodeParents, CellParents, FaceParents, BFaceParents, EdgeParents, BEdgeParents
 export ParentGridRelation, SubGrid, BoundarySubGrid, RefinedGrid
 
 include("shape_specs.jl")
@@ -176,6 +176,8 @@ include("io.jl")
 export writeVTK
 
 include("seal.jl")
+
+include("deprecated.jl")
 
 @static if !isdefined(Base, :get_extension)
     function __init__()

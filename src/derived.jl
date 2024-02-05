@@ -201,7 +201,7 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceNo
         if xgrid[ParentGridRelation] === SubGrid
             ## get FaceNodes from ParentGrid to keep ordering and orientation
             pgrid = xgrid[ParentGrid]
-            pnodes = xgrid[NodeInParent]
+            pnodes = xgrid[NodeParents]
             nscells = num_cells(xgrid)
             PFaceNodes = pgrid[FaceNodes]
             PCellFaces = deepcopy(pgrid[CellFaces])
