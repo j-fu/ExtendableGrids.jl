@@ -1,9 +1,9 @@
 """
 $(TYPEDEF)
 
-Grid component key type for storing node in parent array
+Grid component key type for storing node parents (=ids of nodes in ParentGrid) in an array
 """
-abstract type NodeInParent <: AbstractGridIntegerArray1D end
+abstract type NodeParents <: AbstractGridIntegerArray1D end
 
 """
 $(TYPEDEF)
@@ -98,7 +98,7 @@ Create subgrid from list of regions.
 - `project`: project coordinates onto  subgrid dimension
 
 A subgrid is of type `ExtendableGrid` and stores two additional components:
-[`ParentGrid`](@ref) and [`NodeInParent`](@ref)
+[`ParentGrid`](@ref) and [`NodeParents`](@ref)
 
 """
 function subgrid(parent,
@@ -195,7 +195,7 @@ function subgrid(parent,
     subgrid[CellGeometries]=sub_ct
     subgrid[CellNodes]=tryfix(sub_xnodes)
     subgrid[ParentGrid]=parent
-    subgrid[NodeInParent]=sub_nip
+    subgrid[NodeParents]=sub_nip
     subgrid[CellParents]=cellparents
     subgrid[ParentGridRelation]=boundary ? BoundarySubGrid : SubGrid
 
@@ -265,7 +265,7 @@ function subgrid(parent,
         # Sort nodes of grid for easy plotting
         X=view(subgrid[Coordinates],1,:)
         nx=length(X)
-        I=subgrid[NodeInParent]
+        I=subgrid[NodeParents]
         xipairs=[XIPair{Tc,Ti}(X[i],I[i]) for i=1:nx]
         sort!(xipairs, 1,nx, Base.QuickSort, Base.Forward)
         for i=1:nx
@@ -297,7 +297,7 @@ $(TYPEDSIGNATURES)
 
 Create a view of the vector on a subgrid.
 """
-Base.view(a::AbstractVector,subgrid::ExtendableGrid)  = SubgridVectorView(a,subgrid[NodeInParent])
+Base.view(a::AbstractVector,subgrid::ExtendableGrid)  = SubgridVectorView(a,subgrid[NodeParents])
 
 
 ##############################################################################
