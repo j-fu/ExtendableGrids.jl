@@ -69,3 +69,15 @@ abstract type Spherical1D   <: AbstractCoordinateSystem end  #r (integral over Ï
 
 
 const CoordinateSystems=Union{[Type{t} for t in leaftypes(AbstractCoordinateSystem)]...}
+
+
+"""
+    codim1_coordinatesystem(CoordinateSystem)
+
+Return coordinate system for codimension 1 subgrid.
+"""
+codim1_coordinatesystem(::Type{T}) where T<:AbstractCoordinateSystem = nothing
+codim1_coordinatesystem(::Type{Cartesian3D})=Cartesian2D
+codim1_coordinatesystem(::Type{Cartesian2D})=Cartesian1D
+
+    

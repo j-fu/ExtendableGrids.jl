@@ -62,18 +62,6 @@ Grid component key type for indicating that grid is a refinement of the parentgr
 """
 abstract type RefinedGrid <: ParentGridRelation end
 
-
-"""
-$(TYPEDSIGNATURES)
-
-Default transform for subgrid creation
-"""
-function _copytransform!(a::AbstractArray,b::AbstractArray)
-    for i=1:length(a)
-        a[i]=b[i]
-    end
-end
-
 struct XIPair{Tv, Ti}
     x::Tv
     i::Ti
@@ -85,16 +73,23 @@ Base.isless(x::XIPair, y::XIPair) = (x.x < y.x)
 
 
 """
-$(TYPEDSIGNATURES)
+    subgrid(parent,                                                             
+            subregions::AbstractArray;                                          
+            transform::T=function(a,b) @views a.=b[1:length(a)] end,                                      
+            boundary=false,                                                     
+            coordinatesystem=codim1_coordinatesystem(parent[CoordinateSystem]), 
+            project=true) where T                                               
 
 Create subgrid from list of regions.
 
 - `parent`: parent grid 
-- `subregions`:  Array of subregions
+- `subregions`:  Array of subregions which define the subgrid
+- `boundary`: if true, create codimension 1 subgrid from boundary regions.
 - `transform` (kw parameter): transformation function between
    grid and subgrid coordinates acting on one point.
-   Default: `copytransform`
-- `boundary`: if true, create codimension 1 subgrid from boundary region.
+- `coordinatesystem`: if `boundary==true`, specify coordinate system for the boundary.
+   Default:  if parent coordinatesystem is cartesian, just the cooresponding codim1 coordinatesystem, 
+   otherwise: `nothing`, requiring user specification for use of e.g. CellFinder with the subgrid.
 - `project`: project coordinates onto  subgrid dimension
 
 A subgrid is of type `ExtendableGrid` and stores two additional components:
@@ -103,9 +98,10 @@ A subgrid is of type `ExtendableGrid` and stores two additional components:
 """
 function subgrid(parent,
                  subregions::AbstractArray;
-                 transform::Function=_copytransform!,
+                 transform::T=function(a,b) @views a.=b[1:length(a)] end,                                      
                  boundary=false,
-                 project=true)
+                 coordinatesystem=codim1_coordinatesystem(parent[CoordinateSystem]),
+                 project=true) where T
 
     Tc=coord_type(parent)
     Ti=index_type(parent)
@@ -205,6 +201,9 @@ function subgrid(parent,
         subgrid[BFaceGeometries]=ElementGeometries[]
         subgrid[BFaceNodes]=Matrix{Ti}(undef,sub_gdim,0)
         subgrid[NumBFaceRegions]=0
+        if !isnothing(coordinatesystem)
+            subgrid[CoordinateSystem]=coordinatesystem
+        end
     else
         bfacenodes=parent[BFaceNodes]
         bfaceregions=parent[BFaceRegions]
@@ -258,8 +257,8 @@ function subgrid(parent,
             subgrid[BFaceNodes]=zeros(Ti, 2, 0)
             subgrid[NumBFaceRegions]=0
         end
+        subgrid[CoordinateSystem]=parent[CoordinateSystem]
     end
-    subgrid[CoordinateSystem]=parent[CoordinateSystem]
 
     if sub_gdim == 1
         # Sort nodes of grid for easy plotting
