@@ -1,7 +1,10 @@
-using Test, ExampleJuggler
-using ExtendableGrids, SHA
+using Test
 
-ExampleJuggler.verbose!(true)
+@static if VERSION<v"1.11"
+    using ExampleJuggler
+end
+
+using ExtendableGrids, SHA
 
 @testset "Geomspace" begin
     function test_geomspace()
@@ -263,8 +266,13 @@ end
 
 include("gmsh.jl")
 
-@testset "Examples" begin
-    @testscripts(joinpath(@__DIR__, "..", "examples"), ["examples1d.jl", "examples2d.jl", "examples3d.jl", "gmsh.jl"])
+
+if VERSION<v"1.11"
+    ExampleJuggler.verbose!(true)
+
+    @testset "Examples" begin
+        @testscripts(joinpath(@__DIR__, "..", "examples"), ["examples1d.jl", "examples2d.jl", "examples3d.jl", "gmsh.jl"])
+    end
 end
 
 function voronoitest()
