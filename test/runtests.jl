@@ -1,8 +1,6 @@
 using Test
 
-@static if VERSION<v"1.11"
-    using ExampleJuggler
-end
+using ExampleJuggler
 
 using ExtendableGrids, SHA
 
@@ -267,12 +265,10 @@ end
 include("gmsh.jl")
 
 
-if VERSION<v"1.11"
-    ExampleJuggler.verbose!(true)
+ExampleJuggler.verbose!(true)
 
-    @testset "Examples" begin
-        @testscripts(joinpath(@__DIR__, "..", "examples"), ["examples1d.jl", "examples2d.jl", "examples3d.jl", "gmsh.jl"])
-    end
+@testset "Examples" begin
+    @testscripts(joinpath(@__DIR__, "..", "examples"), ["examples1d.jl", "examples2d.jl", "examples3d.jl", "gmsh.jl"])
 end
 
 function voronoitest()
