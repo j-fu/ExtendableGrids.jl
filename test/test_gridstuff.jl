@@ -78,6 +78,7 @@ function check_cellfinder(xgrid)
     EG = xgrid[UniqueCellGeometries]
     @info "Testing CellFinder for geometries=$EG..."
     xCoordinates = xgrid[Coordinates]
+    @show xCoordinates
     xCellNodes = xgrid[CellNodes]
     edim = dim_element(EG[1])
     CF::CellFinder{Float64,Int32} = CellFinder(xgrid)
@@ -89,11 +90,11 @@ function check_cellfinder(xgrid)
         x_source[j] += xCoordinates[j,xCellNodes[k,cell_to_find]] + 1e-6
     end
     x_source ./= num_targets(xCellNodes,cell_to_find)
-
+    @show x_source
     # find cell by local strategy
     xref = zeros(Float64,edim+1)
     cell = gFindLocal!(xref, CF, x_source; icellstart = 1)
-
+    
     # check xref
     x = zeros(Float64,edim)
     L2G = L2GTransformer(xgrid[CellGeometries][cell], xgrid, ON_CELLS)
@@ -151,6 +152,17 @@ function run_grid_tests()
     @test check_cellfinder(get_testgrid(Tetrahedron3D))
     @test check_cellfinder(get_testgrid(Parallelepiped3D))
 
+    X = LinRange(0, 1, 10)
+    grid = simplexgrid(X, X)
+    sub = subgrid(grid, [2], transform=function(a,b) a[1]=b[2] end,  boundary=true)
+    @test check_cellfinder(sub)
+
+    grid = simplexgrid(X, X, X)
+    sub = subgrid(grid, [5], boundary=true)
+    @test check_cellfinder(sub)
+
+
+    
     @test check_uniform_refinement(reference_domain(Triangle2D), false)
     @test check_uniform_refinement(reference_domain(Triangle2D), true)
     @test check_uniform_refinement(reference_domain(Parallelogram2D), false)

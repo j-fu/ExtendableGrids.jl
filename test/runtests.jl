@@ -1,7 +1,8 @@
-using Test, ExampleJuggler
-using ExtendableGrids, SHA
+using Test
 
-ExampleJuggler.verbose!(true)
+using ExampleJuggler
+
+using ExtendableGrids, SHA
 
 @testset "Geomspace" begin
     function test_geomspace()
@@ -262,6 +263,9 @@ end
 end
 
 include("gmsh.jl")
+
+
+ExampleJuggler.verbose!(true)
 
 @testset "Examples" begin
     @testscripts(joinpath(@__DIR__, "..", "examples"), ["examples1d.jl", "examples2d.jl", "examples3d.jl", "gmsh.jl"])
