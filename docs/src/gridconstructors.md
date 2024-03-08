@@ -9,6 +9,7 @@ glue
 
 ## Various special grids
 ```@autodocs
+Private = false
 Modules = [ExtendableGrids]
 Pages = ["commongrids.jl"]
 ```
