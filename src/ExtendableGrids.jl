@@ -82,7 +82,7 @@ export seemingly_equal, numbers_match
 include("subgrid.jl")
 export subgrid
 export ParentGrid
-export NodeParents, CellParents, FaceParents, BFaceParents, EdgeParents, BEdgeParents
+export NodeParents, CellParents, FaceParents, BFaceParents
 export ParentGridRelation, SubGrid, BoundarySubGrid, RefinedGrid
 
 include("shape_specs.jl")
@@ -93,7 +93,6 @@ export num_edges
 export local_cellfacenodes
 export local_celledgenodes
 export facetype_of_cellface
-export Volume4ElemType
 export Normal4ElemType!
 export Tangent4ElemType!
 export xrefFACE2xrefCELL
@@ -167,7 +166,6 @@ export glue, geomspace, linspace
 include("simplexgrid.jl")
 export simplexgrid, geomspace, glue
 export XCoordinates, YCoordinates, ZCoordinates
-export writefile
 
 include("tokenstream.jl")
 export TokenStream, gettoken, expecttoken, trytoken

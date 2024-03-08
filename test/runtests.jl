@@ -1,8 +1,21 @@
-using Test
-
+using Test, Aqua
 using ExampleJuggler
 
 using ExtendableGrids, SHA
+
+using AbstractTrees, StatsBase
+
+@testset "Aqua" begin
+Aqua.test_ambiguities([ExtendableGrids, Base, Core], exclude=[view, ==, StatsBase.TestStat, copyto!])
+Aqua.test_unbound_args(ExtendableGrids)
+Aqua.test_undefined_exports(ExtendableGrids)
+Aqua.test_project_extras(ExtendableGrids)
+Aqua.test_stale_deps(ExtendableGrids,ignore=[:Requires,:Bijections])
+Aqua.test_deps_compat(ExtendableGrids)
+Aqua.test_piracies(ExtendableGrids,treat_as_own=[AbstractTrees.children])
+Aqua.test_persistent_tasks(ExtendableGrids)
+end
+
 
 @testset "Geomspace" begin
     function test_geomspace()
