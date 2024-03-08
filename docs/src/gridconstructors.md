@@ -1,9 +1,15 @@
 # Grid constructors
 
+## Tensor product simplex grids
 
-## API
+```@docs
+simplexgrid
+glue
+```
+
+## Various special grids
 ```@autodocs
 Modules = [ExtendableGrids]
-Pages = ["simplexgrid.jl","commongrids.jl"]
+Pages = ["commongrids.jl"]
 ```
 

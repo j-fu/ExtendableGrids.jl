@@ -17,6 +17,35 @@ ExtendableGrids.simplexgrid_from_gmsh
 ExtendableGrids.simplexgrid_to_gmsh
 ExtendableGrids.mixedgrid_from_gmsh
 ExtendableGrids.mixedgrid_to_gmsh
+ExtendableGrids.seal!
 ```
 
 
+
+## Internals
+### Gmsh extension
+```@docs
+ExtendableGridsGmshExt.gmshfile_to_mixedgrid
+ExtendableGridsGmshExt.take_second
+ExtendableGridsGmshExt.gmshfile_to_simplexgrid
+ExtendableGridsGmshExt.test_gmsh_init
+ExtendableGridsGmshExt.mixedgrid_to_gmshfile
+ExtendableGridsGmshExt.multiply_indices
+ExtendableGridsGmshExt.mod_to_mixedgrid
+ExtendableGridsGmshExt.simplexgrid_to_gmshfile
+ExtendableGridsGmshExt.simplexgrid_to_mod
+ExtendableGridsGmshExt.mod_to_simplexgrid
+ExtendableGridsGmshExt.incomplete_mod_to_simplexgrid
+ExtendableGridsGmshExt.use_geoms
+ExtendableGridsGmshExt.use_vta
+```
+
+### seal! method
+```@docs
+ExtendableGrids.faces_of_ndim_simplex
+ExtendableGrids.assemble_bfaces_direct
+ExtendableGrids.decode
+ExtendableGrids.encode
+ExtendableGrids.faces_of_ndim_simplex_direct
+ExtendableGrids.assemble_bfaces
+```
