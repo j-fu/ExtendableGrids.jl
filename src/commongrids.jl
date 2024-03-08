@@ -38,9 +38,7 @@ function reference_domain(EG::Type{<:AbstractElementGeometry}, T::Type{<:Real} =
 end
 
 """
-````
-    Triangle(coords) -> ExtendableGrid{T,Int32}
-````
+    grid_triangle(coords::AbstractArray{T,2}) where {T}
 
 Generates a single triangle with the given coordinates, that should be a 2 x 3 array
 with the coordinates of the three vertices, e.g. coords = [0.0 0.0; 1.0 0.0; 0.0 1.0]'.
@@ -51,12 +49,20 @@ function grid_triangle(coords::AbstractArray{T,2}) where {T}
     return xgrid
 end
 
-# unit cube as one cell with six boundary regions (bottom, front, right, back, left, top)
+"""
+    grid_unitcube(EG::Type{<:Hexahedron3D}; scale = [1,1,1], shift = [0,0,0])
+
+Unit cube as one cell with six boundary regions (bottom, front, right, back, left, top)
+"""
 function grid_unitcube(EG::Type{<:Hexahedron3D}; scale = [1,1,1], shift = [0,0,0])
     return reference_domain(EG; scale = scale, shift = shift)
 end
 
-# unit cube as six tets with six boundary regions (bottom, front, right, back, left, top)
+"""
+    grid_unitcube(::Type{Tetrahedron3D}; scale = [1,1,1], shift = [0,0,0])
+
+Unit cube as six tets with six boundary regions (bottom, front, right, back, left, top)
+"""
 function grid_unitcube(::Type{Tetrahedron3D}; scale = [1,1,1], shift = [0,0,0])
     xgrid=ExtendableGrid{Float64,Int32}()
     xCoordinates=Array{Float64,2}([0 0 0; 1 0 0; 1 1 0; 0 1 0; 0 0 1; 1 0 1; 1 1 1; 0 1 1]')
@@ -80,14 +86,18 @@ function grid_unitcube(::Type{Tetrahedron3D}; scale = [1,1,1], shift = [0,0,0])
     return xgrid
 end
 
-
-
-# unit square as one cell with four boundary regions (bottom, right, top, left)
+"""
+    grid_unitsquare(EG::Type{<:Quadrilateral2D}; scale = [1,1], shift = [0,0])
+Unit square as one cell with four boundary regions (bottom, right, top, left)
+"""
 function grid_unitsquare(EG::Type{<:Quadrilateral2D}; scale = [1,1], shift = [0,0])
     return reference_domain(EG; scale = scale, shift = shift)
 end
 
-# unit square as two triangles with four boundary regions (bottom, right, top, left)
+"""
+    grid_unitsquare(::Type{<:Triangle2D}; scale = [1,1], shift = [0,0])
+Unit square as two triangles with four boundary regions (bottom, right, top, left)
+"""
 function grid_unitsquare(::Type{<:Triangle2D}; scale = [1,1], shift = [0,0])
     xgrid=ExtendableGrid{Float64,Int32}()
     xCoordinates=Array{Float64,2}([0 0; 1 0; 1 1; 0 1; 0.5 0.5]')
@@ -107,7 +117,10 @@ function grid_unitsquare(::Type{<:Triangle2D}; scale = [1,1], shift = [0,0])
 end
 
 
-# unit square as two triangles with four boundary regions (bottom, right, top, left)
+"""
+    grid_lshape(::Type{<:Triangle2D}; scale = [1,1], shift = [0,0])
+Lshape domain
+"""
 function grid_lshape(::Type{<:Triangle2D}; scale = [1,1], shift = [0,0])
     xgrid=ExtendableGrid{Float64,Int32}()
     xCoordinates=Array{Float64,2}([0 0; 1 0; 1 1; 0 1; -1 1; -1 0; -1 -1; 0 -1]')
@@ -126,7 +139,11 @@ function grid_lshape(::Type{<:Triangle2D}; scale = [1,1], shift = [0,0])
     return xgrid
 end
 
-# unit suqare as mixed triangles and squares with four boundary regions (bottom, right, top, left)
+"""
+    grid_unitsquare_mixedgeometries()
+
+Unit suqare as mixed triangles and squares with four boundary regions (bottom, right, top, left)
+"""
 function grid_unitsquare_mixedgeometries()
 
     xgrid=ExtendableGrid{Float64,Int32}()
@@ -155,10 +172,12 @@ function grid_unitsquare_mixedgeometries()
     return xgrid
 end
 
-#################################
-# Specific tensor product grids #
-#################################
 
+"""
+    ringsector(rad,ang; eltype=Triangle2D)
+
+Sector of ring or full ring (if  `ang[begin]-ang[end]≈2π`)
+"""
 function ringsector(rad,ang; eltype=Triangle2D)
     Tv=Float32
     Ti=Int32
