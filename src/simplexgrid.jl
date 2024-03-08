@@ -647,11 +647,11 @@ end
 
 
 """
-   function glue(g1,g2;
-            g1regions=1:num_bfaceregions(g1),
-            g2regions=1:num_bfaceregions(g2),
-            interface=0,
-            tol=1.0e-10)
+    glue(g1,g2;
+         g1regions=1:num_bfaceregions(g1),
+         g2regions=1:num_bfaceregions(g2),
+         interface=0,
+         tol=1.0e-10)
 
 Merge two grids along their common boundary facets. 
 
@@ -666,7 +666,7 @@ Merge two grids along their common boundary facets.
 Deprecated:
 - breg: old notation for interface
 """
-function glue(g1,g2;
+function glue(g1::ExtendableGrid,g2::ExtendableGrid;
               g1regions=1:num_bfaceregions(g1),
               g2regions=1:num_bfaceregions(g2),
               breg=nothing,

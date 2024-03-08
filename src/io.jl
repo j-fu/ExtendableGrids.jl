@@ -17,7 +17,6 @@ exports grid and optional provided data as a vtk file
 
 Each '(key, value)' pair adds another data entry to the vtk file via WriteVTK functionality.
 """
-
 function writeVTK(filename::String, grid::ExtendableGrid{Tc, Ti}; kwargs...) where {Tc, Ti}
     ncells = num_cells(grid)   # get number of cells in grid
     coords = grid[Coordinates] # get coordinates 

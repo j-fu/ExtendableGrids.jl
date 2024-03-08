@@ -1,8 +1,8 @@
 QUARRY
-.project.jl
+test/*testfile*
 docs/build
-docs/src/examples
+docs/src/*examples
 *~
 Manifest.toml
 .repl_history.jl
-
+quarry

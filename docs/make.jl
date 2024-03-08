@@ -2,16 +2,15 @@ using Documenter, ExtendableGrids, ExampleJuggler, Gmsh
 import CairoMakie
 CairoMakie.activate!(; type = "svg", visible = false)
 ExampleJuggler.verbose!(true)
-
+ExtendableGridsGmshExt=Base.get_extension(ExtendableGrids, :ExtendableGridsGmshExt)
 function mkdocs()
     cleanexamples()
     generated_examples = @docscripts(joinpath(@__DIR__, "..", "examples"),
                                      ["examples1d.jl", "examples2d.jl", "examples3d.jl", "gmsh.jl"],
                                      Plotter=CairoMakie)
     makedocs(; sitename = "ExtendableGrids.jl",
-             modules = [ExtendableGrids, Base.get_extension(ExtendableGrids, :ExtendableGridsGmshExt)],
+             modules = [ExtendableGrids,ExtendableGridsGmshExt],
              clean = false,
-             warnonly = true,
              doctest = true,
              authors = "J. Fuhrmann, Ch. Merdon, J. Taraz",
              repo = "https://github.com/j-fu/ExtendableGrids.jl",
@@ -31,6 +30,7 @@ function mkdocs()
                  "cellfinder.md",
                  "arraytools.md",
                  "gridconstructors.md",
+                 "output.md",
                  "refinement.md",
                  "regionedit.md",
                  "tokenstream.md",
