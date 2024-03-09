@@ -1,8 +1,7 @@
 """
     ExtendableGrids
 
-Package providing container structure `ExtendableGrid` with type stable content access and lazy content creation holding data for discretization
-grids for finite element and finite volume methods. 
+$(read(joinpath(@__DIR__,"..","README.md"),String))
 """
 module ExtendableGrids
 
