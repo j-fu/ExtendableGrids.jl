@@ -1,3 +1,9 @@
+"""
+    ExtendableGrids
+
+Package providing container structure `ExtendableGrid` with type stable content access and lazy content creation holding data for discretization
+grids for finite element and finite volume methods. 
+"""
 module ExtendableGrids
 
 using DocStringExtensions
