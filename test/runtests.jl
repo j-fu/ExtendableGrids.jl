@@ -1,19 +1,31 @@
 using Test, Aqua
 using ExampleJuggler
+using Gmsh: gmsh
 
 using ExtendableGrids, SHA
 
 using AbstractTrees, StatsBase
 
+if isdefined(Docs,:undocumented_names) # 1.11
+@testset "undocumented names" begin
+    undocnames=Docs.undocumented_names(ExtendableGrids)
+    @test isempty(undocnames)
+end
+end
+
+
 @testset "Aqua" begin
-Aqua.test_ambiguities([ExtendableGrids, Base, Core], exclude=[view, ==, StatsBase.TestStat, copyto!])
-Aqua.test_unbound_args(ExtendableGrids)
-Aqua.test_undefined_exports(ExtendableGrids)
-Aqua.test_project_extras(ExtendableGrids)
-Aqua.test_stale_deps(ExtendableGrids,ignore=[:Requires,:Bijections])
-Aqua.test_deps_compat(ExtendableGrids)
-Aqua.test_piracies(ExtendableGrids,treat_as_own=[AbstractTrees.children])
-Aqua.test_persistent_tasks(ExtendableGrids)
+    # not sure why copyto! and StatsBase are popping up here
+    Aqua.test_ambiguities([ExtendableGrids, Base, Core], exclude=[view, ==, StatsBase.TestStat, copyto!])
+    Aqua.test_unbound_args(ExtendableGrids)
+    Aqua.test_undefined_exports(ExtendableGrids)
+    Aqua.test_project_extras(ExtendableGrids)
+    Aqua.test_stale_deps(ExtendableGrids,ignore=[:Requires,:Bijections])
+    Aqua.test_deps_compat(ExtendableGrids)
+
+    # Guilty of pirating: AbstracTrees.children(::Type)...
+    Aqua.test_piracies(ExtendableGrids,treat_as_own=[AbstractTrees.children])
+    Aqua.test_persistent_tasks(ExtendableGrids)
 end
 
 

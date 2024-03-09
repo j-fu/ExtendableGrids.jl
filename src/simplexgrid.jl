@@ -91,8 +91,23 @@ end
 
 
 ##########################################################
+
+"""
+    $(TYPEDEF)
+X coordinates of simplex grid derived from tensor product
+"""
 abstract type XCoordinates <: AbstractGridFloatArray1D end
+
+"""
+    $(TYPEDEF)
+Y coordinates of simplex grid derived from tensor product
+"""
 abstract type YCoordinates <: AbstractGridFloatArray1D end
+
+"""
+    $(TYPEDEF)
+Z coordinates of simplex grid derived from tensor product
+"""
 abstract type ZCoordinates <: AbstractGridFloatArray1D end
 
 

@@ -1,5 +1,3 @@
-using Gmsh: gmsh
-
 # Add this later as an verbosity option
 #  gmsh.option.setNumber("General.Terminal", 0)
 #  gmsh.option.setNumber("General.Verbosity", 0)
