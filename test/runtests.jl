@@ -5,14 +5,12 @@ using Gmsh: gmsh
 using ExtendableGrids, SHA
 
 using AbstractTrees, StatsBase
-@show pkgdir(ExtendableGrids)
-@show :grid_unitcube ∈ Docs.undocumented_names(ExtendableGrids)
 
+if isdefined(Docs,:undocumented_names) # 1.11
 @testset "undocumented names" begin
     undocnames=Docs.undocumented_names(ExtendableGrids)
     @test isempty(undocnames)
 end
-
 end
 
 
