@@ -1009,14 +1009,20 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{CellFa
     xgrid[CellFaceSigns]
 end
 
-function collectVolumes4Geometries(T::Type{<:Real}, xgrid::ExtendableGrid{Tc,Ti}, ItemType) where {Tc,Ti}
+function collectVolumes4Geometries(xgrid::ExtendableGrid{Tc,Ti}, ItemType) where {Tc,Ti}
     # get links to other stuff
     xCoordinates = xgrid[Coordinates]
     xCoordinateSystem = xgrid[CoordinateSystem]
     xItemNodes = xgrid[GridComponent4TypeProperty(ItemType,PROPERTY_NODES) ]
     xGeometries = xgrid[GridComponent4TypeProperty(ItemType,PROPERTY_GEOMETRY) ]
     nitems = num_sources(xItemNodes)
-    xVolumes = zeros(T,nitems)
+
+    # keep existing volume array if possible
+    if haskey(xgrid.components, GridComponent4TypeProperty(ItemType, PROPERTY_VOLUME))
+        xVolumes = xgrid[GridComponent4TypeProperty(ItemType,PROPERTY_VOLUME)]
+    else
+        xVolumes = zeros(Tc,nitems)
+    end
 
     # Introduce a function barrier: this will be compiled for each differnent type
     # of coordinate systems.
@@ -1032,23 +1038,23 @@ end
 
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{CellVolumes}) where {Tc,Ti}
-    collectVolumes4Geometries(Tc, xgrid, ITEMTYPE_CELL)
+    collectVolumes4Geometries(xgrid, ITEMTYPE_CELL)
 end
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceVolumes}) where {Tc,Ti}
-    collectVolumes4Geometries(Tc, xgrid, ITEMTYPE_FACE)
+    collectVolumes4Geometries(xgrid, ITEMTYPE_FACE)
 end
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BFaceVolumes}) where {Tc,Ti}
-    collectVolumes4Geometries(Tc, xgrid, ITEMTYPE_BFACE)
+    collectVolumes4Geometries(xgrid, ITEMTYPE_BFACE)
 end
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeVolumes}) where {Tc,Ti}
-    collectVolumes4Geometries(Tc, xgrid, ITEMTYPE_EDGE)
+    collectVolumes4Geometries(xgrid, ITEMTYPE_EDGE)
 end
 
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{BEdgeVolumes}) where {Tc,Ti}
-    collectVolumes4Geometries(Tc, xgrid, ITEMTYPE_BEDGE)
+    collectVolumes4Geometries(xgrid, ITEMTYPE_BEDGE)
 end
 
 
@@ -1269,7 +1275,9 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceNo
     nfaces::Int = num_sources(xFaceNodes)
     xFaceGeometries::GridEGTypes = xgrid[FaceGeometries]
     xCoordinateSystem::Type{<:AbstractCoordinateSystem} = xgrid[CoordinateSystem]
-    xFaceNormals::Array{Tc,2} = zeros(Tc,dim,nfaces)
+
+    xFaceNormals::Array{Tc,2} = haskey(xgrid.components, FaceNormals) ? xgrid[FaceNormals] : zeros(Tc,dim,nfaces)
+
     normal::Array{Tc,1} = zeros(Tc,dim)
     EG = xFaceGeometries[1]
     for face = 1 : nfaces
@@ -1290,7 +1298,9 @@ function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{EdgeTa
     nedges::Int = num_sources(xEdgeNodes)
     xEdgeGeometries::GridEGTypes = xgrid[EdgeGeometries]
     xCoordinateSystem::Type{<:AbstractCoordinateSystem} = xgrid[CoordinateSystem]
-    xEdgeTangents::Array{Tc,2} = zeros(Tc,dim,nedges)
+
+    xEdgeTangents::Array{Tc,2} = haskey(xgrid.components, EdgeTangents) ? xgrid[EdgeTangents] : zeros(Tc,dim,nedges)
+
     EG = xEdgeGeometries[1]
     tangent::Array{Tc,1} = zeros(Tc,dim)
     for edge = 1 : nedges
