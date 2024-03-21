@@ -34,6 +34,7 @@ function mkdocs()
                  "refinement.md",
                  "regionedit.md",
                  "tokenstream.md",
+                 "binnedpointlist.md",
                  "gmsh.md",
                  "allindex.md",
                  "Examples" => generated_examples,

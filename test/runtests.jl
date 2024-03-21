@@ -5,6 +5,8 @@ using ExtendableGrids, SHA
 
 using AbstractTrees, StatsBase
 
+using TetGen, SimplexGridFactory
+
 @testset "Aqua" begin
 Aqua.test_ambiguities([ExtendableGrids, Base, Core], exclude=[view, ==, StatsBase.TestStat, copyto!])
 Aqua.test_unbound_args(ExtendableGrids)
@@ -237,6 +239,11 @@ end
     @test length(rgrid[BFaceParents]) == num_bfaces(grid)
 
 
+end
+
+
+@testset "        BinnedPointList" begin
+    include("testbinned.jl")
 end
 
 function tglue(; dim = 2, breg = 0)
