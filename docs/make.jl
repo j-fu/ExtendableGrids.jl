@@ -16,6 +16,7 @@ function mkdocs()
              repo = "https://github.com/j-fu/ExtendableGrids.jl",
              pages = [
                  "Home" => "index.md",
+                 "Changes" => "changes.md",
                  "adjacency.md",
                  "vectorofconstants.md",
                  "typehierarchy.md",
