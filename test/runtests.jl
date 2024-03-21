@@ -5,8 +5,6 @@ using ExtendableGrids, SHA
 
 using AbstractTrees, StatsBase
 
-using TetGen, SimplexGridFactory
-
 @testset "Aqua" begin
 Aqua.test_ambiguities([ExtendableGrids, Base, Core], exclude=[view, ==, StatsBase.TestStat, copyto!])
 Aqua.test_unbound_args(ExtendableGrids)

@@ -2,7 +2,18 @@
 Used to find and identify points in space
 
 ## API
-```@autodocs
-Modules = [ExtendableGrids]
-Pages = ["binnedpointlist.jl"]
+
+```@docs
+BinnedPointList
+findpoint
+Base.insert!
+```
+
+## Internal
+
+```@docs
+ExtendableGrids._findpoint
+ExtendableGrids._bin_of_point!
+ExtendableGrids._rebin_all_points!
+ExtendableGrids.naiveinsert!
 ```

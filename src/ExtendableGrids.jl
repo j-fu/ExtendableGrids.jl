@@ -164,7 +164,7 @@ include("arraytools.jl")
 export glue, geomspace, linspace
 
 include("binnedpointlist.jl")
-export BinnedPointList
+export BinnedPointList, findpoint
 
 include("simplexgrid.jl")
 export simplexgrid, geomspace, glue

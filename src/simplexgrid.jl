@@ -651,7 +651,8 @@ end
          g1regions=1:num_bfaceregions(g1),
          g2regions=1:num_bfaceregions(g2),
          interface=0,
-         tol=1.0e-10)
+         tol=1.0e-10,
+         naive=false)
 
 Merge two grids along their common boundary facets. 
 
@@ -661,7 +662,7 @@ Merge two grids along their common boundary facets.
 - g2regions: boundary regions to be used from grid2. Default: all.
 - interface: if nonzero, create interface region in new grid, otherwise, ignore
 - tol:  Distance below which two points are seen as identical. Default: 1.0e-10
-
+- naive: use naive quadratic complexity matching (for checking backward compatibility). Default: false
 
 Deprecated:
 - breg: old notation for interface
@@ -671,8 +672,9 @@ function glue(g1::ExtendableGrid,g2::ExtendableGrid;
               g2regions=1:num_bfaceregions(g2),
               breg=nothing,
               interface=0,
-              tol=1.0e-10)
-    Ti=Cint
+              tol=1.0e-10,
+              naive = false)
+    Ti=eltype(g1[CellNodes])
     dim=dim_space(g1)
 
     if breg!=nothing
@@ -770,7 +772,7 @@ function glue(g1::ExtendableGrid,g2::ExtendableGrid;
         breg2used[reg]=true
     end
 
-    if false
+    if naive
         # Run over all pairs of boundary faces and try to match them
         # This can scale catastrophically...
         for ibf1=1:nbf1
@@ -821,7 +823,7 @@ function glue(g1::ExtendableGrid,g2::ExtendableGrid;
         end
     end
     
-    @info "glue: matches found: nodes $(n_matching_nodes) bfaces: $(n_matching_faces)"
+    @info "glue: $(n_matching_faces) matching bfaces found"
     
     creg1=g1[CellRegions]
     creg2=g2[CellRegions]
