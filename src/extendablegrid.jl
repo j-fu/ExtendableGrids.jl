@@ -259,6 +259,13 @@ Base.delete!(grid::ExtendableGrid, T::Type{<:AbstractGridComponent}) = delete!(g
 """
 $(TYPEDSIGNATURES)
 
+Reinstantiate grid component (only if it exists)
+"""
+update!(grid::ExtendableGrid, T::Type{<:AbstractGridComponent}) = haskey(grid, T) ? instantiate(grid, T) : nothing
+
+"""
+$(TYPEDSIGNATURES)
+
 To be called by getindex. This triggers lazy creation of 
 non-existing gridcomponents
 """

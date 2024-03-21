@@ -63,6 +63,7 @@ export Polar2D, Polar1D, Spherical3D, Spherical1D
 include("extendablegrid.jl")
 export ExtendableGrid
 export instantiate, veryform
+export update!
 export AbstractGridComponent
 export AbstractGridAdjacency, AbstractElementGeometries, AbstractElementRegions
 export Coordinates, CellNodes, BFaceNodes
