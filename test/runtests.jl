@@ -239,6 +239,11 @@ end
 
 end
 
+
+@testset "        BinnedPointList" begin
+    include("testbinned.jl")
+end
+
 function tglue(; dim = 2, breg = 0)
     X1 = linspace(0, 1, 5)
     Y1 = linspace(0, 1, 5)

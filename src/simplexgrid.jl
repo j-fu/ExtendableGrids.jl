@@ -10,7 +10,7 @@ function simplexgrid(coord::Array{Tc,2},
 
 Create  d-dimensional simplex grid from five arrays.
 
--    coord: d ``\\times`` n_points matrix of coordinates
+-        coord: d ``\\times`` n_points matrix of coordinates
 -    cellnodes: d+1 ``\\times`` n_tri matrix of triangle - point incidence
 -  cellregions: n_tri vector of cell region markers
 -   bfacenodes: d ``\\times`` n_bf matrix of boundary facet - point incidences
@@ -651,7 +651,8 @@ end
          g1regions=1:num_bfaceregions(g1),
          g2regions=1:num_bfaceregions(g2),
          interface=0,
-         tol=1.0e-10)
+         tol=1.0e-10,
+         naive=false)
 
 Merge two grids along their common boundary facets. 
 
@@ -661,7 +662,7 @@ Merge two grids along their common boundary facets.
 - g2regions: boundary regions to be used from grid2. Default: all.
 - interface: if nonzero, create interface region in new grid, otherwise, ignore
 - tol:  Distance below which two points are seen as identical. Default: 1.0e-10
-
+- naive: use naive quadratic complexity matching (for checking backward compatibility). Default: false
 
 Deprecated:
 - breg: old notation for interface
@@ -671,8 +672,9 @@ function glue(g1::ExtendableGrid,g2::ExtendableGrid;
               g2regions=1:num_bfaceregions(g2),
               breg=nothing,
               interface=0,
-              tol=1.0e-10)
-    Ti=Cint
+              tol=1.0e-10,
+              naive = false)
+    Ti=eltype(g1[CellNodes])
     dim=dim_space(g1)
 
     if breg!=nothing
@@ -749,23 +751,79 @@ function glue(g1::ExtendableGrid,g2::ExtendableGrid;
       end
     end
 
+    function barycenter!(bc,bfnodes,coord,iface)
+        for idim=1:dim
+            bc[idim]=0.0
+            for jdim=1:dim
+                bc[idim]+=coord[idim,bfnodes[jdim,iface]]/dim
+            end
+        end
+        bc
+    end
+    
+    nbfreg1=num_bfaceregions(g1)
+    nbfreg2=num_bfaceregions(g2)
+    breg1used=zeros(Bool,nbfreg1)
+    breg2used=zeros(Bool,nbfreg2)
+    for reg in g1regions
+        breg1used[reg]=true
+    end
+    for reg in g2regions
+        breg2used[reg]=true
+    end
 
-    use_region(ireg,regionlist) = findfirst(i->i==ireg,regionlist)!=nothing
-    # Run over all pairs of boundary faces and try to match them
-    for ibf1=1:nbf1
-        if use_region(bfreg1[ibf1],g1regions)
-            for ibf2=1:nbf2
-                if use_region(bfreg2[ibf2],g2regions)
+    if naive
+        # Run over all pairs of boundary faces and try to match them
+        # This can scale catastrophically...
+        for ibf1=1:nbf1
+            if breg1used[bfreg1[ibf1]]
+                for ibf2=1:nbf2
+                    if breg2used[bfreg2[ibf2]]
+                        match_faces(ibf1,ibf2)
+                    end
+                end
+            end
+        end
+    else
+        # Use a binned point list for speed up.
+        # Facets are found through their barycenters.
+        bcenter=zeros(dim)
+        bpl=BinnedPointList(eltype(coord1),dim)
+        nbf1used=0
+
+        for ibf1=1:nbf1
+            if breg1used[bfreg1[ibf1]]
+                nbf1used+=1
+            end
+        end
+
+        # marker for facet numbers
+        bf1used=zeros(Int,nbf1used)
+
+        # insert all barycenters of used bfaces from grid 1 into the binned pointlist
+        for ibf1=1:nbf1
+            if breg1used[bfreg1[ibf1]]
+                i=insert!(bpl,barycenter!(bcenter,bfn1,coord1,ibf1))
+                bf1used[i]=ibf1
+            end
+        end
+        
+        # loop over used grid2 bfaces and find if barycenters match with a point in
+        # the binned pointlist
+        for ibf2=1:nbf2
+            if breg2used[bfreg2[ibf2]]
+                i=findpoint(bpl,barycenter!(bcenter,bfn2,coord2,ibf2))
+                # if a match has been found, identify facets
+                if i>0
+                    ibf1=bf1used[i]
+                    # use "old" matching, double check at once
                     match_faces(ibf1,ibf2)
                 end
             end
         end
     end
     
-    @info "glue: matches found: nodes $(n_matching_nodes) bfaces: $(n_matching_faces)"
-
-
-
+    @info "glue: $(n_matching_faces) matching bfaces found"
     
     creg1=g1[CellRegions]
     creg2=g2[CellRegions]

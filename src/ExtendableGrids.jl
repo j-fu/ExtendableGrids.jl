@@ -163,6 +163,9 @@ export cellmask!, bfacemask!, bedgemask!, rect!
 include("arraytools.jl")
 export glue, geomspace, linspace
 
+include("binnedpointlist.jl")
+export BinnedPointList, findpoint
+
 include("simplexgrid.jl")
 export simplexgrid, geomspace, glue
 export XCoordinates, YCoordinates, ZCoordinates
