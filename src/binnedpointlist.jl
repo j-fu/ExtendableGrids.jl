@@ -213,6 +213,16 @@ function Base.insert!(bpl::BinnedPointList{T}, p) where {T}
     end
 end
 
+function findpoint(bpl::BinnedPointList{T}, p) where {T}
+    _rebin_all_points!(bpl)
+    _bin_of_point!(bpl, p)
+    if reduce(*, bpl.current_bin) > 0
+        return _findpoint(bpl, bpl.bins[bpl.current_bin...], p)
+    else
+        return _findpoint(bpl, bpl.unbinned, p)
+    end
+end
+
 Base.insert!(bpl::BinnedPointList{T}, x::Number) where {T} = insert!(bpl, (x))
 Base.insert!(bpl::BinnedPointList{T}, x::Number, y::Number) where {T} = insert!(bpl, (x, y))
 Base.insert!(bpl::BinnedPointList{T}, x::Number, y::Number, z::Number) where {T} = insert!(bpl, (x, y, z))
