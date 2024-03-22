@@ -78,7 +78,7 @@ function check_cellfinder(xgrid)
     EG = xgrid[UniqueCellGeometries]
     @info "Testing CellFinder for geometries=$EG..."
     xCoordinates = xgrid[Coordinates]
-    @show xCoordinates
+    # @show xCoordinates
     xCellNodes = xgrid[CellNodes]
     edim = dim_element(EG[1])
     CF::CellFinder{Float64,Int32} = CellFinder(xgrid)

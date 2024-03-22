@@ -651,6 +651,7 @@ end
          g1regions=1:num_bfaceregions(g1),
          g2regions=1:num_bfaceregions(g2),
          interface=0,
+         warnonly = false,
          tol=1.0e-10,
          naive=false)
 
@@ -661,6 +662,7 @@ Merge two grids along their common boundary facets.
 - g1regions: boundary regions to be used from grid1. Default: all.
 - g2regions: boundary regions to be used from grid2. Default: all.
 - interface: if nonzero, create interface region in new grid, otherwise, ignore
+- strict: Assume all bfaces form specfied regions shall be matched, throw error on failure
 - tol:  Distance below which two points are seen as identical. Default: 1.0e-10
 - naive: use naive quadratic complexity matching (for checking backward compatibility). Default: false
 
@@ -673,6 +675,7 @@ function glue(g1::ExtendableGrid,g2::ExtendableGrid;
               breg=nothing,
               interface=0,
               tol=1.0e-10,
+              strict = false,
               naive = false)
     Ti=eltype(g1[CellNodes])
     dim=dim_space(g1)
@@ -755,8 +758,9 @@ function glue(g1::ExtendableGrid,g2::ExtendableGrid;
         for idim=1:dim
             bc[idim]=0.0
             for jdim=1:dim
-                bc[idim]+=coord[idim,bfnodes[jdim,iface]]/dim
+                bc[idim]+=coord[idim,bfnodes[jdim,iface]]
             end
+            bc[idim]/=3.0
         end
         bc
     end
@@ -772,6 +776,25 @@ function glue(g1::ExtendableGrid,g2::ExtendableGrid;
         breg2used[reg]=true
     end
 
+    nbf1used=0
+    for ibf1=1:nbf1
+        if breg1used[bfreg1[ibf1]]
+            nbf1used+=1
+        end
+    end
+    
+    nbf2used=0
+    for ibf2=1:nbf2
+        if breg2used[bfreg2[ibf2]]
+            nbf2used+=1
+        end
+    end
+
+    if nbf1used!=nbf2used && strict
+        error("glue: trying to match $nbf1used grid1 bfaces with $nbf2used grid2 bfaces.")
+    end
+
+    
     if naive
         # Run over all pairs of boundary faces and try to match them
         # This can scale catastrophically...
@@ -788,14 +811,7 @@ function glue(g1::ExtendableGrid,g2::ExtendableGrid;
         # Use a binned point list for speed up.
         # Facets are found through their barycenters.
         bcenter=zeros(dim)
-        bpl=BinnedPointList(eltype(coord1),dim)
-        nbf1used=0
-
-        for ibf1=1:nbf1
-            if breg1used[bfreg1[ibf1]]
-                nbf1used+=1
-            end
-        end
+        bpl=BinnedPointList(eltype(coord1),dim;tol)
 
         # marker for facet numbers
         bf1used=zeros(Int,nbf1used)
@@ -822,9 +838,13 @@ function glue(g1::ExtendableGrid,g2::ExtendableGrid;
             end
         end
     end
-    
-    @info "glue: $(n_matching_faces) matching bfaces found"
-    
+
+    if (n_matching_faces != nbf1used || n_matching_faces != nbf2used) && strict
+        error("glue: bfaces to be matched: $nbf1used vs. $nbf2used, bfaces matched: $n_matching_faces.")
+    else
+        @info "glue: $(n_matching_faces) matching bfaces found"
+    end
+
     creg1=g1[CellRegions]
     creg2=g2[CellRegions]
     
