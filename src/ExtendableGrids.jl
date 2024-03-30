@@ -78,6 +78,7 @@ export dim_space, dim_grid
 export num_nodes, num_cells, num_bfaces, num_bedges
 export num_cellregions, num_bfaceregions, num_bedgeregions
 export gridcomponents
+export isconsistent, dangling_nodes
 export seemingly_equal, numbers_match
 
 include("subgrid.jl")
