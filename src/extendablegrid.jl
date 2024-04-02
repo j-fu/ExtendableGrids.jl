@@ -424,6 +424,48 @@ Type of indices
 """
 index_type(grid::ExtendableGrid{Tc, Ti}) where {Tc, Ti} = Ti
 
+function dangling_nodes(grid)
+    coord=grid[Coordinates]
+    nnodes=size(coord,2)
+    nodemark=zeros(Bool,nnodes)
+    cn=grid[CellNodes]
+    ncells=num_cells(grid)
+    for icell = 1:ncells
+        for inode=1:num_targets(cn,icell)
+            nodemark[cn[inode,icell]] = true
+        end
+    end
+    if all(nodemark)
+        return nothing
+    else
+        return coord[:,findall(!,nodemark)]
+    end
+end
+
+
+"""
+    isconsistent(grid; warnonly=false)
+
+Check consistency of grid: a grid is consistent if
+- Grid has no dangling nodes
+- ... more to be added
+
+If grid is consistent, return true, otherwise throw an error, 
+or, if `warnoly==true`, return false.
+"""
+function isconsistent(grid; warnonly=false)
+    consistent= true
+    dnodes=dangling_nodes(grid)
+    if !isnothing(dnodes)
+        @warn "Found dangling nodes: $(dnodes)"
+        consistent=false
+    end
+    if !consistent && ! warnonly
+        error("Consistency error(s) found in grid")
+    end
+    consistent
+end
+
 """
 $(TYPEDSIGNATURES)
 

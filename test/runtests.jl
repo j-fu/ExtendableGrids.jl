@@ -51,6 +51,48 @@ end
 end
 
 @testset "Basic" begin
+    @test let
+        nodes = [0.0 1;
+                 1 0;
+                 0 1;
+                 1 1]'
+
+        cells = [1 2 3;
+                 2 3 4]'
+
+        cellmat = [1, 1]
+        bfaces = [1 2;
+                  1 3;
+                  2 4]'
+
+        bfacemat = [1, 1]
+
+        grid = simplexgrid(nodes, cells, cellmat, bfaces, bfacemat)
+        isconsistent(grid)
+    end
+
+    @test let
+        nodes = [0.0 1;
+                 1 0;
+                 0 1;
+                 1 1;
+                 1 2;
+                 2 4]'
+
+        cells = [1 2 3;
+                 2 3 4]'
+
+        cellmat = [1, 1]
+        bfaces = [1 2;
+                  1 3;
+                  2 4]'
+
+        bfacemat = [1, 1]
+
+        grid = simplexgrid(nodes, cells, cellmat, bfaces, bfacemat)
+        !isconsistent(grid;warnonly=true)
+    end
+
     function test_prepare_edges()
         ## Compared with pdelib; have more of these
         nodes = [0.0 1;
