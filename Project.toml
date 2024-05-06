@@ -1,7 +1,7 @@
 name = "ExtendableGrids"
 uuid = "cfc395e8-590f-11e8-1f13-43a2532b2fa8"
 authors = ["Juergen Fuhrmann <juergen.fuhrmann@wias-berlin.de>", "Christian Merdon  <christian.merdon@wias-berlin.de>", "Johannes Taraz  <johannes.taraz@gmail.com>"]
-version = "1.5.0"
+version = "1.5.1"
 
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
@@ -32,7 +32,7 @@ Bijections = "0.1.4"
 Dates = "1.6"
 DocStringExtensions = "0.8,0.9"
 ElasticArrays = "1"
-Gmsh = "0.2.2"
+Gmsh = "0.2.2,0.3"
 InteractiveUtils = "1.6"
 LinearAlgebra = "1.6"
 Printf = "1.6"
