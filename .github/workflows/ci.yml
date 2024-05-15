@@ -22,6 +22,7 @@ jobs:
           - ubuntu-latest
           - windows-latest
           - macOS-11 # intel
+          - macOS-13 # intel
           - macOS-14 # arm
         arch:
           - x64
@@ -31,7 +32,9 @@ jobs:
             arch: aarch64
           - os: windows-latest
             arch: aarch64
-          - os: macOS-13 
+          - os: macOS-11
+            arch: aarch64
+          - os: macOS-13
             arch: aarch64
           - os: macOS-14
             version: 1.6
