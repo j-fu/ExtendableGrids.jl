@@ -11,11 +11,12 @@ Used by [VoronoiFVM](https://github.com/j-fu/VoronoiFVM.jl) and  [GradientRobust
 a package for novel, gradient robust finite element methods.
 
 ## Additional functionality:
-## Companion packages:
 
   
 - Tools to create tensor product grids
 - Tools for grid modification
+
+## Companion packages:
 - [Gmsh.jl](https://github.com/JuliaFEM/Gmsh.jl) extension. Please be aware about the fact that, while this package
   and  [Gmsh.jl](https://github.com/JuliaFEM/Gmsh.jl) are MIT licensed, the underlying binary code of Gmsh is
   distributed under the [GPLv2 license](https://gmsh.info/LICENSE.txt).
