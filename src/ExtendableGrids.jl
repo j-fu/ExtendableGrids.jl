@@ -13,10 +13,6 @@ using Random
 using Dates
 using LinearAlgebra
 
-if !isdefined(Base, :get_extension)
-    using Requires
-end
-
 include("adjacency.jl")
 export Adjacency, VariableTargetAdjacency, FixedTargetAdjacency
 export atranspose, num_targets, num_sources, num_links, append!, max_num_targets_per_source
@@ -182,13 +178,6 @@ include("seal.jl")
 
 include("deprecated.jl")
 
-@static if !isdefined(Base, :get_extension)
-    function __init__()
-        @require Gmsh="705231aa-382f-11e9-3f0c-b7cb4346fdeb" begin
-            include("../ext/ExtendableGridsGmshExt.jl")
-        end
-    end
-end
 export simplexgrid_from_gmsh, simplexgrid_to_gmsh
 
 end # module

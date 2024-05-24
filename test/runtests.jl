@@ -322,6 +322,8 @@ end
     @test numbers_match(tglue(; dim = 3, breg = 1), 161, 480, 264)
 end
 
+include("tritet.jl")
+
 include("gmsh.jl")
 
 
