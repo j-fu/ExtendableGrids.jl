@@ -1,10 +1,6 @@
 module ExtendableGridsGmshExt
 
-if isdefined(Base, :get_extension)
-    import Gmsh: gmsh
-else
-    import ..Gmsh: gmsh
-end
+import Gmsh: gmsh
 
 import ExtendableGrids: simplexgrid_from_gmsh, simplexgrid_to_gmsh
 import ExtendableGrids: mixedgrid_from_gmsh, mixedgrid_to_gmsh
