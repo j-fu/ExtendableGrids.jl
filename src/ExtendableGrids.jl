@@ -12,6 +12,9 @@ using Printf
 using Random
 using Dates
 using LinearAlgebra
+import Metis
+import Graphs
+
 
 include("adjacency.jl")
 export Adjacency, VariableTargetAdjacency, FixedTargetAdjacency
@@ -77,6 +80,11 @@ export gridcomponents
 export isconsistent, dangling_nodes
 export seemingly_equal, numbers_match
 
+include("partitioning.jl")
+export ColorPartitions, PartitionCells
+export num_colors, num_partitions, colors, color_partitions, partition_cells, partition
+
+
 include("subgrid.jl")
 export subgrid
 export ParentGrid
@@ -95,6 +103,7 @@ export Normal4ElemType!
 export Tangent4ElemType!
 export xrefFACE2xrefCELL
 export xrefFACE2xrefOFACE
+
 
 include("derived.jl")
 export Coordinates
