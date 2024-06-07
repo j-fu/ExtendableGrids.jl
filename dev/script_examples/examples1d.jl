@@ -8,7 +8,7 @@ function interval_from_vector()
     X = collect(0:0.05:1)
     grid = simplexgrid(X)
 end
-# ![](interval_from_vector.svg)
+# ![](interval_from_vector.png)
 
 # 
 # ## Interval with local refinement
@@ -19,7 +19,7 @@ function interval_localref()
     X = glue(XLeft, XRight)
     grid = simplexgrid(X)
 end
-# ![](interval_localref.svg)
+# ![](interval_localref.png)
 
 #
 # ## Interval with  multiple regions
@@ -31,7 +31,7 @@ function interval_multiregion()
     bfacemask!(grid, [0.5], [0.5], 4)
     grid
 end
-# ![](interval_multiregion.svg)
+# ![](interval_multiregion.png)
 #
 # ## Multiple regions and subgrid
 #
@@ -43,7 +43,7 @@ function interval_subgrid()
     cellmask!(grid, [0.20], [0.5], 3)
     subgrid(grid, [2, 3])
 end
-# ![](interval_subgrid.svg)
+# ![](interval_subgrid.png)
 # ## CI callbacks  for [ExampleJuggler.jl](https://github.com/j-fu/ExampleJuggler.jl)
 # Unit tests
 using Test
@@ -61,9 +61,9 @@ function generateplots(picdir; Plotter = nothing)
     if isdefined(Plotter, :Makie)
         size = (500, 200)
         legend = :rt
-        Plotter.save(joinpath(picdir, "interval_from_vector.svg"), gridplot(interval_from_vector(); Plotter, size, legend))
-        Plotter.save(joinpath(picdir, "interval_localref.svg"), gridplot(interval_localref(); Plotter, size, legend))
-        Plotter.save(joinpath(picdir, "interval_multiregion.svg"), gridplot(interval_multiregion(); Plotter, size, legend))
-        Plotter.save(joinpath(picdir, "interval_subgrid.svg"), gridplot(interval_subgrid(); Plotter, size, legend))
+        Plotter.save(joinpath(picdir, "interval_from_vector.png"), gridplot(interval_from_vector(); Plotter, size, legend))
+        Plotter.save(joinpath(picdir, "interval_localref.png"), gridplot(interval_localref(); Plotter, size, legend))
+        Plotter.save(joinpath(picdir, "interval_multiregion.png"), gridplot(interval_multiregion(); Plotter, size, legend))
+        Plotter.save(joinpath(picdir, "interval_subgrid.png"), gridplot(interval_subgrid(); Plotter, size, legend))
     end
 end

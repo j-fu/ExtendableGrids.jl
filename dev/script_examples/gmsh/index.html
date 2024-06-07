@@ -32,7 +32,7 @@ using Gmsh: gmsh</code></pre><p><a href="https://gmsh.info/doc/texinfo/gmsh.html
     grid = ExtendableGrids.simplexgrid_from_gmsh(gmsh.model)
     gmsh.finalize()
     grid
-end</code></pre><p><img src="../gmsh_t1.svg" alt/></p><p><a href="https://gmsh.info/doc/texinfo/gmsh.html#t4">Example t4</a>  from the GMSH docs</p><pre><code class="language-julia hljs">function gmsh_t4()
+end</code></pre><p><img src="../gmsh_t1.png" alt/></p><p><a href="https://gmsh.info/doc/texinfo/gmsh.html#t4">Example t4</a>  from the GMSH docs</p><pre><code class="language-julia hljs">function gmsh_t4()
     gmsh.initialize()
 
     gmsh.model.add(&quot;t4&quot;)
@@ -145,7 +145,7 @@ end</code></pre><p><img src="../gmsh_t1.svg" alt/></p><p><a href="https://gmsh.i
     grid = ExtendableGrids.simplexgrid_from_gmsh(gmsh.model)
     gmsh.finalize()
     grid
-end</code></pre><p><img src="../gmsh_t4.svg" alt/></p><p><a href="https://gmsh.info/doc/texinfo/gmsh.html#t5">Example t5</a>  from the GMSH docs</p><pre><code class="language-julia hljs">function gmsh_t5()
+end</code></pre><p><img src="../gmsh_t4.png" alt/></p><p><a href="https://gmsh.info/doc/texinfo/gmsh.html#t5">Example t5</a>  from the GMSH docs</p><pre><code class="language-julia hljs">function gmsh_t5()
 
     gmsh.initialize()
 
@@ -271,7 +271,7 @@ end</code></pre><p><img src="../gmsh_t4.svg" alt/></p><p><a href="https://gmsh.i
     grid = ExtendableGrids.simplexgrid_from_gmsh(gmsh.model)
     gmsh.finalize()
     grid
-end</code></pre><p><img src="../gmsh_t5.svg" alt/></p><h2 id="CI-callbacks-for-[ExampleJuggler.jl](https://github.com/j-fu/ExampleJuggler.jl)"><a class="docs-heading-anchor" href="#CI-callbacks-for-[ExampleJuggler.jl](https://github.com/j-fu/ExampleJuggler.jl)">CI callbacks for <a href="https://github.com/j-fu/ExampleJuggler.jl">ExampleJuggler.jl</a></a><a id="CI-callbacks-for-[ExampleJuggler.jl](https://github.com/j-fu/ExampleJuggler.jl)-1"></a><a class="docs-heading-anchor-permalink" href="#CI-callbacks-for-[ExampleJuggler.jl](https://github.com/j-fu/ExampleJuggler.jl)" title="Permalink"></a></h2><p>Unit tests</p><pre><code class="language-julia hljs">using Test
+end</code></pre><p><img src="../gmsh_t5.png" alt/></p><h2 id="CI-callbacks-for-[ExampleJuggler.jl](https://github.com/j-fu/ExampleJuggler.jl)"><a class="docs-heading-anchor" href="#CI-callbacks-for-[ExampleJuggler.jl](https://github.com/j-fu/ExampleJuggler.jl)">CI callbacks for <a href="https://github.com/j-fu/ExampleJuggler.jl">ExampleJuggler.jl</a></a><a id="CI-callbacks-for-[ExampleJuggler.jl](https://github.com/j-fu/ExampleJuggler.jl)-1"></a><a class="docs-heading-anchor-permalink" href="#CI-callbacks-for-[ExampleJuggler.jl](https://github.com/j-fu/ExampleJuggler.jl)" title="Permalink"></a></h2><p>Unit tests</p><pre><code class="language-julia hljs">using Test
 function runtests()
     ok(grid)= num_nodes(grid) &gt; 0 &amp;&amp; num_cells(grid) &gt; 0 &amp;&amp; num_bfaces(grid) &gt; 0
     @test ok(gmsh_t1())
@@ -281,8 +281,8 @@ end</code></pre><p>Plot generation</p><pre><code class="language-julia hljs">usi
 function generateplots(picdir; Plotter = nothing)
     if isdefined(Plotter, :Makie)
         size = (500, 500)
-        Plotter.save(joinpath(picdir, &quot;gmsh_t1.svg&quot;), gridplot(gmsh_t1(); Plotter, size))
-        Plotter.save(joinpath(picdir, &quot;gmsh_t4.svg&quot;), gridplot(gmsh_t4(); Plotter, size))
-        Plotter.save(joinpath(picdir, &quot;gmsh_t5.svg&quot;), gridplot(gmsh_t5(); Plotter, size))
+        Plotter.save(joinpath(picdir, &quot;gmsh_t1.png&quot;), gridplot(gmsh_t1(); Plotter, size))
+        Plotter.save(joinpath(picdir, &quot;gmsh_t4.png&quot;), gridplot(gmsh_t4(); Plotter, size))
+        Plotter.save(joinpath(picdir, &quot;gmsh_t5.png&quot;), gridplot(gmsh_t5(); Plotter, size))
     end
-end</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../examples3d/">« examples3d</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.4.1 on <span class="colophon-date" title="Friday 24 May 2024 13:27">Friday 24 May 2024</span>. Using Julia version 1.10.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../examples3d/">« examples3d</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.4.1 on <span class="colophon-date" title="Friday 7 June 2024 14:48">Friday 7 June 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
