@@ -10,7 +10,7 @@ function quadrilateral(; hx = 0.25, hy = 0.2, hz = 0.1)
     Z = collect(0:hz:1)
     simplexgrid(X, Y, Z)
 end
-# ![](quadrilateral.svg)
+# ![](quadrilateral.png)
 
 # ## Cross3d
 function cross3d()
@@ -25,7 +25,7 @@ function cross3d()
 
     subgrid(grid, [2])
 end
-# ![](cross3d.svg)
+# ![](cross3d.png)
 # ## CI callbacks  for [ExampleJuggler.jl](https://github.com/j-fu/ExampleJuggler.jl)
 # Unit tests
 
@@ -54,7 +54,7 @@ using GridVisualize
 function generateplots(picdir; Plotter = nothing)
     if isdefined(Plotter, :Makie)
         size = (400, 400)
-        Plotter.save(joinpath(picdir, "quadrilateral.svg"), gridplot(quadrilateral(); Plotter, size))
-        Plotter.save(joinpath(picdir, "cross3d.svg"), gridplot(cross3d(); Plotter, size))
+        Plotter.save(joinpath(picdir, "quadrilateral.png"), gridplot(quadrilateral(); Plotter, size))
+        Plotter.save(joinpath(picdir, "cross3d.png"), gridplot(cross3d(); Plotter, size))
     end
 end

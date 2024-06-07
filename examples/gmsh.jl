@@ -40,7 +40,7 @@ function gmsh_t1()
     gmsh.finalize()
     grid
 end
-# ![](gmsh_t1.svg)
+# ![](gmsh_t1.png)
 
 #
 #  [Example t4](https://gmsh.info/doc/texinfo/gmsh.html#t4)  from the GMSH docs
@@ -160,7 +160,7 @@ function gmsh_t4()
     grid
 end
 
-# ![](gmsh_t4.svg)
+# ![](gmsh_t4.png)
 
 #
 #  [Example t5](https://gmsh.info/doc/texinfo/gmsh.html#t5)  from the GMSH docs
@@ -292,7 +292,7 @@ function gmsh_t5()
     gmsh.finalize()
     grid
 end
-# ![](gmsh_t5.svg)
+# ![](gmsh_t5.png)
 
 
 # ## CI callbacks for [ExampleJuggler.jl](https://github.com/j-fu/ExampleJuggler.jl)
@@ -310,8 +310,8 @@ using GridVisualize
 function generateplots(picdir; Plotter = nothing)
     if isdefined(Plotter, :Makie)
         size = (500, 500)
-        Plotter.save(joinpath(picdir, "gmsh_t1.svg"), gridplot(gmsh_t1(); Plotter, size))
-        Plotter.save(joinpath(picdir, "gmsh_t4.svg"), gridplot(gmsh_t4(); Plotter, size))
-        Plotter.save(joinpath(picdir, "gmsh_t5.svg"), gridplot(gmsh_t5(); Plotter, size))
+        Plotter.save(joinpath(picdir, "gmsh_t1.png"), gridplot(gmsh_t1(); Plotter, size))
+        Plotter.save(joinpath(picdir, "gmsh_t4.png"), gridplot(gmsh_t4(); Plotter, size))
+        Plotter.save(joinpath(picdir, "gmsh_t5.png"), gridplot(gmsh_t5(); Plotter, size))
     end
 end
