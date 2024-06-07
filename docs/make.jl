@@ -1,6 +1,6 @@
 using Documenter, ExtendableGrids, ExampleJuggler, Gmsh
 import CairoMakie
-CairoMakie.activate!(; type = "svg", visible = false)
+CairoMakie.activate!(; type = "png", visible = false)
 ExampleJuggler.verbose!(true)
 ExtendableGridsGmshExt=Base.get_extension(ExtendableGrids, :ExtendableGridsGmshExt)
 function mkdocs()

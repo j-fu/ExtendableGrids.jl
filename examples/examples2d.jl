@@ -9,7 +9,7 @@ function rectangle()
     Y = collect(0:0.05:1)
     simplexgrid(X, X)
 end
-# ![](rectangle.svg)
+# ![](rectangle.png)
 # 
 # ## Rectangle with local refinement
 # 
@@ -21,7 +21,7 @@ function rectangle_localref()
     X = glue(XLeft, XRight)
     simplexgrid(X, X)
 end
-# ![](rectangle_localref.svg)
+# ![](rectangle_localref.png)
 
 # 
 # ## Rectangle with multiple regions
@@ -35,7 +35,7 @@ function rectangle_multiregion()
     bfacemask!(grid, [1.0, 0.0], [1.0, 0.5], 6)
     bfacemask!(grid, [0.0, 0.5], [1.0, 0.5], 7)
 end
-# ![](rectangle_multiregion.svg)
+# ![](rectangle_multiregion.png)
 
 # 
 # ## Subgrid from rectangle
@@ -47,7 +47,7 @@ function rectangle_subgrid()
     rect!(grid, [0.25, 0.25], [0.75, 0.75]; region = 2, bregion = 5)
     subgrid(grid, [1])
 end
-# ![](rectangle_subgrid.svg)
+# ![](rectangle_subgrid.png)
 
 # 
 # ## Rect2d with bregion function
@@ -64,7 +64,7 @@ function rect2d_bregion_function()
 
     subgrid(grid, [2])
 end
-# ![](rect2d_bregion_function.svg)
+# ![](rect2d_bregion_function.png)
 
 function sorted_subgrid(; maxvolume = 0.01)
     builder = SimplexGridBuilder(; Generator = Triangulate)
@@ -92,7 +92,7 @@ function sorted_subgrid(; maxvolume = 0.01)
     sf = view(f, sg)
     g, sg, sf
 end
-# ![](sorted_subgrid.svg)
+# ![](sorted_subgrid.png)
 # ## CI callbacks  for [ExampleJuggler.jl](https://github.com/j-fu/ExampleJuggler.jl)
 # Unit tests
 using Test
@@ -114,18 +114,18 @@ using GridVisualize
 function generateplots(picdir; Plotter = nothing)
     if isdefined(Plotter, :Makie)
         size = (300, 300)
-        Plotter.save(joinpath(picdir, "rectangle.svg"), gridplot(rectangle(); Plotter, size))
-        Plotter.save(joinpath(picdir, "rectangle_localref.svg"), gridplot(rectangle_localref(); Plotter, size))
-        Plotter.save(joinpath(picdir, "rectangle_multiregion.svg"), gridplot(rectangle_multiregion(); Plotter, size))
-        Plotter.save(joinpath(picdir, "rectangle_subgrid.svg"), gridplot(rectangle_subgrid(); Plotter, size))
-        Plotter.save(joinpath(picdir, "rect2d_bregion_function.svg"), gridplot(rect2d_bregion_function(); Plotter, size))
+        Plotter.save(joinpath(picdir, "rectangle.png"), gridplot(rectangle(); Plotter, size))
+        Plotter.save(joinpath(picdir, "rectangle_localref.png"), gridplot(rectangle_localref(); Plotter, size))
+        Plotter.save(joinpath(picdir, "rectangle_multiregion.png"), gridplot(rectangle_multiregion(); Plotter, size))
+        Plotter.save(joinpath(picdir, "rectangle_subgrid.png"), gridplot(rectangle_subgrid(); Plotter, size))
+        Plotter.save(joinpath(picdir, "rect2d_bregion_function.png"), gridplot(rect2d_bregion_function(); Plotter, size))
 
         g, sg, sf = sorted_subgrid()
         p = GridVisualizer(; Plotter, layout = (1, 3), size = (800, 300))
         gridplot!(p[1, 1], g)
         gridplot!(p[1, 2], sg)
         scalarplot!(p[1, 3], sg, sf)
-        fname = joinpath(picdir, "sorted_subgrid.svg")
+        fname = joinpath(picdir, "sorted_subgrid.png")
         Plotter.save(fname, reveal(p))
     end
 end
