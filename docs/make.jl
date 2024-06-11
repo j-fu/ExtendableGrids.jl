@@ -33,6 +33,7 @@ function mkdocs()
                  "gridconstructors.md",
                  "output.md",
                  "refinement.md",
+                 "partitioning.md",
                  "regionedit.md",
                  "tokenstream.md",
                  "binnedpointlist.md",

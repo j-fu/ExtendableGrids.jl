@@ -81,9 +81,9 @@ export isconsistent, dangling_nodes
 export seemingly_equal, numbers_match
 
 include("partitioning.jl")
-export ColorPartitions, PartitionCells
-export num_colors, num_partitions, colors, color_partitions, partition_cells, partition
-
+export PColorPartitions, PartitionCells
+export num_pcolors, num_partitions, pcolors, pcolor_partitions, partition_cells, partition, num_partitions_per_color
+export AbstractPartitioningAlgorithm, TrivialPartitioning, PlainMetisPartitioning
 
 include("subgrid.jl")
 export subgrid
