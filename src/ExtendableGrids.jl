@@ -12,7 +12,6 @@ using Printf
 using Random
 using Dates
 using LinearAlgebra
-import Metis
 import Graphs
 
 

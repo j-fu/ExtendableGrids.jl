@@ -326,6 +326,7 @@ include("tritet.jl")
 
 include("gmsh.jl")
 
+include("partitioning.jl")
 
 ExampleJuggler.verbose!(true)
 

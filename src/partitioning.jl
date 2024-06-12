@@ -35,8 +35,8 @@ $(SIGNATURES)
 Create trivial partitioning: the whole grid is partition #1 with just one color.
 """
 function trivial_partitioning!(grid::ExtendableGrid{Tc,Ti}) where {Tc,Ti}
-    grid[PColorPartitions]=ones(Ti,2)
-    grid[PartitionCells]=Ti[1,num_cells(grid)]
+    grid[PColorPartitions]=[1,2]
+    grid[PartitionCells]=Ti[1,num_cells(grid)+1]
     grid
 end
 
@@ -121,23 +121,6 @@ function num_partitions_per_color(grid)
 end
 
 
-"""
-    $(SIGNATURES)
-
-Partition grid into `npart` partitions using Metis.
-Return vector of partition numbers per cell and cell-to-cell
-adjacency.
-"""
-function metis_partition(g::ExtendableGrid, npart)
-    nn = num_nodes(g)
-    ncells = num_cells(g)
-    cn = asparse(g[CellNodes])
-    nc = asparse(atranspose(g[CellNodes]))
-    cellcelladj = nc * cn
-    mg = Metis.graph(cellcelladj)
-    cellpartitions = Metis.partition(mg, npart)
-    cellpartitions, cellcelladj
-end
 
 """
     $(SIGNATURES)
@@ -168,14 +151,6 @@ Abstract super type for partitioning algorithms
 abstract type AbstractPartitioningAlgorithm end
 
 
-"""
-    $(SIGNATURES)
-
-Partition grid according to `alg`, such that the neigborhood graph
-of partitions is colored in such a way, that all partitions with 
-a given color can be worked on in parallel.
-"""
-function partition(grid, alg::AbstractPartitioningAlgorithm) end
 
 """
     $(TYPEDEF)
@@ -186,8 +161,11 @@ Base.@kwdef struct TrivialPartitioning <: AbstractPartitioningAlgorithm
 end
 
 function partition(grid::ExtendableGrid{Tc,Ti}, ::TrivialPartitioning) where {Tc,Ti}
-    pgrid=copy(grid)
-    trivial_partitioning!(grid)
+    pgrid=ExtendableGrid{Tc,Ti}()
+    for (k,v) in pairs(grid.components)
+        pgrid.components[k]=v
+    end
+    trivial_partitioning!(pgrid)
 end
 
 
@@ -195,6 +173,7 @@ end
     $(TYPEDEF)
 
 Subdivide grid into `npart` partitions using `Metis.partition` and color the resulting partition neigborhood graph.
+This requires to import Metis.jl in order to trigger the corresponding extension.
 
 $(TYPEDFIELDS)
 """
@@ -202,64 +181,17 @@ Base.@kwdef struct PlainMetisPartitioning <: AbstractPartitioningAlgorithm
     npart::Int=20
 end
 
+"""
+    $(SIGNATURES)
 
-function partition(grid::ExtendableGrid{Tc,Ti}, alg::PlainMetisPartitioning) where {Tc,Ti}
-    cellpartitions,cellcelladj=metis_partition(grid,alg.npart)
-    ncells=length(cellpartitions)
-    uniquecellpartitions=unique(cellpartitions)
-    ncellpartitions=length(uniquecellpartitions)
-    gr=partgraph(cellpartitions,ncellpartitions,cellcelladj)
-    col=Graphs.degree_greedy_color(gr)
-
-    # Reorder partitions such that all partitions with the same color
-    # are numbered contiguously
-    partperm=similar(uniquecellpartitions)
-    colctr=zeros(Int,col.num_colors+1)
-    colctr[1]=1
-    for i=1:length(colctr)-1
-	colctr[i+1]=colctr[i]+sum(x->x==i, col.colors)
+Partition grid according to `alg`, such that the neigborhood graph
+of partitions is colored in such a way, that all partitions with 
+a given color can be worked on in parallel.
+"""
+function partition(grid, alg::AbstractPartitioningAlgorithm)
+    if isa(alg,PlainMetisPartitioning)
+        error("Import Metis.jl to allow Metis based partitioning")
+    else
+        error("unexpected Partitioning")
     end
-    colpart=copy(colctr)
-    for ip=1:ncellpartitions
-	color=col.colors[ip]
-	partperm[ip]=colctr[color]
-	colctr[color]+=1
-    end
-    
-    # Renumber cell partition according to new order
-    for i=1:ncells
-        cellpartitions[i]=partperm[cellpartitions[i]]
-    end
-
-    # Create cell permutation such that
-    # all cells belonging to one partition
-    # are contiguous
-    cellperm=copy(cellpartitions)
-    partctr=zeros(Int,ncellpartitions+1)
-    partctr[1]=1
-    for i=1:ncellpartitions
-	partctr[i+1]=partctr[i]+sum(x->x==i, cellpartitions)
-    end
-    partcells=copy(partctr)
-    for ic=1:ncells
-	part=cellpartitions[ic]
-	cellperm[partctr[part]]=ic
-	partctr[part]+=1
-    end
-
-    pgrid=ExtendableGrid{Tc,Ti}()
-    pgrid[CellNodes]=grid[CellNodes][:,cellperm]
-    pgrid[CellRegions]=grid[CellRegions][cellperm]
-    pgrid[PColorPartitions]=colpart
-    pgrid[PartitionCells]=partcells
-    
-    for key in [Coordinates,
-                CellGeometries,
-                BFaceNodes,
-                BFaceRegions,
-                BFaceGeometries,
-                CoordinateSystem]
-        pgrid[key]=grid[key]
-    end
-    pgrid
 end

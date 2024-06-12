@@ -25,6 +25,5 @@ partition_cells
 ExtendableGrids.trivial_partitioning!
 ExtendableGrids.instantiate(grid::ExtendableGrid, ::Type{PColorPartitions})
 ExtendableGrids.instantiate(grid::ExtendableGrid, ::Type{PartitionCells})
-ExtendableGrids.metis_partition
 ExtendableGrids.partgraph
 ```
