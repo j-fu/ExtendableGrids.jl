@@ -58,7 +58,7 @@ If not given otherwise, instantiate partition data with trivial partitioning.
 """
 function ExtendableGrids.instantiate(grid::ExtendableGrid, ::Type{PartitionCells})
     trivial_partitioning!(grid)
-    grid[PartionCells]
+    grid[PartitionCells]
 end
 
 
@@ -94,6 +94,16 @@ function pcolor_partitions(grid,color)
     colpart[color]:colpart[color+1]-1
 end
 
+function partition_pcolors(grid::ExtendableGrid{Tc,Ti}) where {Tc,Ti}
+    partcolors=zeros(Ti, num_partitions(grid))
+    for color in pcolors(grid)
+        for part in pcolor_partitions(grid,color)
+            partcolors[part]=color
+        end
+    end
+    partcolors
+end
+
 """
     $(SIGNATURES)
 
@@ -121,6 +131,38 @@ function num_partitions_per_color(grid)
 end
 
 
+"""
+    $(SIGNATURES)
+
+Check correctness of partittioning
+"""
+function checkpartitioning(grid::ExtendableGrid{Tc, Ti}; verbose=true) where {Tc, Ti}
+    cn=grid[CellNodes]
+    ok=true
+    partnodes=Vector{Tc}[unique(vec(cn[:,partition_cells(grid,ipart)])) for ipart=1:num_partitions(grid)]
+    if length(intersect(vcat(partnodes...), 1:num_nodes(grid))) !=num_nodes(grid)
+        if verbose
+            @warn "Not all nodes part of partitions"
+        end
+        ok=false
+    end
+    for color in pcolors(grid)
+        for ipart in pcolor_partitions(grid, color)
+            for jpart in pcolor_partitions(grid, color)
+                if ipart != jpart
+                    is=intersect(partnodes[ipart],partnodes[jpart])
+                    if length(is)>0
+                        if verbose
+                            @warn "Found nodes belonging to  partitions $ipart,$jpart of color $color"
+                        end
+                        ok=false
+                    end
+                end
+            end
+        end
+    end
+    ok
+end
 
 """
     $(SIGNATURES)
@@ -188,7 +230,7 @@ Partition grid according to `alg`, such that the neigborhood graph
 of partitions is colored in such a way, that all partitions with 
 a given color can be worked on in parallel.
 """
-function partition(grid, alg::AbstractPartitioningAlgorithm)
+function partition(grid::ExtendableGrid, alg::AbstractPartitioningAlgorithm)
     if isa(alg,PlainMetisPartitioning)
         error("Import Metis.jl to allow Metis based partitioning")
     else

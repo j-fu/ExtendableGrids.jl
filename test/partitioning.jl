@@ -15,7 +15,8 @@ import Metis
         @test partition_cells(grid,1) == 1:num_cells(grid)
         @test num_partitions_per_color(grid) == [1]
     end
-    
+
+    # METIS has different results depending on the OS...
     grid4=partition(grid1,PlainMetisPartitioning(npart=10))
     @test num_pcolors(grid4) > 1
     @test num_partitions(grid4)==10
