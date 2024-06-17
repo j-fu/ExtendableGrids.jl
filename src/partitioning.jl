@@ -26,6 +26,10 @@ Let `pc=grid[PartitionCells]`. Then all cells with index
 """
 abstract type PartitionCells <: AbstractGridIntegerArray1D end
 
+abstract type PartitionNodes <: AbstractGridIntegerArray1D end
+abstract type NodePermutation <: AbstractGridIntegerArray1D end
+
+
 
 """
 $(SIGNATURES)
@@ -37,6 +41,7 @@ Create trivial partitioning: the whole grid is partition #1 with just one color.
 function trivial_partitioning!(grid::ExtendableGrid{Tc,Ti}) where {Tc,Ti}
     grid[PColorPartitions]=[1,2]
     grid[PartitionCells]=Ti[1,num_cells(grid)+1]
+    grid[PartitionNodes]=Ti[1,num_nodes(grid)+1]
     grid
 end
 
@@ -59,6 +64,11 @@ If not given otherwise, instantiate partition data with trivial partitioning.
 function ExtendableGrids.instantiate(grid::ExtendableGrid, ::Type{PartitionCells})
     trivial_partitioning!(grid)
     grid[PartitionCells]
+end
+
+function ExtendableGrids.instantiate(grid::ExtendableGrid, ::Type{PartitionNodes})
+    trivial_partitioning!(grid)
+    grid[PartitionNodes]
 end
 
 
@@ -112,6 +122,12 @@ Return range of cells belonging to a given partition.
 function partition_cells(grid, part)
     partcells=grid[PartitionCells]
     partcells[part]:partcells[part+1]-1
+end
+
+
+function partition_nodes(grid, part)
+    partnodess=grid[PartitionNodes]
+    partnodes[part]:partcells[part+1]-1
 end
 
 
@@ -223,6 +239,68 @@ Base.@kwdef struct PlainMetisPartitioning <: AbstractPartitioningAlgorithm
     npart::Int=20
 end
 
+
+function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti}; keep_nodepermutation=true) where {Tc, Ti}
+    coord=grid[Coordinates]
+    partcells=grid[PartitionCells]
+    cellnodes=grid[CellNodes]
+    bfacenodes=grid[BFaceNodes]
+    lnodes=size(cellnodes,1)
+
+    nodepartitions=zeros(Ti,num_nodes(grid))
+    for ipart=1:length(partcells)-1
+        for icell in partition_cells(grid,ipart)
+            for k=1:lnodes
+                nodepartitions[cellnodes[k,icell]]=ipart
+            end
+        end
+    end
+    
+    nnodepartitions=length(partcells)-1
+    
+    # Create cell permutation such that
+    # all cells belonging to one partition
+    # are contiguous
+    nodeperm=copy(nodepartitions)
+    partctr=zeros(Int,nnodepartitions+1)
+    partctr[1]=1
+    for i=1:nnodepartitions
+	partctr[i+1]=partctr[i]+sum(x->x==i, nodepartitions)
+    end
+    partnodes=copy(partctr)
+    for inode=1:num_nodes(grid)
+	part=nodepartitions[inode]
+	nodeperm[partctr[part]]=inode
+	partctr[part]+=1
+    end
+
+    nodeperm=invperm(nodeperm)
+    xcoord=similar(coord)
+    xcoord[:,nodeperm].=coord
+
+    xcellnodes=similar(cellnodes)
+    for icell=1:num_cells(grid)
+        for k=1:lnodes
+            xcellnodes[k,icell]=nodeperm[cellnodes[k,icell]]
+        end
+    end
+
+    xbfacenodes=similar(bfacenodes)
+    for ibface=1:num_bfaces(grid)
+        for k=1:lnodes-1
+            xbfacenodes[k,ibface]=nodeperm[bfacenodes[k,ibface]]
+        end
+    end
+
+
+    grid[PartitionNodes]=partnodes
+    grid[CellNodes]=xcellnodes
+    grid[BFaceNodes]=xbfacenodes
+    grid[Coordinates]=xcoord
+    grid[NodePermutation]=nodeperm
+    grid
+end
+
 """
     $(SIGNATURES)
 
@@ -237,3 +315,4 @@ function partition(grid::ExtendableGrid, alg::AbstractPartitioningAlgorithm)
         error("unexpected Partitioning")
     end
 end
+

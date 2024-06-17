@@ -1,7 +1,7 @@
 module ExtendableGridsMetisExt
 
 import Metis
-import ExtendableGrids: partition, partgraph
+import ExtendableGrids: partition, partgraph, induce_node_partitioning!
 using ExtendableGrids, Graphs
 
 """
@@ -80,7 +80,7 @@ function partition(grid::ExtendableGrid{Tc,Ti}, alg::PlainMetisPartitioning) whe
                 CoordinateSystem]
         pgrid[key]=grid[key]
     end
-    pgrid
+    induce_node_partitioning!(pgrid)
 end
 
 end

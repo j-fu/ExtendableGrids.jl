@@ -23,5 +23,6 @@ import Metis
     @test pcolors(grid4) |> length  >0
     @test partition_cells(grid4,1) |> length >0 
     @test num_partitions_per_color(grid4) |> length >0
+    @test grid4[Coordinates][:,grid4[NodePermutation]]≈grid1[Coordinates]
     
 end

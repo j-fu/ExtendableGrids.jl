@@ -80,7 +80,7 @@ export isconsistent, dangling_nodes
 export seemingly_equal, numbers_match
 
 include("partitioning.jl")
-export PColorPartitions, PartitionCells
+export PColorPartitions, PartitionCells, PartitionNodes, NodePermutation
 export num_pcolors, num_partitions, pcolors, pcolor_partitions, partition_cells, partition, num_partitions_per_color,checkpartitioning
 export partition_pcolors
 export AbstractPartitioningAlgorithm, TrivialPartitioning, PlainMetisPartitioning
