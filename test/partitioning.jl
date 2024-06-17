@@ -14,7 +14,7 @@ import Metis
         @test pcolor_partitions(grid,1) == 1:1
         @test partition_cells(grid,1) == 1:num_cells(grid)
         @test num_partitions_per_color(grid) == [1]
-        @test checkpartitioning(grid)
+        @test check_partitioning(grid)
     end
 
     # METIS has different results depending on the OS...
@@ -25,6 +25,6 @@ import Metis
     @test partition_cells(grid4,1) |> length >0 
     @test num_partitions_per_color(grid4) |> length >0
     @test grid4[Coordinates][:,grid4[NodePermutation]]≈grid1[Coordinates]
-    @test checkpartitioning(grid4)
+    @test check_partitioning(grid4)
     
 end

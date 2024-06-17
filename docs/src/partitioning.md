@@ -12,7 +12,7 @@ pcolors
 pcolor_partitions
 partition_cells
 partition_nodes
-checkpartitioning
+check_partitioning
 ```
 
 ### Key types for grid access

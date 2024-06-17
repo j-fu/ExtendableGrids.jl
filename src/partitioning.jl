@@ -176,7 +176,7 @@ end
 
 Check correctness of partittioning
 """
-function checkpartitioning(grid::ExtendableGrid{Tc, Ti}; verbose=true) where {Tc, Ti}
+function check_partitioning(grid::ExtendableGrid{Tc, Ti}; verbose=true) where {Tc, Ti}
     cn=grid[CellNodes]
     ok=true
     partnodes=Vector{Tc}[unique(vec(cn[:,partition_cells(grid,ipart)])) for ipart=1:num_partitions(grid)]
