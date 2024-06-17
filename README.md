@@ -24,6 +24,8 @@ a package for novel, gradient robust finite element methods.
 - [SimplexGridFactory](https://github.com/j-fu/SimplexGridFactory.jl) contains an API which allows to
   create `ExtendableGrid` objects with  [Triangulate.jl](https://github.com/JuliaGeometry/Triangulate.jl) which wraps the Triangle mesh generator
   by J. Shewchuk and [TetGen.jl](https://github.com/JuliaGeometry/TetGen.jl) which wraps the  TetGen mesh generator by H. Si.
-
+- [Triangulate.jl](https://github.com/JuliaGeometry/Triangulate.jl) and  [TetGen.jl](https://github.com/JuliaGeometry/TetGen.jl) extensions
+- [Metis.jl](https://github.com/JuliaSparse/Metis.jl) extension and partitioning for multithreading (under development)
+  
 ## Recent changes
 - Please look up the list of recent [changes](https://j-fu.github.io/ExtendableGrids.jl/stable/changes)

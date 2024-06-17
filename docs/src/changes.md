@@ -1,4 +1,17 @@
 # Changelog
+## [1.7.0] - 2024-06-17
+- Partitioning for multithreading
+- Metis extension
+
+## [1.6.1] - 2024-06-07
+
+- Drop support of Julia 1.6. Minimum Julia version is 1.9
+- TetGen + Triangulate extensions
+- png instead of svg in docs
+
+## [1.5.1] - 2024-05-06
+- Grid consistency check
+- Gmsh 0.3
 
 ## [1.4.0] - 2024-03-21
 
