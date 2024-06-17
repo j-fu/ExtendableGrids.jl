@@ -12,6 +12,8 @@ using Printf
 using Random
 using Dates
 using LinearAlgebra
+import Graphs
+
 
 include("adjacency.jl")
 export Adjacency, VariableTargetAdjacency, FixedTargetAdjacency
@@ -77,6 +79,12 @@ export gridcomponents
 export isconsistent, dangling_nodes
 export seemingly_equal, numbers_match
 
+include("partitioning.jl")
+export PColorPartitions, PartitionCells, PartitionNodes, NodePermutation
+export num_pcolors, num_partitions, pcolors, pcolor_partitions, partition_cells, partition_nodes
+export partition, num_partitions_per_color,check_partitioning
+export AbstractPartitioningAlgorithm, TrivialPartitioning, PlainMetisPartitioning
+
 include("subgrid.jl")
 export subgrid
 export ParentGrid
@@ -95,6 +103,7 @@ export Normal4ElemType!
 export Tangent4ElemType!
 export xrefFACE2xrefCELL
 export xrefFACE2xrefOFACE
+
 
 include("derived.jl")
 export Coordinates
