@@ -81,8 +81,7 @@ export seemingly_equal, numbers_match
 
 include("partitioning.jl")
 export PColorPartitions, PartitionCells, PartitionNodes, NodePermutation
-export num_pcolors, num_partitions, pcolors, pcolor_partitions, partition_cells, partition, num_partitions_per_color,checkpartitioning
-export partition_pcolors
+export num_pcolors, num_partitions, pcolors, pcolor_partitions, partition_cells, partition_nodes, partition, num_partitions_per_color,checkpartitioning
 export AbstractPartitioningAlgorithm, TrivialPartitioning, PlainMetisPartitioning
 
 include("subgrid.jl")

@@ -26,7 +26,30 @@ Let `pc=grid[PartitionCells]`. Then all cells with index
 """
 abstract type PartitionCells <: AbstractGridIntegerArray1D end
 
+"""
+    $(TYPEDEF)
+
+Key type describing the nodes of a given partition.
+
+`grid[PartitionNodes]` returns an integer vector describing 
+the nodes of a partition  given by its number.
+Let `pn=grid[PartitionNodes]`. Then all nodes with index
+`i ∈ pn[p]:pn[p+1]-1`  belong to partition p.
+"""
 abstract type PartitionNodes <: AbstractGridIntegerArray1D end
+
+"""
+    $(TYPEDEF)
+
+Key type describing the permutation of the nodes of a partitioned grid
+with respect  to the unpartitioned origin.
+
+If `pgrid` is the partitioned grid and `grid` is the unpartitioned origin,
+then 
+
+`pgrid[Coordinates][:,pgrid[NodePermutation]]==grid[Coordinates]`
+
+"""
 abstract type NodePermutation <: AbstractGridIntegerArray1D end
 
 
@@ -66,6 +89,11 @@ function ExtendableGrids.instantiate(grid::ExtendableGrid, ::Type{PartitionCells
     grid[PartitionCells]
 end
 
+"""
+    instantiate(grid::ExtendableGrid, ::Type{PartitionNodes})
+
+If not given otherwise, instantiate partition data with trivial partitioning.
+"""
 function ExtendableGrids.instantiate(grid::ExtendableGrid, ::Type{PartitionNodes})
     trivial_partitioning!(grid)
     grid[PartitionNodes]
@@ -104,15 +132,6 @@ function pcolor_partitions(grid,color)
     colpart[color]:colpart[color+1]-1
 end
 
-function partition_pcolors(grid::ExtendableGrid{Tc,Ti}) where {Tc,Ti}
-    partcolors=zeros(Ti, num_partitions(grid))
-    for color in pcolors(grid)
-        for part in pcolor_partitions(grid,color)
-            partcolors[part]=color
-        end
-    end
-    partcolors
-end
 
 """
     $(SIGNATURES)
@@ -125,6 +144,11 @@ function partition_cells(grid, part)
 end
 
 
+"""
+    $(SIGNATURES)
+
+Return range of nodes belonging to a given partition.
+"""
 function partition_nodes(grid, part)
     partnodess=grid[PartitionNodes]
     partnodes[part]:partcells[part+1]-1
@@ -240,6 +264,12 @@ Base.@kwdef struct PlainMetisPartitioning <: AbstractPartitioningAlgorithm
 end
 
 
+"""
+    $(SIGNATURES)
+
+(internal)
+Induce node partitioning from partitioning of `grid`.
+"""
 function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti}; keep_nodepermutation=true) where {Tc, Ti}
     coord=grid[Coordinates]
     partcells=grid[PartitionCells]
@@ -258,8 +288,8 @@ function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti}; keep_nodepermuta
     
     nnodepartitions=length(partcells)-1
     
-    # Create cell permutation such that
-    # all cells belonging to one partition
+    # Create node permutation such that
+    # all nodes belonging to one partition
     # are contiguous
     nodeperm=copy(nodepartitions)
     partctr=zeros(Int,nnodepartitions+1)
