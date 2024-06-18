@@ -218,6 +218,9 @@ function subgrid(parent,
         subgrid[BFaceGeometries]=ElementGeometries[]
         subgrid[BFaceNodes]=Matrix{Ti}(undef,sub_gdim,0)
         subgrid[NumBFaceRegions]=0
+        if !isnothing(coordinatesystem)
+            subgrid[CoordinateSystem]=coordinatesystem
+        end
     else
         bfacenodes=parent[BFaceNodes]
         bfaceregions=parent[BFaceRegions]
@@ -271,8 +274,8 @@ function subgrid(parent,
             subgrid[BFaceNodes]=zeros(Ti, 2, 0)
             subgrid[NumBFaceRegions]=0
         end
+        subgrid[CoordinateSystem]=parent[CoordinateSystem]
     end
-    subgrid[CoordinateSystem]=parent[CoordinateSystem]
 
     if sub_gdim == 1
         # Sort nodes of grid for easy plotting

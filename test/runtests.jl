@@ -243,7 +243,7 @@ end
     grid = grid_unitsquare(Triangle2D)
     grid[CellRegions] = Int32[1,2,2,1]
     sgrid = subgrid(grid, [1])
-    @test sgrid[ParentGridRelation] == SubGrid
+    @test sgrid[ParentGridRelation] == SubGrid{ON_CELLS}
 
     ## check if CellParents are assigned correctly
     @test sgrid[CellParents] == [1,4]
