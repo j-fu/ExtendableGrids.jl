@@ -46,7 +46,7 @@ $(TYPEDEF)
 
 Grid component key type for indicating that grid is a subgrid of the parentgrid
 """
-abstract type SubGrid{based} <: ParentGridRelation where {based <: AssemblyType} end
+abstract type SubGrid{support} <: ParentGridRelation where {support <: AssemblyType} end
 
 """
 $(TYPEDEF)
@@ -109,7 +109,7 @@ function subgrid(parent,
                  coordinatesystem=codim1_coordinatesystem(parent[CoordinateSystem]),
                  project=true) where T
 
-    @assert support in [ON_CELLS, ON_FACES, ON_BFACES] "value ($based) for 'support' is not allowed"
+    @assert support in [ON_CELLS, ON_FACES, ON_BFACES] "value ($support) for 'support' is not allowed"
 
     if boundary
         support = ON_BFACES
