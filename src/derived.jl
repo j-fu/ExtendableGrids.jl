@@ -125,42 +125,6 @@ GridComponent4TypeProperty(::Type{ITEMTYPE_BEDGE},::Type{PROPERTY_GEOMETRY}) = B
 GridComponent4TypeProperty(::Type{ITEMTYPE_BEDGE},::Type{PROPERTY_UNIQUEGEOMETRY}) = UniqueBEdgeGeometries
 GridComponent4TypeProperty(::Type{ITEMTYPE_BEDGE},::Type{PROPERTY_ASSEMBLYGROUP}) = BEdgeAssemblyGroups
 
-
-function get_facegrid(source_grid::ExtendableGrid{Tc,Ti}) where {Tc,Ti}
-    facegrid=ExtendableGrid{Tc,Ti}()
-    facegrid[Coordinates]=source_grid[Coordinates]
-    facegrid[CellNodes]=source_grid[FaceNodes]
-    facegrid[CoordinateSystem]=source_grid[CoordinateSystem]
-    facegrid[CellGeometries]=source_grid[FaceGeometries]
-    facegrid[UniqueCellGeometries]=source_grid[UniqueFaceGeometries]
-    facegrid[CellRegions] = source_grid[FaceRegions]
-    # todo: facegrid[CellFaces] = source_grid[FaceEdges]
-    return facegrid
-end
-
-function get_bfacegrid(source_grid::ExtendableGrid{Tc,Ti})  where {Tc,Ti}
-    bfacegrid=ExtendableGrid{Tc,Ti}()
-    bfacegrid[Coordinates]=source_grid[Coordinates]
-    bfacegrid[CellNodes]=source_grid[BFaceNodes]
-    bfacegrid[CoordinateSystem]=source_grid[CoordinateSystem]
-    bfacegrid[CellGeometries]=source_grid[BFaceGeometries]
-    bfacegrid[UniqueCellGeometries]=source_grid[UniqueBFaceGeometries]
-    bfacegrid[CellRegions] = source_grid[BFaceRegions]
-    # todo: bfacegrid[CellFaces] = source_grid[BFaceEdges] (or sub-view of FaceEdges ?)
-    return bfacegrid
-end
-
-function get_edgegrid(source_grid::ExtendableGrid{Tc,Ti}) where {Tc,Ti}
-    edgegrid=ExtendableGrid{Tc,Ti}()
-    edgegrid[Coordinates]=source_grid[Coordinates]
-    edgegrid[CellNodes]=source_grid[EdgeNodes]
-    edgegrid[CoordinateSystem]=source_grid[CoordinateSystem]
-    edgegrid[CellGeometries]=source_grid[EdgeGeometries]
-    edgegrid[UniqueCellGeometries]=source_grid[UniqueedgeGeometries]
-    edgegrid[CellRegions] = source_grid[EdgeRegions]
-    return edgegrid
-end
-
 # show function for ExtendableGrids and defined Components in its Dict
 function showmore(io::IO, xgrid::ExtendableGrid{Tc,Ti}) where {Tc,Ti}
 
@@ -198,7 +162,7 @@ end
 function ExtendableGrids.instantiate(xgrid::ExtendableGrid{Tc,Ti}, ::Type{FaceNodes}) where {Tc,Ti}
 
     if haskey(xgrid, ParentGrid) && haskey(xgrid, ParentGridRelation)
-        if xgrid[ParentGridRelation] === SubGrid
+        if xgrid[ParentGridRelation] <: SubGrid{ON_CELLS}
             ## get FaceNodes from ParentGrid to keep ordering and orientation
             pgrid = xgrid[ParentGrid]
             pnodes = xgrid[NodeParents]

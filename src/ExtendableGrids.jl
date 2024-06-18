@@ -88,8 +88,8 @@ export AbstractPartitioningAlgorithm, TrivialPartitioning, PlainMetisPartitionin
 include("subgrid.jl")
 export subgrid
 export ParentGrid
-export NodeParents, CellParents, FaceParents, BFaceParents
-export ParentGridRelation, SubGrid, BoundarySubGrid, RefinedGrid
+export NodeParents, CellParents, FaceParents, BFaceParents, EdgeParents, BEdgeParents
+export ParentGridRelation, SubGrid, RefinedGrid
 
 include("shape_specs.jl")
 export refcoords_for_geometry
@@ -99,6 +99,7 @@ export num_edges
 export local_cellfacenodes
 export local_celledgenodes
 export facetype_of_cellface
+export Volume4ElemType
 export Normal4ElemType!
 export Tangent4ElemType!
 export xrefFACE2xrefCELL

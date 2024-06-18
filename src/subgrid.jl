@@ -46,14 +46,7 @@ $(TYPEDEF)
 
 Grid component key type for indicating that grid is a subgrid of the parentgrid
 """
-abstract type SubGrid <: ParentGridRelation end
-
-"""
-$(TYPEDEF)
-
-Grid component key type for indicating that grid is a boundary subgrid of the parentgrid
-"""
-abstract type BoundarySubGrid <: ParentGridRelation end
+abstract type SubGrid{based} <: ParentGridRelation where {based <: AssemblyType} end
 
 """
 $(TYPEDEF)
@@ -62,6 +55,18 @@ Grid component key type for indicating that grid is a refinement of the parentgr
 """
 abstract type RefinedGrid <: ParentGridRelation end
 
+
+"""
+$(TYPEDSIGNATURES)
+
+Default transform for subgrid creation
+"""
+function _copytransform!(a::AbstractArray,b::AbstractArray)
+    for i=1:length(a)
+        a[i]=b[i]
+    end
+end
+
 struct XIPair{Tv, Ti}
     x::Tv
     i::Ti
@@ -69,7 +74,6 @@ end
 
 # Comparison method for sorting
 Base.isless(x::XIPair, y::XIPair) = (x.x < y.x)
-
 
 
 """
@@ -84,7 +88,8 @@ Create subgrid from list of regions.
 
 - `parent`: parent grid 
 - `subregions`:  Array of subregions which define the subgrid
-- `boundary`: if true, create codimension 1 subgrid from boundary regions.
+- 'support': support of subgrid, default is ON_CELLS but can be also ON_FACES or ON_BFACES to create codimension 1 subgrid from face/bfaces region
+- `boundary`: if true, create codimension 1 subgrid from boundary regions (same as support = ON_BFACES)
 - `transform` (kw parameter): transformation function between
    grid and subgrid coordinates acting on one point.
 - `coordinatesystem`: if `boundary==true`, specify coordinate system for the boundary.
@@ -100,8 +105,15 @@ function subgrid(parent,
                  subregions::AbstractArray;
                  transform::T=function(a,b) @views a.=b[1:length(a)] end,                                      
                  boundary=false,
+                 support=ON_CELLS,
                  coordinatesystem=codim1_coordinatesystem(parent[CoordinateSystem]),
                  project=true) where T
+
+    @assert support in [ON_CELLS, ON_FACES, ON_BFACES] "value ($based) for 'support' is not allowed"
+
+    if boundary
+        support = ON_BFACES
+    end
 
     Tc=coord_type(parent)
     Ti=index_type(parent)
@@ -118,14 +130,19 @@ function subgrid(parent,
         return false
     end
 
-    
-    if boundary
+    if support == ON_BFACES
         xregions=parent[BFaceRegions]
         xnodes=parent[BFaceNodes]
         sub_gdim=dim_grid(parent)-1
         xct=parent[BFaceGeometries]
         sub_gdim=dim_grid(parent)-1
-    else
+    elseif support == ON_FACES
+        xregions=parent[FaceRegions]
+        xnodes=parent[FaceNodes]
+        sub_gdim=dim_grid(parent)-1
+        xct=parent[FaceGeometries]
+        sub_gdim=dim_grid(parent)-1
+    elseif support == ON_CELLS
         xregions=parent[CellRegions]
         xnodes=parent[CellNodes]
         xct=parent[CellGeometries]
@@ -193,17 +210,14 @@ function subgrid(parent,
     subgrid[ParentGrid]=parent
     subgrid[NodeParents]=sub_nip
     subgrid[CellParents]=cellparents
-    subgrid[ParentGridRelation]=boundary ? BoundarySubGrid : SubGrid
+    subgrid[ParentGridRelation]=SubGrid{support}
 
-    if boundary
+    if support in [ON_BFACES, ON_FACES]
         subgrid[NumBFaceRegions]=0
         subgrid[BFaceRegions]=Ti[]
         subgrid[BFaceGeometries]=ElementGeometries[]
         subgrid[BFaceNodes]=Matrix{Ti}(undef,sub_gdim,0)
         subgrid[NumBFaceRegions]=0
-        if !isnothing(coordinatesystem)
-            subgrid[CoordinateSystem]=coordinatesystem
-        end
     else
         bfacenodes=parent[BFaceNodes]
         bfaceregions=parent[BFaceRegions]
@@ -257,8 +271,8 @@ function subgrid(parent,
             subgrid[BFaceNodes]=zeros(Ti, 2, 0)
             subgrid[NumBFaceRegions]=0
         end
-        subgrid[CoordinateSystem]=parent[CoordinateSystem]
     end
+    subgrid[CoordinateSystem]=parent[CoordinateSystem]
 
     if sub_gdim == 1
         # Sort nodes of grid for easy plotting
