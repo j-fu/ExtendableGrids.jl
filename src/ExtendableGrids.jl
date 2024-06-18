@@ -119,7 +119,6 @@ export CellAssemblyGroups, FaceAssemblyGroups, BFaceAssemblyGroups, EdgeAssembly
 export GridComponent4TypeProperty
 export ITEMTYPE_CELL, ITEMTYPE_FACE, ITEMTYPE_BFACE, ITEMTYPE_EDGE, ITEMTYPE_BEDGE
 export PROPERTY_NODES, PROPERTY_REGION, PROPERTY_VOLUME, PROPERTY_UNIQUEGEOMETRY, PROPERTY_GEOMETRY, PROPERTY_ASSEMBLYGROUP
-export get_facegrid, get_bfacegrid, get_edgegrid
 export GridEGTypes
 export GridRegionTypes
 
