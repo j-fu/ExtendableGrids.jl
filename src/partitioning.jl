@@ -129,7 +129,7 @@ Return range of partitions for given pcolor.
 """
 function pcolor_partitions(grid,color)
     colpart=grid[PColorPartitions]
-    colpart[color]:colpart[color+1]-1
+    @inbounds colpart[color]:colpart[color+1]-1
 end
 
 
@@ -140,7 +140,7 @@ Return range of cells belonging to a given partition.
 """
 function partition_cells(grid, part)
     partcells=grid[PartitionCells]
-    partcells[part]:partcells[part+1]-1
+    @inbounds partcells[part]:partcells[part+1]-1
 end
 
 
@@ -180,11 +180,19 @@ function check_partitioning(grid::ExtendableGrid{Tc, Ti}; verbose=true) where {T
     cn=grid[CellNodes]
     ok=true
     partnodes=Vector{Tc}[unique(vec(cn[:,partition_cells(grid,ipart)])) for ipart=1:num_partitions(grid)]
+
+    if verbose
+        @info "Check if every node belongs to one of the partitions..."
+    end
     if length(intersect(vcat(partnodes...), 1:num_nodes(grid))) !=num_nodes(grid)
         if verbose
             @warn "Not all nodes part of partitions"
         end
         ok=false
+    end
+    
+    if verbose
+        @info "Check if no node belongs to two cell partitions of the same color at once..."
     end
     for color in pcolors(grid)
         for ipart in pcolor_partitions(grid, color)
@@ -193,13 +201,64 @@ function check_partitioning(grid::ExtendableGrid{Tc, Ti}; verbose=true) where {T
                     is=intersect(partnodes[ipart],partnodes[jpart])
                     if length(is)>0
                         if verbose
-                            @warn "Found nodes belonging to  partitions $ipart,$jpart of color $color"
+                            @warn "Found nodes belonging to cell partitions $ipart,$jpart of color $color"
                         end
                         ok=false
                     end
                 end
             end
         end
+    end
+
+    if verbose
+        @info "Check if no node belongs to two node partitions of the same color at once..."
+    end
+    pnodes=grid[PartitionNodes]
+    partnodes=Vector{Tc}[collect(pnodes[ipart]:pnodes[ipart+1]-1) for ipart=1:num_partitions(grid)]
+    for color in pcolors(grid)
+        for ipart in pcolor_partitions(grid, color)
+            for jpart in pcolor_partitions(grid, color)
+                if ipart != jpart
+                    is=intersect(partnodes[ipart],partnodes[jpart])
+                    if length(is)>0
+                        if verbose
+                            @warn "Found nodes belonging to both node partitions $ipart,$jpart of color $color"
+                        end
+                        ok=false
+                    end
+                end
+            end
+        end
+    end
+
+    if verbose
+        @info "Check if no node is a neigbor of nodes from  two node partitions of the same color..."
+    end
+    nc = asparse(atranspose(cn))
+    rv=SparseArrays.getrowval(nc)
+    mark=zeros(Int, num_nodes(grid))
+    for color in pcolors(grid)
+        mark.=0
+        for ipart in pcolor_partitions(grid, color)
+            for inode in pnodes[ipart]:pnodes[ipart+1]-1
+                for j in nzrange(nc,inode)
+                    icell=rv[j]
+                    for k=1:size(cn,1)
+                        mpart=mark[cn[k,icell]]
+                        if mpart!=0 && mpart !=ipart
+                            if verbose 
+                                @warn "Found node $(cn[k,icell]) neigboring to both partitions $ipart,$mpart of color $color"
+                            end
+                            ok=false
+                        end
+                        mark[cn[k,icell]]=ipart
+                    end
+                end
+            end
+        end
+    end
+    if verbose && !ok
+        error("Inconsistency in grid partitioning. Errors in assembly and  matrix-vector multiplication may occur.")
     end
     ok
 end
@@ -268,7 +327,7 @@ end
     $(SIGNATURES)
 
 (internal)
-Induce node partitioning from partitioning of `grid`.
+Induce node partitioning from cell partitioning of `grid`.
 """
 function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti}; keep_nodepermutation=true) where {Tc, Ti}
     coord=grid[Coordinates]
@@ -281,7 +340,7 @@ function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti}; keep_nodepermuta
     for ipart=1:length(partcells)-1
         for icell in partition_cells(grid,ipart)
             for k=1:lnodes
-                nodepartitions[cellnodes[k,icell]]=ipart
+                nodepartitions[cellnodes[k,icell]]=max(ipart,nodepartitions[cellnodes[k,icell]])
             end
         end
     end
