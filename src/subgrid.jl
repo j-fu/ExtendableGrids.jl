@@ -106,8 +106,8 @@ function subgrid(parent,
                  transform::T=function(a,b) @views a.=b[1:length(a)] end,                                      
                  boundary=false,
                  support=ON_CELLS,
-                 coordinatesystem=codim1_coordinatesystem(parent[CoordinateSystem]),
-                 project=true) where T
+                 project=true,
+                 coordinatesystem=project ? codim1_coordinatesystem(parent[CoordinateSystem]) : parent[CoordinateSystem]) where T
 
     @assert support in [ON_CELLS, ON_FACES, ON_BFACES] "value ($support) for 'support' is not allowed"
 
@@ -133,13 +133,11 @@ function subgrid(parent,
     if support == ON_BFACES
         xregions=parent[BFaceRegions]
         xnodes=parent[BFaceNodes]
-        sub_gdim=dim_grid(parent)-1
         xct=parent[BFaceGeometries]
         sub_gdim=dim_grid(parent)-1
     elseif support == ON_FACES
         xregions=parent[FaceRegions]
         xnodes=parent[FaceNodes]
-        sub_gdim=dim_grid(parent)-1
         xct=parent[FaceGeometries]
         sub_gdim=dim_grid(parent)-1
     elseif support == ON_CELLS
@@ -277,7 +275,7 @@ function subgrid(parent,
         subgrid[CoordinateSystem]=parent[CoordinateSystem]
     end
 
-    if sub_gdim == 1
+    if sub_gdim == 1 && project
         # Sort nodes of grid for easy plotting
         X=view(subgrid[Coordinates],1,:)
         nx=length(X)
