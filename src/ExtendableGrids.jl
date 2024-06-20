@@ -85,11 +85,22 @@ export num_pcolors, num_partitions, pcolors, pcolor_partitions, partition_cells,
 export partition, num_partitions_per_color,check_partitioning
 export AbstractPartitioningAlgorithm, TrivialPartitioning, PlainMetisPartitioning
 
+include("assemblytypes.jl")
+export AssemblyType
+export AT_NODES, ON_CELLS, ON_FACES, ON_IFACES, ON_BFACES, ON_EDGES, ON_BEDGES
+export ItemType4AssemblyType
+export GridComponentNodes4AssemblyType
+export GridComponentVolumes4AssemblyType
+export GridComponentGeometries4AssemblyType
+export GridComponentRegions4AssemblyType
+export GridComponentUniqueGeometries4AssemblyType
+export GridComponentAssemblyGroups4AssemblyType
+
 include("subgrid.jl")
 export subgrid
 export ParentGrid
 export NodeParents, CellParents, FaceParents, BFaceParents
-export ParentGridRelation, SubGrid, BoundarySubGrid, RefinedGrid
+export ParentGridRelation, SubGrid, RefinedGrid
 
 include("shape_specs.jl")
 export refcoords_for_geometry
@@ -118,7 +129,6 @@ export CellAssemblyGroups, FaceAssemblyGroups, BFaceAssemblyGroups, EdgeAssembly
 export GridComponent4TypeProperty
 export ITEMTYPE_CELL, ITEMTYPE_FACE, ITEMTYPE_BFACE, ITEMTYPE_EDGE, ITEMTYPE_BEDGE
 export PROPERTY_NODES, PROPERTY_REGION, PROPERTY_VOLUME, PROPERTY_UNIQUEGEOMETRY, PROPERTY_GEOMETRY, PROPERTY_ASSEMBLYGROUP
-export get_facegrid, get_bfacegrid, get_edgegrid
 export GridEGTypes
 export GridRegionTypes
 
@@ -137,17 +147,6 @@ export barycentric_refine
 include("adaptive_meshrefinements.jl")
 export bulk_mark
 export RGB_refine
-
-include("assemblytypes.jl")
-export AssemblyType
-export AT_NODES, ON_CELLS, ON_FACES, ON_IFACES, ON_BFACES, ON_EDGES, ON_BEDGES
-export ItemType4AssemblyType
-export GridComponentNodes4AssemblyType
-export GridComponentVolumes4AssemblyType
-export GridComponentGeometries4AssemblyType
-export GridComponentRegions4AssemblyType
-export GridComponentUniqueGeometries4AssemblyType
-export GridComponentAssemblyGroups4AssemblyType
 
 include("l2gtransformations.jl")
 export L2GTransformer, update_trafo!, eval_trafo!, mapderiv!
