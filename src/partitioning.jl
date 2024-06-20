@@ -275,7 +275,7 @@ function check_partitioning(grid::ExtendableGrid{Tc, Ti}; verbose=true, cellpart
         end
     end
     if verbose && !ok
-        error("Inconsistency in grid partitioning. Errors in assembly and  matrix-vector multiplication may occur.")
+        throw(ErrorException("Inconsistency in grid partitioning. Errors in assembly and  matrix-vector multiplication may occur."))
     end
     ok
 end
