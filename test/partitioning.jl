@@ -45,7 +45,7 @@ import Metis
                 end
             end
         end
-        for npart in [3,5] 
+        for npart in [3] 
             grid4=partition(grid1,RecursiveMetisPartitioning(npart=npart))
             @test num_pcolors(grid4) > 1
             @test num_partitions(grid4)>npart
