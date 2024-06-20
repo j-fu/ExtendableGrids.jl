@@ -150,7 +150,7 @@ end
 Return range of nodes belonging to a given partition.
 """
 function partition_nodes(grid, part)
-    partnodess=grid[PartitionNodes]
+    partnodes=grid[PartitionNodes]
     partnodes[part]:partnodes[part+1]-1
 end
 
@@ -468,8 +468,67 @@ function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti},nc; trivial=false
             end
         end
     end
-    
-    
+
+
+    partcolors=zeros(Int,num_partitions(grid))
+    for col in pcolors(grid)
+        for part in pcolor_partitions(grid,col)
+            partcolors[part]=col
+        end
+    end
+
+    # Correct situation where a node is a neighbor of
+    # two different partitions of the same color
+    # which would lead to clashes in the matrix-vector product
+    cn = grid[CellNodes]
+    nc = asparse(atranspose(grid[CellNodes]))
+    rv=SparseArrays.getrowval(nc)
+    while true
+        # Detect the situation, record  the corresponding
+        # pairs of partitions
+        idpart=Pair{Int,Int}[]
+        for inode=1:num_nodes(grid)
+            ipart=nodepartitions[inode]
+            icol=partcolors[ipart]
+            for j in nzrange(nc,inode)
+                icell=rv[j]
+                for k=1:size(cn,1)
+                    knode=cn[k,icell]
+                    for l in nzrange(nc,knode)
+                        lcell=rv[l]
+                        for m =1:size(cn,1)
+                            mnode=cn[m,lcell]
+                            mpart=nodepartitions[mnode]
+                            mcol=partcolors[mpart]
+                            if (mpart != ipart) && (mcol == icol)
+                                if ipart < mpart
+                                    push!(idpart, ipart=>mpart)
+                                else
+                                    push!(idpart, mpart=>ipart)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        idpart=unique(idpart)
+        # We are done if no such case is left
+        if length(idpart)==0
+            break
+        end
+        @show idpart
+        # Re-assign the respective lower partition numbers for the problem cases.
+        for inode=1:num_nodes(grid)
+            part=nodepartitions[inode]
+            for id in idpart
+                if part==id[2]
+                    nodepartitions[inode]=id[1]
+                end
+            end
+        end
+    end
+
     # Create node permutation such that
     # all nodes belonging to one partition
     # are contiguous
@@ -512,6 +571,7 @@ function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti},nc; trivial=false
     if keep_nodepermutation
         grid[NodePermutation]=nodeperm
     end
+    @show [length(partition_nodes(grid,ipart)) for ipart=1:num_partitions(grid)]
     grid
 end
 
