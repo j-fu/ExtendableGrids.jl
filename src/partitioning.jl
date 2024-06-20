@@ -151,7 +151,7 @@ Return range of nodes belonging to a given partition.
 """
 function partition_nodes(grid, part)
     partnodess=grid[PartitionNodes]
-    partnodes[part]:partcells[part+1]-1
+    partnodes[part]:partnodes[part+1]-1
 end
 
 
@@ -161,32 +161,46 @@ end
 Return a vector containing the number of partitions for each of
 the colors of the grid partitioning.
 """
-function num_partitions_per_color(grid)
-    colpart=grid[PColorPartitions]
-    nthd=zeros(Int,0)
-    for i=1:length(colpart)-1
-        push!(nthd,colpart[i+1]-colpart[i])
-    end
-    nthd
-end
-
+num_partitions_per_color(grid) = [length(pcolor_partitions(grid, col)) for col in pcolors(grid)]
 
 """
     $(SIGNATURES)
 
-Check correctness of partittioning
+Return a vector containing the number of cells for each of
+the colors of the grid partitioning.
 """
-function check_partitioning(grid::ExtendableGrid{Tc, Ti}; verbose=true) where {Tc, Ti}
+function num_cells_per_color(grid)
+    [sum( p->length(partition_cells(grid,p)), pcolor_partitions(grid, col)) for col in pcolors(grid)]
+end
+
+
+"""
+    check_partitioning(grid; 
+                       verbose=true, 
+                       cellpartonly=false)
+
+Check correctness of cell partitioning, necessesary for parallel assembly:
+- Check if every node belongs to one of the cell partitions
+- Check if no node belongs to two cell partitions of the same color at once
+
+
+
+If `cellpartonly==false` check correctness of node partitioning necessary
+for parallel sparse matrix multiplication and ILU preconditioning
+- Check if no node belongs to two node partitions of the same color at once
+- Check if no node is a neighbor of nodes from two node partitions of the same color
+"""
+function check_partitioning(grid::ExtendableGrid{Tc, Ti}; verbose=true, cellpartonly=false) where {Tc, Ti}
     cn=grid[CellNodes]
     ok=true
     partnodes=Vector{Tc}[unique(vec(cn[:,partition_cells(grid,ipart)])) for ipart=1:num_partitions(grid)]
 
     if verbose
-        @info "Check if every node belongs to one of the partitions..."
+        @info "Check if every node belongs to one of the cell partitions..."
     end
     if length(intersect(vcat(partnodes...), 1:num_nodes(grid))) !=num_nodes(grid)
         if verbose
-            @warn "Not all nodes part of partitions"
+            @warn "Not all nodes in one of the partitions"
         end
         ok=false
     end
@@ -209,7 +223,10 @@ function check_partitioning(grid::ExtendableGrid{Tc, Ti}; verbose=true) where {T
             end
         end
     end
-
+    
+    if cellpartonly
+        return ok
+    end
     if verbose
         @info "Check if no node belongs to two node partitions of the same color at once..."
     end
@@ -232,7 +249,7 @@ function check_partitioning(grid::ExtendableGrid{Tc, Ti}; verbose=true) where {T
     end
 
     if verbose
-        @info "Check if no node is a neigbor of nodes from  two node partitions of the same color..."
+        @info "Check if no node is a neighbor of nodes from  two node partitions of the same color..."
     end
     nc = asparse(atranspose(cn))
     rv=SparseArrays.getrowval(nc)
@@ -316,22 +333,129 @@ end
 Subdivide grid into `npart` partitions using `Metis.partition` and color the resulting partition neigborhood graph.
 This requires to import Metis.jl in order to trigger the corresponding extension.
 
+!!! warning
+    This algorithm is unreliable with respect to the induced node partitioning, see
+    [`induce_node_partitioning!`](@ref). Check the result with
+    [`check_partitioning`](@ref) before use.    
+
+Parameters: 
+
 $(TYPEDFIELDS)
 """
 Base.@kwdef struct PlainMetisPartitioning <: AbstractPartitioningAlgorithm
+    "Number of partitions (default: 20)"
     npart::Int=20
+
+    "Induce node partioning (default: true)"
+    partition_nodes::Bool=true
+
+    "Keep node permutation vector (default: true)"
+    keep_nodepermutation::Bool=true
 end
 
+
+"""
+    $(TYPEDEF)
+
+Subdivide grid into `npart` partitions using `Metis.partition` and calculate cell separators
+from this partitioning. The initial partitions  get pcolor 1, and the separator gets pcolor 2.
+This is continued recursively with partitioning of the separator.  
+
+
+!!! warning
+    This algorithm is unreliable with respect to the induced node partitioning, see
+    [`induce_node_partitioning!`](@ref). Check the result with
+    [`check_partitioning`](@ref) before use.    
+
+Parameters: 
+
+$(TYPEDFIELDS)
+"""
+Base.@kwdef struct RecursiveMetisPartitioning <: AbstractPartitioningAlgorithm
+    "Number of level 0 partitions (default: 4)"
+    npart::Int=4
+
+    "Recursion depth (default: 1)"
+    maxdepth::Int=1
+
+    "Separator width  (default: 2)"
+    separatorwidth::Int=2
+
+    "Induce node partioning (default: true)"
+    partition_nodes::Bool=true
+
+    "Keep node permutation vector (default: true)"
+    keep_nodepermutation::Bool=true
+end
+
+"""
+    $(SIGNATURES)
+
+(internal)
+Create cell permutation such that  all cells belonging to one partition
+are contiguous and reorder return grid with reordered cells.
+"""
+function reorder_cells(grid::ExtendableGrid{Tc,Ti}, cellpartitions,ncellpartitions,colpart) where {Tc,Ti}
+    ncells=num_cells(grid)
+    cellperm=copy(cellpartitions)
+    partctr=zeros(Int,ncellpartitions+1)
+    partctr[1]=1
+    for i=1:ncellpartitions
+	partctr[i+1]=partctr[i]+sum(x->x==i, cellpartitions)
+    end
+    partcells=copy(partctr)
+    for ic=1:ncells
+	part=cellpartitions[ic]
+	cellperm[partctr[part]]=ic
+	partctr[part]+=1
+    end
+    
+    pgrid=ExtendableGrid{Tc,Ti}()
+    pgrid[CellNodes]=grid[CellNodes][:,cellperm]
+    pgrid[CellRegions]=grid[CellRegions][cellperm]
+    pgrid[PColorPartitions]=colpart
+    pgrid[PartitionCells]=partcells
+    
+    for key in [Coordinates,
+                CellGeometries,
+                BFaceNodes,
+                BFaceRegions,
+                BFaceGeometries,
+                CoordinateSystem]
+        pgrid[key]=grid[key]
+    end
+    pgrid
+end
 
 """
     $(SIGNATURES)
 
 (internal)
 Induce node partitioning from cell partitioning of `grid`.
+
+Node partitioning should support parallel matrix-vector products with `SparseMatrixCSC`.
+The current algorithm assumes that nodes get the partition number from the partition
+numbers of the cells having this node in common. If these are differnt, the highest
+number is taken.
+
+This algorithm does not always fulfill the following condition (checked among others by [`check_partitioning`](@ref) with `cellpartonly=false`):
+There is no node which is neigbour of nodes from two different partition with the same color.
 """
-function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti}; keep_nodepermutation=true) where {Tc, Ti}
-    coord=grid[Coordinates]
+function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti},nc; trivial=false, keep_nodepermutation=true) where {Tc, Ti}
     partcells=grid[PartitionCells]
+    nnodepartitions=length(partcells)-1
+    if trivial
+        partnodes=zeros(Int,nnodepartitions+1)
+        partnodes[1]=1
+        partnodes[2:end].=num_nodes(grid)+1
+        grid[PartitionNodes]=partnodes
+        if keep_nodepermutation
+            grid[NodePermutation]=1:num_nodes(grid)
+        end
+        return grid
+    end
+
+    coord=grid[Coordinates]
     cellnodes=grid[CellNodes]
     bfacenodes=grid[BFaceNodes]
     lnodes=size(cellnodes,1)
@@ -340,12 +464,11 @@ function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti}; keep_nodepermuta
     for ipart=1:length(partcells)-1
         for icell in partition_cells(grid,ipart)
             for k=1:lnodes
-                nodepartitions[cellnodes[k,icell]]=max(ipart,nodepartitions[cellnodes[k,icell]])
+                nodepartitions[cellnodes[k,icell]]=ipart
             end
         end
     end
     
-    nnodepartitions=length(partcells)-1
     
     # Create node permutation such that
     # all nodes belonging to one partition
@@ -386,12 +509,14 @@ function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti}; keep_nodepermuta
     grid[CellNodes]=xcellnodes
     grid[BFaceNodes]=xbfacenodes
     grid[Coordinates]=xcoord
-    grid[NodePermutation]=nodeperm
+    if keep_nodepermutation
+        grid[NodePermutation]=nodeperm
+    end
     grid
 end
 
 """
-    $(SIGNATURES)
+    partition(grid, alg::AbstractPartitioningAlgorithm)
 
 Partition grid according to `alg`, such that the neigborhood graph
 of partitions is colored in such a way, that all partitions with 
