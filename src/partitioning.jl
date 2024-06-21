@@ -26,6 +26,19 @@ Let `pc=grid[PartitionCells]`. Then all cells with index
 """
 abstract type PartitionCells <: AbstractGridIntegerArray1D end
 
+
+"""
+    $(TYPEDEF)
+
+Key type describing the bondary faces of a given partition.
+
+`grid[PartitionBFaces]` returns an integer vector describing 
+the boundary faces of a partition  given by its number.
+Let `pc=grid[PartitionCells]`. Then all cells with index
+`i ∈ pc[p]:pc[p+1]-1`  belong to partition p.
+"""
+abstract type PartitionBFaces <: AbstractGridIntegerArray1D end
+
 """
     $(TYPEDEF)
 
@@ -64,6 +77,7 @@ Create trivial partitioning: the whole grid is partition #1 with just one color.
 function trivial_partitioning!(grid::ExtendableGrid{Tc,Ti}) where {Tc,Ti}
     grid[PColorPartitions]=[1,2]
     grid[PartitionCells]=Ti[1,num_cells(grid)+1]
+    grid[PartitionBFaces]=Ti[1,num_bfaces(grid)+1]
     grid[PartitionNodes]=Ti[1,num_nodes(grid)+1]
     grid
 end
@@ -80,13 +94,23 @@ function ExtendableGrids.instantiate(grid::ExtendableGrid, ::Type{PColorPartitio
 end
 
 """
-    instantiate(grid::ExtendableGrid, ::Type{PColorPartitions})
+    instantiate(grid::ExtendableGrid, ::Type{PartitionCells})
 
 If not given otherwise, instantiate partition data with trivial partitioning.
 """
 function ExtendableGrids.instantiate(grid::ExtendableGrid, ::Type{PartitionCells})
     trivial_partitioning!(grid)
     grid[PartitionCells]
+end
+
+"""
+    instantiate(grid::ExtendableGrid, ::Type{PartitionBFaces})
+
+If not given otherwise, instantiate partition data with trivial partitioning.
+"""
+function ExtendableGrids.instantiate(grid::ExtendableGrid, ::Type{PartitionBFaces})
+    trivial_partitioning!(grid)
+    grid[PartitionBFaces]
 end
 
 """
@@ -141,6 +165,16 @@ Return range of cells belonging to a given partition.
 function partition_cells(grid, part)
     partcells=grid[PartitionCells]
     @inbounds partcells[part]:partcells[part+1]-1
+end
+
+"""
+    $(SIGNATURES)
+
+Return range of cells belonging to a given partition.
+"""
+function partition_bfaces(grid, part)
+    partbfaces=grid[PartitionBFaces]
+    @inbounds partbfaces[part]:partbfaces[part+1]-1
 end
 
 
@@ -335,11 +369,6 @@ end
 Subdivide grid into `npart` partitions using `Metis.partition` and color the resulting partition neigborhood graph.
 This requires to import Metis.jl in order to trigger the corresponding extension.
 
-!!! warning
-    This algorithm is unreliable with respect to the induced node partitioning, see
-    [`induce_node_partitioning!`](@ref). Check the result with
-    [`check_partitioning`](@ref) before use.    
-
 Parameters: 
 
 $(TYPEDFIELDS)
@@ -360,14 +389,8 @@ end
     $(TYPEDEF)
 
 Subdivide grid into `npart` partitions using `Metis.partition` and calculate cell separators
-from this partitioning. The initial partitions  get pcolor 1, and the separator gets pcolor 2.
+from this partitioning. The initial partitions  gets pcolor 1, and the separator gets pcolor 2.
 This is continued recursively with partitioning of the separator.  
-
-
-!!! warning
-    This algorithm is unreliable with respect to the induced node partitioning, see
-    [`induce_node_partitioning!`](@ref). Check the result with
-    [`check_partitioning`](@ref) before use.    
 
 Parameters: 
 
@@ -419,7 +442,8 @@ function reorder_cells(grid::ExtendableGrid{Tc,Ti}, cellpartitions,ncellpartitio
     pgrid[CellRegions]=grid[CellRegions][cellperm]
     pgrid[PColorPartitions]=colpart
     pgrid[PartitionCells]=partcells
-    
+    pgrid[PartitionBFaces]=trivial_partitioning(ncellpartitions,num_bfaces(grid))
+
     for key in [Coordinates,
                 CellGeometries,
                 BFaceNodes,
@@ -435,6 +459,21 @@ end
     $(SIGNATURES)
 
 (internal)
+Create a trivial partitioning
+"""
+
+function trivial_partitioning(npart,nitems)
+    part=zeros(Int,npart+1)
+    part[1]=1
+    part[2:end].=nitems+1
+    part
+end
+
+
+"""
+    $(SIGNATURES)
+
+(internal)
 Induce node partitioning from cell partitioning of `grid`.
 
 Node partitioning should support parallel matrix-vector products with `SparseMatrixCSC`.
@@ -442,17 +481,17 @@ The current algorithm assumes that nodes get the partition number from the parti
 numbers of the cells having this node in common. If these are differnt, the highest
 number is taken.
 
-This algorithm does not always fulfill the following condition (checked among others by [`check_partitioning`](@ref) with `cellpartonly=false`):
-There is no node which is neigbour of nodes from two different partition with the same color.
+This algorithm does not always fulfill the  condition that
+there is no node which is neigbour of nodes from two different partition with the same color.
+
+This situation is detected and corrected by joining respective critical partitions.
+This sacrifies parallel efficiency for correctness.
 """
 function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti},cn,nc; trivial=false, keep_nodepermutation=true) where {Tc, Ti}
     partcells=grid[PartitionCells]
     nnodepartitions=length(partcells)-1
     if trivial
-        partnodes=zeros(Int,nnodepartitions+1)
-        partnodes[1]=1
-        partnodes[2:end].=num_nodes(grid)+1
-        grid[PartitionNodes]=partnodes
+        grid[PartitionNodes]=trivial_partitioning(nnodepartitions,num_nodes(grid))
         if keep_nodepermutation
             grid[NodePermutation]=1:num_nodes(grid)
         end
@@ -486,6 +525,9 @@ function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti},cn,nc; trivial=fa
     # which would lead to clashes in the matrix-vector product
     nn=cn*nc
     rv=SparseArrays.getrowval(nn)
+    showinfo=true
+
+    # Repeat several times until ok.
     while true
         # Detect the situation, record  the corresponding
         # pairs of partitions
@@ -514,8 +556,18 @@ function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti},cn,nc; trivial=fa
         if length(idpart)==0
             break
         end
-        @info "Correcting node partitions: $idpart"
+        # Show this only once:
+        if showinfo
+            """Ensure that no node is accessed from
+                     two different partitions with same color """
+            showinfo=false
+        end
+        @info "Renumbering: $idpart"
+
         # Re-assign the respective lower partition numbers for the problem cases.
+        # The parttions with the higher numbers will be just empty.
+        # This renders the critical nodes into the same partition, so they
+        # will be accessed from the same parallel task.
         for inode=1:num_nodes(grid)
             part=nodepartitions[inode]
             for id in idpart
@@ -542,10 +594,13 @@ function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti},cn,nc; trivial=fa
 	partctr[part]+=1
     end
 
+    # Permute coordinate array
     nodeperm=invperm(nodeperm)
     xcoord=similar(coord)
     xcoord[:,nodeperm].=coord
 
+  
+    # Renumber node indices for cells
     xcellnodes=similar(cellnodes)
     for icell=1:num_cells(grid)
         for k=1:lnodes
@@ -553,6 +608,7 @@ function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti},cn,nc; trivial=fa
         end
     end
 
+    # Renumber node indices for bfaces
     xbfacenodes=similar(bfacenodes)
     for ibface=1:num_bfaces(grid)
         for k=1:lnodes-1

@@ -26,7 +26,6 @@ import Metis
                 @test check_partitioning(grid, verbose=false)
             end
             
-            # METIS has different results depending on the OS...
             for npart in [10, 15, 20]
                 grid4=partition(grid1,PlainMetisPartitioning(npart=npart))
                 @test num_pcolors(grid4) > 1
@@ -37,6 +36,7 @@ import Metis
                 @test grid4[Coordinates][:,grid4[NodePermutation]]≈grid1[Coordinates]
                 @test check_partitioning(grid4, verbose=false)
             end
+
             for npart in [3,4,5,6] 
                 grid4=partition(grid1,RecursiveMetisPartitioning(npart=npart))
                 @test num_pcolors(grid4) > 1
