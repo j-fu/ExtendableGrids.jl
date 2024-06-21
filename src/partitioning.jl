@@ -459,9 +459,9 @@ end
     $(SIGNATURES)
 
 (internal)
-Create a trivial partitioning
+Create a trivial partitioning such that all items
+fall in the first of nparts
 """
-
 function trivial_partitioning(npart,nitems)
     part=zeros(Int,npart+1)
     part[1]=1
