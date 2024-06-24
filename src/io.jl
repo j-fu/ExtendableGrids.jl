@@ -41,23 +41,32 @@ end
 """
 $(TYPEDSIGNATURES)
   
-Write grid to file. Currently for pdelib sg and Gmsh formats.
+Write grid to file. 
+Supported formats:
+- "*.sg": pdelib sg format
+        
 """
-function Base.write(fname::String, g::ExtendableGrid; format = "")
+function Base.write(fname::String, g::ExtendableGrid; format = "", kwargs...)
     (fbase, fext) = splitext(fname)
     if format == ""
         format = fext[2:end]
     end
-    if format == "msh"
-        try
-            simplexgrid_to_gmsh(g; filename = fname)
-        catch e
-            throw(ErrorException("Missing Gmsh extension. Add Gmsh.jl to your environment and import it to write $(fext) files."))
-        end
-        return
+    try
+        writegrid(fname,g, Val{Symbol(format)}; kwargs...)
+    catch e
+        throw(ErrorException("Writing $(fext) files not supported"))
     end
-    @assert format == "sg"
+end
 
+function writegrid(filename::String, g::ExtendableGrid, ::Type{Val{:msh}};kwargs...)
+    try
+        simplexgrid_to_gmsh(g; filename)
+    catch e
+        throw(ErrorException("Missing Gmsh extension. Add Gmsh.jl to your environment and import it to write msh files."))
+    end
+end
+
+function writegrid(fname::String, g::ExtendableGrid, ::Type{Val{:sg}}; version=v"2.2",  kwargs...)
     dim_g = dim_grid(g)
     dim_s = dim_space(g)
     nn = num_nodes(g)
@@ -73,13 +82,12 @@ function Base.write(fname::String, g::ExtendableGrid; format = "")
     open(fname, "w") do file
         write(file, @sprintf("SimplexGrid"))
         write(file, @sprintf(" "))
-        write(file, @sprintf("2.1\n"))
+        write(file, @sprintf("%s\n","$version"[1:end-2]))
         write(file, @sprintf("#created by ExtendableGrids.jl (c) J.Fuhrmann et al\n"))
-        write(file, @sprintf("#mailto:{fuhrmann|streckenbach}@wias-berlin.de\n"))
         write(file, @sprintf("#%s\n", Dates.format(Dates.now(), "yyyy-mm-ddTHH-mm-SS")))
 
-        write(file, @sprintf("DIMENSION\n%d\n", dim_g))
-        write(file, @sprintf("NODES\n%d %d\n", nn, dim_s))
+        write(file, @sprintf("DIMENSION %d\n", dim_g))
+        write(file, @sprintf("NODES %d %d\n", nn, dim_s))
 
         for inode = 1:nn
             for idim = 1:dim_s
@@ -88,7 +96,7 @@ function Base.write(fname::String, g::ExtendableGrid; format = "")
             end
         end
 
-        write(file, @sprintf("CELLS\n%d\n", nc))
+        write(file, @sprintf("CELLS %d\n", nc))
         for icell = 1:nc
             for inode = 1:(dim_g + 1)
                 write(file, @sprintf("%d ", cellnodes[inode, icell]))
@@ -96,12 +104,26 @@ function Base.write(fname::String, g::ExtendableGrid; format = "")
             write(file, @sprintf("%d\n", cellregions[icell]))
         end
 
-        write(file, @sprintf("FACES\n%d\n", nbf))
+        write(file, @sprintf("FACES %d\n", nbf))
         for ibface = 1:nbf
             for inode = 1:dim_g
                 write(file, @sprintf("%d ", bfacenodes[inode, ibface]))
             end
             write(file, @sprintf("%d\n", bfaceregions[ibface]))
+        end
+
+        if version>v"2.1"
+            function writeitems(key,label)
+                data=g[key]
+                write(file, "$(label) $(length(data))\n")
+                for d in data
+                    write(file, "$d\n")
+                end
+            end
+            writeitems(PColorPartitions,"PCOLORPARTITIONS")
+            writeitems(PartitionCells,"PARTITIONCELLS")
+            writeitems(PartitionBFaces,"PARTITIONBFACES")
+            writeitems(PartitionNodes,"PARTITIONNODES")
         end
         write(file, @sprintf("END\n"))
         flush(file)
@@ -114,36 +136,47 @@ end
 """
 $(TYPEDSIGNATURES)
   
-Read grid from file. Currently for pdelib sg and Gmsh formats.
+Read grid from file. 
+Supported formats:
+- "*.sg": pdelib sg files
+- "*.geo": gmsh geometry description (requires `using Gmsh`)
+- "*.msh": gmsh mesh (requires `using Gmsh`)
 """
-function simplexgrid(file::String; format = "")
-    Ti = Cint
+function simplexgrid(file::String; format = "", kwargs...)
     (fbase, fext) = splitext(file)
     if format == ""
         format = fext[2:end]
     end
-    if format == "msh" || format == "geo"
-        grid = nothing
-        try
-            grid = simplexgrid_from_gmsh(file)
-        catch e
-            throw(ErrorException("Missing Gmsh extension. Add Gmsh.jl to your environment and import it to read $(fext) files."))
-        end
-        return grid
+    try
+        simplexgrid(file,Val{Symbol(format)}; kwargs...)
+    catch e
+        throw(ErrorException("Reading $(fext) files not supported"))
     end
+end
 
-    @assert format == "sg"
+function simplexgrid(file::String, ::Type{Val{:msh}}; kwargs...)
+    try
+        simplexgrid_from_gmsh(file)
+    catch e
+        throw(ErrorException("Missing Gmsh extension. Add Gmsh.jl to your environment and import it to read msh files."))
+    end
+end
 
+function simplexgrid(file::String, ::Type{Val{:geo}}; kwargs...)
+    try
+        simplexgrid_from_gmsh(file)
+    catch e
+        throw(ErrorException("Missing Gmsh extension. Add Gmsh.jl to your environment and import it to read geo files."))
+    end
+end
+
+function simplexgrid(file::String, ::Type{Val{:sg}}; kwargs...)
+    Ti = Cint
     tks = TokenStream(file)
     expecttoken(tks, "SimplexGrid")
-    version = parse(Float64, gettoken(tks))
-    version20 = false
+    version = VersionNumber(gettoken(tks))
 
-    if (version == 2.0)
-        version20 = true
-    elseif (version == 2.1)
-        version20 = false
-    else
+    if version<v"2.0" || version>=v"2.3"
         error("Read grid: wrong format version: $(version)")
     end
 
@@ -153,6 +186,13 @@ function simplexgrid(file::String; format = "")
     regions = Array{Ti, 1}(undef, 0)
     faces = Array{Ti, 2}(undef, 0, 0)
     bregions = Array{Ti, 1}(undef, 0)
+
+    pcolorpartitions=Array{Ti, 1}(undef, 0)
+    partitioncells=Array{Ti, 1}(undef, 0)
+    partitionbfaces=Array{Ti, 1}(undef, 0)
+    partitionnodes=Array{Ti, 1}(undef, 0)
+    
+    
     while (true)
         if (trytoken(tks, "DIMENSION"))
             dim = parse(Ti, gettoken(tks))
@@ -177,7 +217,7 @@ function simplexgrid(file::String; format = "")
                     cells[inode, icell] = parse(Ti, gettoken(tks))
                 end
                 regions[icell] = parse(Ti, gettoken(tks))
-                if version20
+                if version==v"2.0"
                     for j = 1:(dim + 1)
                         gettoken(tks)  # skip file format garbage
                     end
@@ -192,18 +232,37 @@ function simplexgrid(file::String; format = "")
                     faces[inode, iface] = parse(Ti, gettoken(tks))
                 end
                 bregions[iface] = parse(Ti, gettoken(tks))
-                if (version20)
+                if version == v"2.0"
                     for j = 1:(dim + 2)
                         gettoken(tks) #skip file format garbage
                     end
                 end
             end
+        elseif trytoken(tks, "PCOLORPARTITIONS") && version>v"2.1"
+            n=parse(Ti, gettoken(tks))
+            pcolorpartitions=[parse(Ti, gettoken(tks)) for i=1:n]
+        elseif trytoken(tks, "PARTITIONCELLS") && version>v"2.1"
+            n=parse(Ti, gettoken(tks))
+            partitioncells=[parse(Ti, gettoken(tks)) for i=1:n]
+        elseif trytoken(tks, "PARTITIONBFACES") && version>v"2.1"
+            n=parse(Ti, gettoken(tks))
+            partitionbfaces=[parse(Ti, gettoken(tks)) for i=1:n]
+        elseif trytoken(tks, "PARTITIONNODES") && version>v"2.1"
+            n=parse(Ti, gettoken(tks))
+            partitionnodes=[parse(Ti, gettoken(tks)) for i=1:n]
         else
             expecttoken(tks, "END")
             break
         end
     end
-    simplexgrid(coord, cells, regions, faces, bregions)
+    g=simplexgrid(coord, cells, regions, faces, bregions)
+    if version>v"2.1"
+        g[PColorPartitions]=pcolorpartitions
+        g[PartitionCells]=partitioncells
+        g[PartitionBFaces]=partitionbfaces
+        g[PartitionNodes]=partitionnodes
+    end
+    g
 end
 
 function simplexgrid_from_gmsh end

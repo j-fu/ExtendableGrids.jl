@@ -161,19 +161,21 @@ end
     end
 end
 
-function testrw(grid, format; confidence = :full)
+function testrw(grid, format; confidence = :full, kwargs...)
     #@warn format
     ftmp = tempname() * "." * format
-    write(ftmp, grid)
+    write(ftmp, grid; kwargs...)
     grid1 = simplexgrid(ftmp)
     seemingly_equal(grid1, grid; confidence = confidence)
 end
 
 @testset "Read/Write sg" begin
     X = collect(0:0.05:1)
-    @test testrw(simplexgrid(X), "sg")
-    @test testrw(simplexgrid(X, X), "sg")
-    @test testrw(simplexgrid(X, X, X), "sg")
+    for version in [v"2.1", v"2.2"]
+        @test testrw(simplexgrid(X), "sg"; version)
+        @test testrw(simplexgrid(X, X), "sg";version)
+        @test testrw(simplexgrid(X, X, X), "sg"; version)
+    end
 end
 
 @testset "rectnd" begin
@@ -416,4 +418,5 @@ end
 
     @test sha_code == "93a31139ccb3ae3017351d7cef0c2639c5def97c9744699543fe8bc58e1ebcea"
 end
+
 

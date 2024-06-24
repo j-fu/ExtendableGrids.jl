@@ -1,11 +1,11 @@
 module ExtendableGridsMetisExt
 
 import Metis
-import ExtendableGrids: partition, partgraph, induce_node_partitioning!, reorder_cells
+import ExtendableGrids: dopartition, partgraph, induce_node_partitioning!, reorder_cells
 using ExtendableGrids, Graphs
 
 
-function partition(grid::ExtendableGrid{Tc,Ti}, alg::PlainMetisPartitioning) where {Tc,Ti}
+function dopartition(grid::ExtendableGrid{Tc,Ti}, alg::PlainMetisPartitioning) where {Tc,Ti}
     nn = num_nodes(grid)
     ncells = num_cells(grid)
     cn = asparse(grid[CellNodes])
@@ -39,12 +39,11 @@ function partition(grid::ExtendableGrid{Tc,Ti}, alg::PlainMetisPartitioning) whe
     end
     
     pgrid=reorder_cells(grid,cellpartitions,ncellpartitions,colpart)
-    induce_node_partitioning!(pgrid,nc; trivial=!alg.partition_nodes, keep_nodepermutation=alg.keep_nodepermutation)
+    induce_node_partitioning!(pgrid,cn,nc; trivial=!alg.partition_nodes, keep_nodepermutation=alg.keep_nodepermutation)
 end
 
 
 function coloredpartition(cc; npart = 4, depth = 0, maxdepth=4, separatorwidth=2)
-    @info "depth=$depth"
     mg = Metis.graph(cc)
     Metis.options[Int(Metis.METIS_OPTION_CCORDER)+1] = 1
     
@@ -133,14 +132,14 @@ function coloredpartition(cc; npart = 4, depth = 0, maxdepth=4, separatorwidth=2
     
 end
 
-function partition(grid::ExtendableGrid{Tc,Ti}, alg::RecursiveMetisPartitioning) where {Tc,Ti}
+function dopartition(grid::ExtendableGrid{Tc,Ti}, alg::RecursiveMetisPartitioning) where {Tc,Ti}
     cn = asparse(grid[CellNodes])
     nc = asparse(atranspose(grid[CellNodes]))
     cc = nc * cn
     cellpartitions, colpart = coloredpartition(cc; npart=alg.npart, maxdepth=alg.maxdepth, separatorwidth=alg.separatorwidth)
     ncellpartitions=maximum(cellpartitions)
     pgrid=reorder_cells(grid,cellpartitions,ncellpartitions,colpart)
-    induce_node_partitioning!(pgrid,nc; trivial=!alg.partition_nodes, keep_nodepermutation=alg.keep_nodepermutation)
+    induce_node_partitioning!(pgrid,cn,nc; trivial=!alg.partition_nodes, keep_nodepermutation=alg.keep_nodepermutation)
 end
 
 

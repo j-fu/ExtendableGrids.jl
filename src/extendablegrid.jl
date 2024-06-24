@@ -484,12 +484,13 @@ function Base.map(f::Function, grid::ExtendableGrid)
 end
 
 function Base.show(io::IO, grid::ExtendableGrid)
+    str = @sprintf("%s;\ndim: %d nodes: %d cells: %d bfaces: %d",
+                   typeof(grid), dim_space(grid), num_nodes(grid), num_cells(grid), num_bfaces(grid))
     if num_edges(grid) > 0
-        str = @sprintf("%s;\ndim: %d nodes: %d cells: %d bfaces: %d, edges: %d\n",
-                       typeof(grid), dim_space(grid), num_nodes(grid), num_cells(grid), num_bfaces(grid), num_edges(grid))
-    else
-        str = @sprintf("%s;\ndim: %d nodes: %d cells: %d bfaces: %d\n",
-                       typeof(grid), dim_space(grid), num_nodes(grid), num_cells(grid), num_bfaces(grid))
+        str*=@sprintf(", edges: %d", num_edges(grid))
+    end
+    if num_partitions(grid)>1
+        str*="\npartitions/color: $(num_partitions_per_color(grid))" 
     end
     println(io, str)
 end
