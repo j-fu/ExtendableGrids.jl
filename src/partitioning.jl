@@ -558,7 +558,7 @@ function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti},cn,nc; trivial=fa
         end
         # Show this only once:
         if showinfo
-           @info """Renumber partitions to ensure that no node is neighbor of
+           @info """Renumber node partitions such that no node is neighbor of
                          two different partitions with same color:\n"""
             showinfo=false
         end
