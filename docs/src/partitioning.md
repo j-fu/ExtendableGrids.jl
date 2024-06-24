@@ -23,6 +23,7 @@ num_cells_per_color
 pcolors
 pcolor_partitions
 partition_cells
+partition_bfaces
 partition_nodes
 check_partitioning
 ```
@@ -40,6 +41,7 @@ RecursiveMetisPartitioning
 ```@docs
 PColorPartitions 
 PartitionCells
+PartitionBFaces
 PartitionNodes
 NodePermutation
 ```
@@ -47,8 +49,10 @@ NodePermutation
 ## Internal API
 ```@docs
 ExtendableGrids.trivial_partitioning!
+ExtendableGrids.trivial_partitioning
 ExtendableGrids.instantiate(grid::ExtendableGrid, ::Type{PColorPartitions})
 ExtendableGrids.instantiate(grid::ExtendableGrid, ::Type{PartitionCells})
+ExtendableGrids.instantiate(grid::ExtendableGrid, ::Type{PartitionBFaces})
 ExtendableGrids.instantiate(grid::ExtendableGrid, ::Type{PartitionNodes})
 ExtendableGrids.partgraph
 ExtendableGrids.dopartition

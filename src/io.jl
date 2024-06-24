@@ -86,8 +86,8 @@ function writegrid(fname::String, g::ExtendableGrid, ::Type{Val{:sg}}; version=v
         write(file, @sprintf("#created by ExtendableGrids.jl (c) J.Fuhrmann et al\n"))
         write(file, @sprintf("#%s\n", Dates.format(Dates.now(), "yyyy-mm-ddTHH-mm-SS")))
 
-        write(file, @sprintf("DIMENSION\n%d\n", dim_g))
-        write(file, @sprintf("NODES\n%d %d\n", nn, dim_s))
+        write(file, @sprintf("DIMENSION %d\n", dim_g))
+        write(file, @sprintf("NODES %d %d\n", nn, dim_s))
 
         for inode = 1:nn
             for idim = 1:dim_s
@@ -96,7 +96,7 @@ function writegrid(fname::String, g::ExtendableGrid, ::Type{Val{:sg}}; version=v
             end
         end
 
-        write(file, @sprintf("CELLS\n%d\n", nc))
+        write(file, @sprintf("CELLS %d\n", nc))
         for icell = 1:nc
             for inode = 1:(dim_g + 1)
                 write(file, @sprintf("%d ", cellnodes[inode, icell]))
@@ -104,7 +104,7 @@ function writegrid(fname::String, g::ExtendableGrid, ::Type{Val{:sg}}; version=v
             write(file, @sprintf("%d\n", cellregions[icell]))
         end
 
-        write(file, @sprintf("FACES\n%d\n", nbf))
+        write(file, @sprintf("FACES %d\n", nbf))
         for ibface = 1:nbf
             for inode = 1:dim_g
                 write(file, @sprintf("%d ", bfacenodes[inode, ibface]))
@@ -115,7 +115,7 @@ function writegrid(fname::String, g::ExtendableGrid, ::Type{Val{:sg}}; version=v
         if version>v"2.1"
             function writeitems(key,label)
                 data=g[key]
-                write(file, "$(label)\n$(length(data))\n")
+                write(file, "$(label) $(length(data))\n")
                 for d in data
                     write(file, "$d\n")
                 end

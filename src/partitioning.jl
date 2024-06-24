@@ -170,7 +170,7 @@ end
 """
     $(SIGNATURES)
 
-Return range of cells belonging to a given partition.
+Return range of boundary faces belonging to a given partition.
 """
 function partition_bfaces(grid, part)
     partbfaces=grid[PartitionBFaces]
@@ -558,11 +558,11 @@ function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti},cn,nc; trivial=fa
         end
         # Show this only once:
         if showinfo
-            """Ensure that no node is accessed from
-                     two different partitions with same color """
+           @info """Renumber partitions to ensure that no node is neighbor of
+                         two different partitions with same color:\n"""
             showinfo=false
         end
-        @info "Renumbering: $idpart"
+        @info "Renumbering: $idpart\n"
 
         # Re-assign the respective lower partition numbers for the problem cases.
         # The parttions with the higher numbers will be just empty.
