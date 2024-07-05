@@ -1,7 +1,19 @@
 # Changelog
+## [1.9.0]  - 2024-07-05
+- Add induced edge partitioning
+
+## [1.8.0] - 2024-06-24
+- Correct node partitioning
+- extended sg file format v2.2 with partitioning info
+- Recursive metis partitioning
+
 ## [1.7.0] - 2024-06-17
 - Partitioning for multithreading
 - Metis extension
+- extended subgrid method (new argument 'support' can be `ON_CELLS`, `ON_BFACES`, `ON_FACES`)
+- SubGrid type has now a parameter that knows the support relative to parent grid, removed BoundarySubGrid type
+- removed `get_facegrid`, `get_bfacegrid`, `get_edgegrid` in `derived.jl` (that offer no new functionality compared to subgrid)
+- fixed default behaviour for coordinatesystem and restricted 1D coordinate sorting to project = true
 
 ## [1.6.1] - 2024-06-07
 

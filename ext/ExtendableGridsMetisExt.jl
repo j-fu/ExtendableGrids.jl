@@ -1,7 +1,7 @@
 module ExtendableGridsMetisExt
 
 import Metis
-import ExtendableGrids: dopartition, partgraph, induce_node_partitioning!, reorder_cells
+import ExtendableGrids: dopartition, partgraph,induce_edge_partitioning!, induce_node_partitioning!, reorder_cells
 using ExtendableGrids, Graphs
 
 
@@ -40,6 +40,7 @@ function dopartition(grid::ExtendableGrid{Tc,Ti}, alg::PlainMetisPartitioning) w
     
     pgrid=reorder_cells(grid,cellpartitions,ncellpartitions,colpart)
     induce_node_partitioning!(pgrid,cn,nc; trivial=!alg.partition_nodes, keep_nodepermutation=alg.keep_nodepermutation)
+    induce_edge_partitioning!(pgrid,cn,nc; trivial=!alg.partition_edges)
 end
 
 
@@ -140,6 +141,7 @@ function dopartition(grid::ExtendableGrid{Tc,Ti}, alg::RecursiveMetisPartitionin
     ncellpartitions=maximum(cellpartitions)
     pgrid=reorder_cells(grid,cellpartitions,ncellpartitions,colpart)
     induce_node_partitioning!(pgrid,cn,nc; trivial=!alg.partition_nodes, keep_nodepermutation=alg.keep_nodepermutation)
+    induce_edge_partitioning!(pgrid,cn,nc; trivial=!alg.partition_edges)
 end
 
 

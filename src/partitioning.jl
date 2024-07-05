@@ -54,6 +54,19 @@ abstract type PartitionNodes <: AbstractGridIntegerArray1D end
 """
     $(TYPEDEF)
 
+Key type describing the edges of a given partition.
+
+`grid[PartitionEdges]` returns an integer vector describing 
+the edges of a partition  given by its number.
+Let `pe=grid[PartitionEdges]`. Then all edges with index
+`i ∈ pe[p]:pe[p+1]-1`  belong to partition p.
+"""
+abstract type PartitionEdges <: AbstractGridIntegerArray1D end
+
+
+"""
+    $(TYPEDEF)
+
 Key type describing the permutation of the nodes of a partitioned grid
 with respect  to the unpartitioned origin.
 
@@ -64,8 +77,6 @@ then
 
 """
 abstract type NodePermutation <: AbstractGridIntegerArray1D end
-
-
 
 """
 $(SIGNATURES)
@@ -123,6 +134,16 @@ function ExtendableGrids.instantiate(grid::ExtendableGrid, ::Type{PartitionNodes
     grid[PartitionNodes]
 end
 
+"""
+    instantiate(grid::ExtendableGrid, ::Type{PartitionEdges})
+
+If not given otherwise, instantiate partition data with trivial partitioning.
+"""
+function ExtendableGrids.instantiate(grid::ExtendableGrid{Tc,Ti}, ::Type{PartitionEdges}) where {Tc, Ti}
+    trivial_partitioning!(grid)
+    grid[PartitionEdges]=Ti[1,num_edges(grid)+1]
+    grid[PartitionEdges]
+end
 
 """
 $(SIGNATURES)
@@ -188,6 +209,16 @@ function partition_nodes(grid, part)
     partnodes[part]:partnodes[part+1]-1
 end
 
+"""
+    $(SIGNATURES)
+
+Return range of edges belonging to a given partition.
+"""
+function partition_edges(grid, part)
+    partedges=grid[PartitionEdges]
+    partedges[part]:partedges[part+1]-1
+end
+
 
 """
     $(SIGNATURES)
@@ -215,6 +246,16 @@ the partitions of the grid partitioning.
 """
 function num_nodes_per_partition(grid)
     @show [length(partition_nodes(grid,ipart)) for ipart=1:num_partitions(grid)]
+end
+
+"""
+    $(SIGNATURES)
+
+Return a vector containing the number of nodes for each of
+the partitions of the grid partitioning.
+"""
+function num_edges_per_partition(grid)
+    @show [length(partition_edges(grid,ipart)) for ipart=1:num_partitions(grid)]
 end
 
 """
@@ -380,6 +421,9 @@ Base.@kwdef struct PlainMetisPartitioning <: AbstractPartitioningAlgorithm
     "Induce node partioning (default: true)"
     partition_nodes::Bool=true
 
+    "Induce edge partioning (default: true)"
+    partition_edges::Bool=true
+
     "Keep node permutation vector (default: true)"
     keep_nodepermutation::Bool=true
 end
@@ -408,6 +452,9 @@ Base.@kwdef struct RecursiveMetisPartitioning <: AbstractPartitioningAlgorithm
 
     "Induce node partioning (default: true)"
     partition_nodes::Bool=true
+
+    "Induce edge partioning (default: true)"
+    partition_edges::Bool=true
 
     "Keep node permutation vector (default: true)"
     keep_nodepermutation::Bool=true
@@ -627,6 +674,70 @@ function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti},cn,nc; trivial=fa
     grid
 end
 
+function induce_edge_partitioning!(grid::ExtendableGrid{Tc,Ti},cn,nc; trivial=false) where {Tc, Ti}
+    partcells=grid[PartitionCells]
+    nedgepartitions=length(partcells)-1
+    if trivial
+        grid[PartitionEdges]=trivial_partitioning(nedgepartitions,num_edges(grid))
+        return grid
+    end
+    coord=grid[Coordinates]
+    celledges=grid[CellEdges]
+    ledges=size(celledges,1)
+
+    edgepartitions=zeros(Ti,num_edges(grid))
+    for ipart=1:length(partcells)-1
+        for icell in partition_cells(grid,ipart)
+            for k=1:ledges
+                edgepartitions[celledges[k,icell]]=ipart
+            end
+        end
+    end
+
+
+    partcolors=zeros(Int,num_partitions(grid))
+    for col in pcolors(grid)
+        for part in pcolor_partitions(grid,col)
+            partcolors[part]=col
+        end
+    end
+
+    # Create edge permutation such that
+    # all edges belonging to one partition
+    # are contiguous
+    edgeperm=copy(edgepartitions)
+    partctr=zeros(Int,nedgepartitions+1)
+    partctr[1]=1
+    for i=1:nedgepartitions
+	partctr[i+1]=partctr[i]+sum(x->x==i, edgepartitions)
+    end
+    partedges=copy(partctr)
+    for iedge=1:num_edges(grid)
+	part=edgepartitions[iedge]
+	edgeperm[partctr[part]]=iedge
+	partctr[part]+=1
+    end
+
+    invedgeperm=invperm(edgeperm)
+  
+    # Renumber edge indices for cells
+    xcelledges=similar(celledges)
+    for icell=1:num_cells(grid)
+        for k=1:ledges
+            xcelledges[k,icell]=invedgeperm[celledges[k,icell]]
+        end
+    end
+
+    grid[PartitionEdges]=partedges
+    grid[CellEdges] = xcelledges
+    grid[EdgeCells] = grid[EdgeCells][:,edgeperm]
+    grid[EdgeNodes] = grid[EdgeNodes][:,edgeperm]
+
+    # xgrid[CellEdgeSigns] is not changed
+    # xgrid[EdgeGeometries] is not changed
+
+    grid
+end
 
 
 """
