@@ -730,6 +730,7 @@ function induce_edge_partitioning!(grid::ExtendableGrid{Tc,Ti},cn,nc; trivial=fa
 
     grid[PartitionEdges]=partedges
     grid[CellEdges] = xcelledges
+    @show grid[EdgeCells][:,edgeperm]
     grid[EdgeCells] = grid[EdgeCells][:,edgeperm]
     grid[EdgeNodes] = grid[EdgeNodes][:,edgeperm]
 
