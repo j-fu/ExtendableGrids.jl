@@ -677,12 +677,12 @@ end
 function induce_edge_partitioning!(grid::ExtendableGrid{Tc,Ti},cn,nc; trivial=false) where {Tc, Ti}
     partcells=grid[PartitionCells]
     nedgepartitions=length(partcells)-1
+    celledges=grid[CellEdges]
+    grid[EdgeNodes] # !!!workaround for bug in extendablegrids: sets num_edges right.
     if trivial
         grid[PartitionEdges]=trivial_partitioning(nedgepartitions,num_edges(grid))
         return grid
     end
-    coord=grid[Coordinates]
-    celledges=grid[CellEdges]
     ledges=size(celledges,1)
 
     edgepartitions=zeros(Ti,num_edges(grid))
