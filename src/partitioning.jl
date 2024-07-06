@@ -717,9 +717,9 @@ function induce_edge_partitioning!(grid::ExtendableGrid{Tc,Ti},cn,nc; trivial=fa
 	edgeperm[partctr[part]]=iedge
 	partctr[part]+=1
     end
-
+    
     invedgeperm=invperm(edgeperm)
-  
+    
     # Renumber edge indices for cells
     xcelledges=similar(celledges)
     for icell=1:num_cells(grid)
@@ -727,15 +727,32 @@ function induce_edge_partitioning!(grid::ExtendableGrid{Tc,Ti},cn,nc; trivial=fa
             xcelledges[k,icell]=invedgeperm[celledges[k,icell]]
         end
     end
-
+    
     grid[PartitionEdges]=partedges
     grid[CellEdges] = xcelledges
-    grid[EdgeCells] = grid[EdgeCells][:,edgeperm]
     grid[EdgeNodes] = grid[EdgeNodes][:,edgeperm]
-
-    # xgrid[CellEdgeSigns] is not changed
+    
+    if dim_grid(grid)<3
+        grid[EdgeCells]=grid[EdgeCells][:,edgeperm]
+    else
+        ecells=grid[EdgeCells]
+        csnew=similar(ecells.colstart)
+        cenew=similar(ecells.colentries)
+        icenew=1
+        csnew[1]=1
+        for iedge=1:num_edges(grid)
+            iperm=edgeperm[iedge]
+            for ientry=ecells.colstart[iperm]:ecells.colstart[iperm+1]-1
+                cenew[icenew]=ecells.colentries[ientry]
+                icenew=icenew+1
+            end
+            csnew[iedge+1]=icenew
+        end
+        grid[EdgeCells]=VariableTargetAdjacency(cenew,csnew)
+    end
+    # xgrid[CellEdgeSigns] is not changed by renumbering
     # xgrid[EdgeGeometries] is not changed
-
+    
     grid
 end
 
