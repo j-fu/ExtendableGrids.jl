@@ -54,6 +54,19 @@ abstract type PartitionNodes <: AbstractGridIntegerArray1D end
 """
     $(TYPEDEF)
 
+Key type describing the edges of a given partition.
+
+`grid[PartitionEdges]` returns an integer vector describing 
+the edges of a partition  given by its number.
+Let `pe=grid[PartitionEdges]`. Then all edges with index
+`i ∈ pe[p]:pe[p+1]-1`  belong to partition p.
+"""
+abstract type PartitionEdges <: AbstractGridIntegerArray1D end
+
+
+"""
+    $(TYPEDEF)
+
 Key type describing the permutation of the nodes of a partitioned grid
 with respect  to the unpartitioned origin.
 
@@ -64,8 +77,6 @@ then
 
 """
 abstract type NodePermutation <: AbstractGridIntegerArray1D end
-
-
 
 """
 $(SIGNATURES)
@@ -123,6 +134,16 @@ function ExtendableGrids.instantiate(grid::ExtendableGrid, ::Type{PartitionNodes
     grid[PartitionNodes]
 end
 
+"""
+    instantiate(grid::ExtendableGrid, ::Type{PartitionEdges})
+
+If not given otherwise, instantiate partition data with trivial partitioning.
+"""
+function ExtendableGrids.instantiate(grid::ExtendableGrid{Tc,Ti}, ::Type{PartitionEdges}) where {Tc, Ti}
+    trivial_partitioning!(grid)
+    grid[PartitionEdges]=Ti[1,num_edges(grid)+1]
+    grid[PartitionEdges]
+end
 
 """
 $(SIGNATURES)
@@ -188,6 +209,16 @@ function partition_nodes(grid, part)
     partnodes[part]:partnodes[part+1]-1
 end
 
+"""
+    $(SIGNATURES)
+
+Return range of edges belonging to a given partition.
+"""
+function partition_edges(grid, part)
+    partedges=grid[PartitionEdges]
+    partedges[part]:partedges[part+1]-1
+end
+
 
 """
     $(SIGNATURES)
@@ -215,6 +246,16 @@ the partitions of the grid partitioning.
 """
 function num_nodes_per_partition(grid)
     @show [length(partition_nodes(grid,ipart)) for ipart=1:num_partitions(grid)]
+end
+
+"""
+    $(SIGNATURES)
+
+Return a vector containing the number of nodes for each of
+the partitions of the grid partitioning.
+"""
+function num_edges_per_partition(grid)
+    @show [length(partition_edges(grid,ipart)) for ipart=1:num_partitions(grid)]
 end
 
 """
@@ -376,12 +417,6 @@ $(TYPEDFIELDS)
 Base.@kwdef struct PlainMetisPartitioning <: AbstractPartitioningAlgorithm
     "Number of partitions (default: 20)"
     npart::Int=20
-
-    "Induce node partioning (default: true)"
-    partition_nodes::Bool=true
-
-    "Keep node permutation vector (default: true)"
-    keep_nodepermutation::Bool=true
 end
 
 
@@ -405,12 +440,6 @@ Base.@kwdef struct RecursiveMetisPartitioning <: AbstractPartitioningAlgorithm
 
     "Separator width  (default: 2)"
     separatorwidth::Int=2
-
-    "Induce node partioning (default: true)"
-    partition_nodes::Bool=true
-
-    "Keep node permutation vector (default: true)"
-    keep_nodepermutation::Bool=true
 end
 
 
@@ -420,7 +449,7 @@ end
 
 (Internal utility function)
 Create cell permutation such that  all cells belonging to one partition
-are contiguous and reorder return grid with reordered cells.
+are partition_contiguous and reorder return grid with reordered cells.
 """
 function reorder_cells(grid::ExtendableGrid{Tc,Ti}, cellpartitions,ncellpartitions,colpart) where {Tc,Ti}
     ncells=num_cells(grid)
@@ -475,13 +504,16 @@ end
 
 (internal)
 Induce node partitioning from cell partitioning of `grid`.
+The algorithm assumes that nodes get the partition number from the partition
+numbers of the cells having this node in common. If these are differnt, the highest
+number is taken.
 
 Node partitioning should support parallel matrix-vector products with `SparseMatrixCSC`.
 The current algorithm assumes that nodes get the partition number from the partition
 numbers of the cells having this node in common. If these are differnt, the highest
 number is taken.
 
-This algorithm does not always fulfill the  condition that
+Simply inducing node partition numbers from cell partition numbers does not always fulfill the  condition that
 there is no node which is neigbour of nodes from two different partition with the same color.
 
 This situation is detected and corrected by joining respective critical partitions.
@@ -627,17 +659,136 @@ function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti},cn,nc; trivial=fa
     grid
 end
 
+"""
+    $(SIGNATURES)
+
+Induce edge partitioning from cell partitioning of `grid`.
+The algorithm assumes that nodes get the partition number from the partition
+numbers of the cells having this node in common. If these are differnt, the highest
+number is taken.
+
+This method triggers creation of rather complex edge information and should be called
+only if this information is really necessary.
+"""
+function induce_edge_partitioning!(grid::ExtendableGrid{Tc,Ti}; trivial=false) where {Tc, Ti}
+    partcells=grid[PartitionCells]
+    nedgepartitions=length(partcells)-1
+    celledges=grid[CellEdges]
+    grid[EdgeNodes] # !!!workaround for bug in extendablegrids: sets num_edges right.
+    if trivial
+        grid[PartitionEdges]=trivial_partitioning(nedgepartitions,num_edges(grid))
+        return grid
+    end
+    ledges=size(celledges,1)
+
+    edgepartitions=zeros(Ti,num_edges(grid))
+    for ipart=1:length(partcells)-1
+        for icell in partition_cells(grid,ipart)
+            for k=1:ledges
+                edgepartitions[celledges[k,icell]]=ipart
+            end
+        end
+    end
+
+
+    partcolors=zeros(Int,num_partitions(grid))
+    for col in pcolors(grid)
+        for part in pcolor_partitions(grid,col)
+            partcolors[part]=col
+        end
+    end
+
+    # Create edge permutation such that
+    # all edges belonging to one partition
+    # are contiguous
+    edgeperm=copy(edgepartitions)
+    partctr=zeros(Int,nedgepartitions+1)
+    partctr[1]=1
+    for i=1:nedgepartitions
+	partctr[i+1]=partctr[i]+sum(x->x==i, edgepartitions)
+    end
+    partedges=copy(partctr)
+    for iedge=1:num_edges(grid)
+	part=edgepartitions[iedge]
+	edgeperm[partctr[part]]=iedge
+	partctr[part]+=1
+    end
+    
+    invedgeperm=invperm(edgeperm)
+    
+    # Renumber edge indices for cells
+    xcelledges=similar(celledges)
+    for icell=1:num_cells(grid)
+        for k=1:ledges
+            xcelledges[k,icell]=invedgeperm[celledges[k,icell]]
+        end
+    end
+    
+    grid[PartitionEdges]=partedges
+    grid[CellEdges] = xcelledges
+    grid[EdgeNodes] = grid[EdgeNodes][:,edgeperm]
+    
+    if dim_grid(grid)<3
+        grid[EdgeCells]=grid[EdgeCells][:,edgeperm]
+    else
+        ecells=grid[EdgeCells]
+        csnew=similar(ecells.colstart)
+        cenew=similar(ecells.colentries)
+        icenew=1
+        csnew[1]=1
+        for iedge=1:num_edges(grid)
+            iperm=edgeperm[iedge]
+            for ientry=ecells.colstart[iperm]:ecells.colstart[iperm+1]-1
+                cenew[icenew]=ecells.colentries[ientry]
+                icenew=icenew+1
+            end
+            csnew[iedge+1]=icenew
+        end
+        grid[EdgeCells]=VariableTargetAdjacency(cenew,csnew)
+    end
+    # xgrid[CellEdgeSigns] is not changed by renumbering
+    # xgrid[EdgeGeometries] is not changed
+    
+    grid
+end
 
 
 """
-    partition(grid, alg::AbstractPartitioningAlgorithm)
+         partition(grid::ExtendableGrid,
+                   alg::AbstractPartitioningAlgorithm;
+                   nodes = false,
+                   keep_nodepermutation = false,
+                   edges = false )
 
-Partition grid according to `alg`, such that the neigborhood graph
+Partition cells of grid according to `alg`, such that the neigborhood graph
 of partitions is colored in such a way, that all partitions with 
-a given color can be worked on in parallel.
+a given color can be worked on in parallel. Cells are renumbered in such a way that
+cell numbers for a given partition are numbered contiguously. Return the resulting grid.
+
+Useful for parallel FEM assembly and cellwise FVM assembly.
+
+Keyword arguments:
+- `nodes`: Induce node partitioning from cell partitioning.  Used for edgewise FVM assembly. 
+  In addition the resulting partitioning supports parallel matrix-vector products with `SparseMatrixCSC`.
+  Nodes are renumbered compared to the original grid.
+- `keep_nodepermutation`: keep the node permutation with respect to the original grid.
+- `edges`: Induce partitioning of edges from cell partitioning. Used for edgewise FVM assembly.
+   This step creates a number of relatively expensive adjacencies.
+
+
+It is advisable to call `partition` directly after creating the grid.
 """
-function partition(grid::ExtendableGrid, alg::AbstractPartitioningAlgorithm)
-    dopartition(grid,alg)
+function partition(grid::ExtendableGrid,
+                   alg::AbstractPartitioningAlgorithm;
+                   nodes =false,
+                   keep_nodepermutation=false,
+                   edges = false )
+    pgrid, cn, nc = dopartition(grid,alg)
+    if !isa(alg, TrivialPartitioning)
+        induce_node_partitioning!(pgrid,cn,nc; trivial=!nodes, keep_nodepermutation)
+        induce_edge_partitioning!(pgrid; trivial=!edges)
+    end
+    pgrid
 end
 
 """
@@ -659,5 +810,5 @@ function dopartition(grid::ExtendableGrid{Tc,Ti}, ::TrivialPartitioning) where {
     for (k,v) in pairs(grid.components)
         pgrid.components[k]=v
     end
-    trivial_partitioning!(pgrid)
+    trivial_partitioning!(pgrid), nothing, nothing
 end

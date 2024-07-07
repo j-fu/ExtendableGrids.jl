@@ -22,12 +22,15 @@ pcolor_partitions
 partition_cells
 partition_bfaces
 partition_nodes
+partition_edges
 num_pcolors
 num_partitions
 num_partitions_per_color
 num_nodes_per_partition
+num_edges_per_partition
 num_cells_per_color
 check_partitioning
+ExtendableGrids.induce_edge_partitioning!
 ```
 
 
@@ -45,6 +48,7 @@ PColorPartitions
 PartitionCells
 PartitionBFaces
 PartitionNodes
+PartitionEdges
 NodePermutation
 ```
 
