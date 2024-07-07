@@ -417,15 +417,6 @@ $(TYPEDFIELDS)
 Base.@kwdef struct PlainMetisPartitioning <: AbstractPartitioningAlgorithm
     "Number of partitions (default: 20)"
     npart::Int=20
-
-    "Induce node partioning (default: true)"
-    partition_nodes::Bool=true
-
-    "Induce edge partioning (default: true)"
-    partition_edges::Bool=true
-
-    "Keep node permutation vector (default: true)"
-    keep_nodepermutation::Bool=true
 end
 
 
@@ -449,15 +440,6 @@ Base.@kwdef struct RecursiveMetisPartitioning <: AbstractPartitioningAlgorithm
 
     "Separator width  (default: 2)"
     separatorwidth::Int=2
-
-    "Induce node partioning (default: true)"
-    partition_nodes::Bool=true
-
-    "Induce edge partioning (default: true)"
-    partition_edges::Bool=true
-
-    "Keep node permutation vector (default: true)"
-    keep_nodepermutation::Bool=true
 end
 
 
@@ -467,7 +449,7 @@ end
 
 (Internal utility function)
 Create cell permutation such that  all cells belonging to one partition
-are contiguous and reorder return grid with reordered cells.
+are partition_contiguous and reorder return grid with reordered cells.
 """
 function reorder_cells(grid::ExtendableGrid{Tc,Ti}, cellpartitions,ncellpartitions,colpart) where {Tc,Ti}
     ncells=num_cells(grid)
@@ -522,13 +504,16 @@ end
 
 (internal)
 Induce node partitioning from cell partitioning of `grid`.
+The algorithm assumes that nodes get the partition number from the partition
+numbers of the cells having this node in common. If these are differnt, the highest
+number is taken.
 
 Node partitioning should support parallel matrix-vector products with `SparseMatrixCSC`.
 The current algorithm assumes that nodes get the partition number from the partition
 numbers of the cells having this node in common. If these are differnt, the highest
 number is taken.
 
-This algorithm does not always fulfill the  condition that
+Simply inducing node partition numbers from cell partition numbers does not always fulfill the  condition that
 there is no node which is neigbour of nodes from two different partition with the same color.
 
 This situation is detected and corrected by joining respective critical partitions.
@@ -674,7 +659,18 @@ function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti},cn,nc; trivial=fa
     grid
 end
 
-function induce_edge_partitioning!(grid::ExtendableGrid{Tc,Ti},cn,nc; trivial=false) where {Tc, Ti}
+"""
+    $(SIGNATURES)
+
+Induce edge partitioning from cell partitioning of `grid`.
+The algorithm assumes that nodes get the partition number from the partition
+numbers of the cells having this node in common. If these are differnt, the highest
+number is taken.
+
+This method triggers creation of rather complex edge information and should be called
+only if this information is really necessary.
+"""
+function induce_edge_partitioning!(grid::ExtendableGrid{Tc,Ti}; trivial=false) where {Tc, Ti}
     partcells=grid[PartitionCells]
     nedgepartitions=length(partcells)-1
     celledges=grid[CellEdges]
@@ -758,14 +754,41 @@ end
 
 
 """
-    partition(grid, alg::AbstractPartitioningAlgorithm)
+         partition(grid::ExtendableGrid,
+                   alg::AbstractPartitioningAlgorithm;
+                   nodes = false,
+                   keep_nodepermutation = false,
+                   edges = false )
 
-Partition grid according to `alg`, such that the neigborhood graph
+Partition cells of grid according to `alg`, such that the neigborhood graph
 of partitions is colored in such a way, that all partitions with 
-a given color can be worked on in parallel.
+a given color can be worked on in parallel. Cells are renumbered in such a way that
+cell numbers for a given partition are numbered contiguously. Return the resulting grid.
+
+Useful for parallel FEM assembly and cellwise FVM assembly.
+
+Keyword arguments:
+- `nodes`: Induce node partitioning from cell partitioning.  Used for edgewise FVM assembly. 
+  In addition the resulting partitioning supports parallel matrix-vector products with `SparseMatrixCSC`.
+  Nodes are renumbered compared to the original grid.
+- `keep_nodepermutation`: keep the node permutation with respect to the original grid.
+- `edges`: Induce partitioning of edges from cell partitioning. Used for edgewise FVM assembly.
+   This step creates a number of relatively expensive adjacencies.
+
+
+It is advisable to call `partition` directly after creating the grid.
 """
-function partition(grid::ExtendableGrid, alg::AbstractPartitioningAlgorithm)
-    dopartition(grid,alg)
+function partition(grid::ExtendableGrid,
+                   alg::AbstractPartitioningAlgorithm;
+                   nodes =false,
+                   keep_nodepermutation=false,
+                   edges = false )
+    pgrid, cn, nc = dopartition(grid,alg)
+    if !isa(alg, TrivialPartitioning)
+        induce_node_partitioning!(pgrid,cn,nc; trivial=!nodes, keep_nodepermutation)
+        induce_edge_partitioning!(pgrid; trivial=!edges)
+    end
+    pgrid
 end
 
 """
@@ -787,5 +810,5 @@ function dopartition(grid::ExtendableGrid{Tc,Ti}, ::TrivialPartitioning) where {
     for (k,v) in pairs(grid.components)
         pgrid.components[k]=v
     end
-    trivial_partitioning!(pgrid)
+    trivial_partitioning!(pgrid), nothing, nothing
 end

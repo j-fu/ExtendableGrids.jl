@@ -30,6 +30,7 @@ num_nodes_per_partition
 num_edges_per_partition
 num_cells_per_color
 check_partitioning
+ExtendableGrids.induce_edge_partitioning!
 ```
 
 

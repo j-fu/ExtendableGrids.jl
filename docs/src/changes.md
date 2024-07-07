@@ -1,6 +1,7 @@
 # Changelog
-## [1.9.0]  - 2024-07-05
-- Add induced edge partitioning
+## [1.9.0]  - 2024-07-07
+- Add edge partitioning induced from cell partitioning
+- Overhaul of partitioning API
 
 ## [1.8.0] - 2024-06-24
 - Correct node partitioning

@@ -12,8 +12,8 @@ import Metis
             XXX=(X for i=1:dim)
             grid1=simplexgrid(XXX...)
             grid2=partition(grid1,TrivialPartitioning())
-            grid3=partition(grid1,PlainMetisPartitioning(npart=1))
-            grid3=partition(grid1,RecursiveMetisPartitioning(npart=1))
+            grid3=partition(grid1,PlainMetisPartitioning(npart=1); nodes=true)
+            grid3=partition(grid1,RecursiveMetisPartitioning(npart=1); nodes=true)
             
             
             for grid in (grid1, grid2, grid3)                
@@ -27,7 +27,7 @@ import Metis
             end
             
             for npart in [10, 15, 20]
-                grid4=partition(grid1,PlainMetisPartitioning(npart=npart))
+                grid4=partition(grid1,PlainMetisPartitioning(npart=npart); nodes=true, keep_nodepermutation=true)
                 @test num_pcolors(grid4) > 1
                 @test num_partitions(grid4)==npart
                 @test pcolors(grid4) |> length  >0
@@ -38,7 +38,7 @@ import Metis
             end
 
             for npart in [3,4,5,6] 
-                grid4=partition(grid1,RecursiveMetisPartitioning(npart=npart))
+                grid4=partition(grid1,RecursiveMetisPartitioning(npart=npart); nodes=true, keep_nodepermutation=true)
                 @test num_pcolors(grid4) > 1
                 @test num_partitions(grid4)>npart
                 @test pcolors(grid4) |> length  >0
