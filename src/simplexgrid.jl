@@ -477,11 +477,11 @@ function  simplexgrid(_X::AbstractVector,_Y::AbstractVector,_Z::AbstractVector; 
 	        p111 = ip+1+nx+nxy;
 
                 icell=icell+1;  @. cellnodes[:,icell]=(p000,p100,p110,p111)
-		icell=icell+1;	@. cellnodes[:,icell]=(p000,p100,p101,p111)
+		icell=icell+1;	@. cellnodes[:,icell]=(p000,p101,p100,p111)
 		icell=icell+1;	@. cellnodes[:,icell]=(p000,p010,p011,p111)
-		icell=icell+1;	@. cellnodes[:,icell]=(p000,p010,p110,p111)
+		icell=icell+1;	@. cellnodes[:,icell]=(p000,p110,p010,p111)
 		icell=icell+1;	@. cellnodes[:,icell]=(p000,p001,p101,p111)
-		icell=icell+1;	@. cellnodes[:,icell]=(p000,p001,p011,p111)
+		icell=icell+1;	@. cellnodes[:,icell]=(p000,p011,p001,p111)
             end
         end
     end

@@ -154,13 +154,14 @@ function run_grid_tests()
 
     X = LinRange(0, 1, 10)
     grid = simplexgrid(X, X)
+    @test all(grid[CellVolumes] .> 0)
     sub = subgrid(grid, [2], transform=function(a,b) a[1]=b[2] end,  boundary=true)
     @test check_cellfinder(sub)
 
     grid = simplexgrid(X, X, X)
+    @test all(grid[CellVolumes] .> 0)
     sub = subgrid(grid, [5], boundary=true)
     @test check_cellfinder(sub)
-
 
     
     @test check_uniform_refinement(reference_domain(Triangle2D), false)
