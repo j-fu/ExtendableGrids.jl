@@ -9,7 +9,7 @@ be performed in parallel.
 `grid[PColorPartitions]` returns an integer vector describing 
 the partition colors ("pcolors") of a grid. 
 Let `p=grid[PColorPartitions]`. Then all partitions with numbers
-`i ∈ p[c]:p[c+1]-1`  have "color" `c`. 
+`i ∈ p[c]:p[c+1]-1`  have "color" `c`. See also [`pcolors`](@ref).
 """
 abstract type PColorPartitions <: AbstractGridIntegerArray1D end
 
@@ -148,14 +148,14 @@ end
 """
 $(SIGNATURES)
 
-Return number of partition colors.
+Return number of partition colors based on `grid[`[`PColorPartitions`](@ref)`]`.
 """
 num_pcolors(grid)=length(grid[PColorPartitions])-1
 
 """
 $(SIGNATURES)
 
-Return number of partitions.
+Return number of partitions based on `grid[`[`PartitionCells`](@ref)`]`.
 """
 num_partitions(grid)=length(grid[PartitionCells])-1
 
@@ -163,14 +163,14 @@ num_partitions(grid)=length(grid[PartitionCells])-1
 """
     $(SIGNATURES)
 
-Return range of all pcolors.
+Return range of all pcolors based on `grid[`[`PColorPartitions`](@ref)`]`.
 """
 pcolors(grid)=1:num_pcolors(grid)
 
 """
     $(SIGNATURES)
 
-Return range of partitions for given pcolor.
+Return range of partitions for given pcolor based on  `grid[`[`PColorPartitions`](@ref)`]`.
 """
 function pcolor_partitions(grid,color)
     colpart=grid[PColorPartitions]
@@ -181,7 +181,7 @@ end
 """
     $(SIGNATURES)
 
-Return range of cells belonging to a given partition.
+Return range of cells belonging to a given partition `grid[`[`PartitionCells`](@ref)`]`.
 """
 function partition_cells(grid, part)
     partcells=grid[PartitionCells]
@@ -191,7 +191,7 @@ end
 """
     $(SIGNATURES)
 
-Return range of boundary faces belonging to a given partition.
+Return range of boundary faces belonging to a given partition based on `grid[`[`PartitionBFaces`](@ref)`]`.
 """
 function partition_bfaces(grid, part)
     partbfaces=grid[PartitionBFaces]
@@ -202,7 +202,7 @@ end
 """
     $(SIGNATURES)
 
-Return range of nodes belonging to a given partition.
+Return range of nodes belonging to a given partition based on `grid[`[`PartitionNodes`](@ref)`]`.
 """
 function partition_nodes(grid, part)
     partnodes=grid[PartitionNodes]
@@ -212,7 +212,7 @@ end
 """
     $(SIGNATURES)
 
-Return range of edges belonging to a given partition.
+Return range of edges belonging to a given partition based on `grid[`[`PartitionEdges`](@ref)`]`.
 """
 function partition_edges(grid, part)
     partedges=grid[PartitionEdges]
@@ -224,7 +224,8 @@ end
     $(SIGNATURES)
 
 Return a vector containing the number of partitions for each of
-the colors of the grid partitioning.
+the colors of the grid partitioning. These define the maximum number of parallel
+threads for each color.
 """
 num_partitions_per_color(grid) = [length(pcolor_partitions(grid, col)) for col in pcolors(grid)]
 
@@ -410,6 +411,9 @@ end
 Subdivide grid into `npart` partitions using `Metis.partition` and color the resulting partition neigborhood graph.
 This requires to import Metis.jl in order to trigger the corresponding extension.
 
+This algorithm allows to control  the overall number of partitions. The number of partitions
+per color comes from the subsequent partition graph coloring and in the moment cannot be controled.
+
 Parameters: 
 
 $(TYPEDFIELDS)
@@ -424,15 +428,18 @@ end
     $(TYPEDEF)
 
 Subdivide grid into `npart` partitions using `Metis.partition` and calculate cell separators
-from this partitioning. The initial partitions  gets pcolor 1, and the separator gets pcolor 2.
+from this partitioning. The initial partitions  get color 1, and the separator gets color 2.
 This is continued recursively with partitioning of the separator.  
+
+This algorithm allows to control  the number of partitions in color 1 which coorespond
+to the bulk of the work. 
 
 Parameters: 
 
 $(TYPEDFIELDS)
 """
 Base.@kwdef struct RecursiveMetisPartitioning <: AbstractPartitioningAlgorithm
-    "Number of level 0 partitions (default: 4)"
+    "Number of color 1 partitions (default: 4)"
     npart::Int=4
 
     "Recursion depth (default: 1)"
@@ -449,7 +456,7 @@ end
 
 (Internal utility function)
 Create cell permutation such that  all cells belonging to one partition
-are partition_contiguous and reorder return grid with reordered cells.
+are numbered contiguously, return grid with reordered cells.
 """
 function reorder_cells(grid::ExtendableGrid{Tc,Ti}, cellpartitions,ncellpartitions,colpart) where {Tc,Ti}
     ncells=num_cells(grid)
@@ -516,8 +523,8 @@ number is taken.
 Simply inducing node partition numbers from cell partition numbers does not always fulfill the  condition that
 there is no node which is neigbour of nodes from two different partition with the same color.
 
-This situation is detected and corrected by joining respective critical partitions.
-This sacrifies parallel efficiency for correctness.
+This situation is detected and corrected by joining respective critical partitions,
+sacrificing a bit of  parallel efficiency for correctness.
 """
 function induce_node_partitioning!(grid::ExtendableGrid{Tc,Ti},cn,nc; trivial=false, keep_nodepermutation=true) where {Tc, Ti}
     partcells=grid[PartitionCells]
@@ -662,6 +669,7 @@ end
 """
     $(SIGNATURES)
 
+(internal)
 Induce edge partitioning from cell partitioning of `grid`.
 The algorithm assumes that nodes get the partition number from the partition
 numbers of the cells having this node in common. If these are differnt, the highest
@@ -760,23 +768,50 @@ end
                    keep_nodepermutation = false,
                    edges = false )
 
-Partition cells of grid according to `alg`, such that the neigborhood graph
-of partitions is colored in such a way, that all partitions with 
-a given color can be worked on in parallel. Cells are renumbered in such a way that
-cell numbers for a given partition are numbered contiguously. Return the resulting grid.
+Partition cells of `grid` according to `alg`, such that the neigborhood graph
+of partitions is colored in such a way, that all partitions with  a given color can be worked on in parallel. 
+Cells are renumbered such that cell numbers for a given partition are numbered contiguously. 
+
+Return the resulting grid.
 
 Useful for parallel FEM assembly and cellwise FVM assembly.
 
 Keyword arguments:
-- `nodes`: Induce node partitioning from cell partitioning.  Used for edgewise FVM assembly. 
+- `nodes`: if true, induce node partitioning from cell partitioning. Used for node/edgewise FVM assembly. 
   In addition the resulting partitioning supports parallel matrix-vector products with `SparseMatrixCSC`.
   Nodes are renumbered compared to the original grid.
-- `keep_nodepermutation`: keep the node permutation with respect to the original grid.
-- `edges`: Induce partitioning of edges from cell partitioning. Used for edgewise FVM assembly.
-   This step creates a number of relatively expensive adjacencies.
+- `keep_nodepermutation`: if true, keep the node permutation with respect to the original grid in `grid[`[`NodePermutation`](@ref)`]`.
+- `edges`: if true, induce partitioning of edges from cell partitioning. Used for node/edgewise FVM assembly.
+   This step creates a number of relatively expensive additional adjacencies.
+
+Access:
+- [`pcolors`](@ref) returns the range of partition colors
+- [`pcolor_partitions`](@ref)  returns the range of partition numbers for a given color
+- [`partition_cells`](@ref) provides the range of cell numbers of a given partition
+- [`partition_nodes`](@ref) provides the range of node numbers of a given partition
+- [`partition_edges`](@ref) provides the range of edge numbers of a given partition
+
+A parallel loop over grid cells thus looks like
+```julia
+for color in pcolors(grid)
+    @threads for part in pcolor_partitions(grid, color)
+                for cell in partition_cells(grid, part)
+                 ...
+                end
+             end
+end
+```
+
+Without a call to `partition`, all these functions return trivial data such
+that the above sample code stays valid.
 
 
-It is advisable to call `partition` directly after creating the grid.
+
+!!! note
+     `partition` must be called before obtaining any other adjacencies of a grid.
+
+Currently, partitioning does not cover the boundary, boundary cells belong to
+one big trivial partition.
 """
 function partition(grid::ExtendableGrid,
                    alg::AbstractPartitioningAlgorithm;
@@ -795,11 +830,12 @@ end
     $(SIGNATURES)
 
 (Internal utility function)
-Core method for partitioning
+Core function for partitioning grid cells which dispatches over partitioning algorithms.
+Partitioning extensions should add methods to this function.
 """
 function dopartition(grid::ExtendableGrid, alg::AbstractPartitioningAlgorithm)
-    if isa(alg,PlainMetisPartitioning)
-        error("Import Metis.jl to allow Metis based partitioning")
+    if isa(alg,PlainMetisPartitioning) || isa(alg,RecursiveMetisPartitioning)
+        error("Import Metis.jl to use $(typeof(alg))")
     else
         error("unexpected Partitioning")
     end

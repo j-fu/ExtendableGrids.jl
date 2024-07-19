@@ -1,14 +1,10 @@
 # Grid partitioning
 
-!!! compat
-    Grid partitioning is an experimental feature. Breaking changes
-    in this realm may occur with minor version updates.
-
-The general idea is that all grids created from ExtendableGrids
+All grids created from ExtendableGrids
 can be considered to be partitioned such that the neighborhood graph  of
 the partitions is colored so that operations (FEM/FVM assembly, sparse matrix-vector multiplication
-with SparseMatrixCSC) on different partitions of the same color can be performed in parallel 
-without writing conflicts in a multithreading environment.
+with SparseMatrixCSC, ILU preconditioners) on different partitions of the same color can be performed in parallel 
+without write conflicts in a multithreading environment.
 
 
 The default partitioning is trivial: all cells and nodes belong to one partition,
@@ -30,7 +26,6 @@ num_nodes_per_partition
 num_edges_per_partition
 num_cells_per_color
 check_partitioning
-ExtendableGrids.induce_edge_partitioning!
 ```
 
 
@@ -65,4 +60,5 @@ ExtendableGrids.partgraph
 ExtendableGrids.dopartition
 ExtendableGrids.reorder_cells
 ExtendableGrids.induce_node_partitioning!
+ExtendableGrids.induce_edge_partitioning!
 ```
