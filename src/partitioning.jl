@@ -831,6 +831,7 @@ end
 
 (Internal utility function)
 Core function for partitioning grid cells which dispatches over partitioning algorithms.
+Partitioning extensions should add methods to this function.
 """
 function dopartition(grid::ExtendableGrid, alg::AbstractPartitioningAlgorithm)
     if isa(alg,PlainMetisPartitioning) || isa(alg,RecursiveMetisPartitioning)

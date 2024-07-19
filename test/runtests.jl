@@ -420,3 +420,9 @@ end
 end
 
 
+if  VERSION < v"1.12.0-DEV.0"
+        notebooks = ["pluto-partitioning.jl"]
+        @testset "Notebooks" begin
+            @testscripts(joinpath(@__DIR__, "..", "examples"), notebooks)
+        end
+end
