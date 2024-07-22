@@ -819,6 +819,9 @@ function partition(grid::ExtendableGrid,
                    keep_nodepermutation=false,
                    edges = false )
     pgrid, cn, nc = dopartition(grid,alg)
+    if edges
+        nodes=true
+    end
     if !isa(alg, TrivialPartitioning)
         induce_node_partitioning!(pgrid,cn,nc; trivial=!nodes, keep_nodepermutation)
         induce_edge_partitioning!(pgrid; trivial=!edges)
