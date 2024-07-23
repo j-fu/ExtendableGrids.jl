@@ -416,7 +416,7 @@ end
         sha256(f)
     end |> bytes2hex
 
-    @test sha_code == "f7e86e426aa6673699bd470f6db328a177eabdee74c71cfa6a855a2507b4f1bb"
+    @test sha_code == "9596c59f6b0870dd4a42a7a48725c2257f260757e15cc5ac433e5e8e235659d9"
 end
 
 

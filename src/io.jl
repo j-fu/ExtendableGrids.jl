@@ -16,8 +16,10 @@ exports grid and optional provided data as a vtk file
 - `grid`: grid
 
 Each '(key, value)' pair adds another data entry to the vtk file via WriteVTK functionality.
+
+For the arguments 'append' and 'compress', see documentation of vtk_grid of WriteVTK.
 """
-function writeVTK(filename::String, grid::ExtendableGrid{Tc, Ti}; kwargs...) where {Tc, Ti}
+function writeVTK(filename::String, grid::ExtendableGrid{Tc, Ti}; append = false, compress = false, kwargs...) where {Tc, Ti}
     ncells = num_cells(grid)   # get number of cells in grid
     coords = grid[Coordinates] # get coordinates 
     cells = grid[CellNodes]   # get cell-node list
@@ -31,7 +33,7 @@ function writeVTK(filename::String, grid::ExtendableGrid{Tc, Ti}; kwargs...) whe
         vtk_cells[icell] = MeshCell(VTKCellType(cell_geo[icell]), view(cells, :, icell))
     end
 
-    vtk_grid(filename, coords, vtk_cells) do vtk
+    vtk_grid(filename, coords, vtk_cells, append = append, compress = compress) do vtk
         for (key, value) in kwargs
             vtk[String(key)] = value
         end
