@@ -412,7 +412,7 @@ Subdivide grid into `npart` partitions using `Metis.partition` and color the res
 This requires to import Metis.jl in order to trigger the corresponding extension.
 
 This algorithm allows to control  the overall number of partitions. The number of partitions
-per color comes from the subsequent partition graph coloring and in the moment cannot be controled.
+per color comes from the subsequent partition graph coloring and in the moment cannot be controlled.
 
 Parameters: 
 
@@ -429,10 +429,13 @@ end
 
 Subdivide grid into `npart` partitions using `Metis.partition` and calculate cell separators
 from this partitioning. The initial partitions  get color 1, and the separator gets color 2.
-This is continued recursively with partitioning of the separator.  
+This is continued recursively with partitioning of the separator into `npart` partitions and
+calculating the spearator of the separator, giving it color 3.
 
-This algorithm allows to control  the number of partitions in color 1 which coorespond
-to the bulk of the work. 
+This algorithm allows to control  the number of partitions in color 1 which correspond
+to the bulk of the work. The overall number of partitions will be in the range of `3*npart`.
+
+If the grid is too coarse for that many partitions, several of them may be just empty.
 
 Parameters: 
 
@@ -779,10 +782,12 @@ Useful for parallel FEM assembly and cellwise FVM assembly.
 Keyword arguments:
 - `nodes`: if true, induce node partitioning from cell partitioning. Used for node/edgewise FVM assembly. 
   In addition the resulting partitioning supports parallel matrix-vector products with `SparseMatrixCSC`.
-  Nodes are renumbered compared to the original grid.
+  Nodes are renumbered compared to the original grid. If `false` (default), a trivial partitioning of the 
+  nodes is created such that all nodes belong to partition 1 and all others are empty.
 - `keep_nodepermutation`: if true, keep the node permutation with respect to the original grid in `grid[`[`NodePermutation`](@ref)`]`.
 - `edges`: if true, induce partitioning of edges from cell partitioning. Used for node/edgewise FVM assembly.
-   This step creates a number of relatively expensive additional adjacencies.
+   This step creates a number of relatively expensive additional adjacencies.  If `false` (default), a trivial partitioning of the 
+   edges is created such that all edges belong to partition 1 and all others are empty.
 
 Access:
 - [`pcolors`](@ref) returns the range of partition colors
