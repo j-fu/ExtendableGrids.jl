@@ -467,19 +467,83 @@ function isconsistent(grid; warnonly=false)
 end
 
 """
-$(TYPEDSIGNATURES)
+    map(f,grid)
+Map function `f` returning a number onto node coordinates of grid.
+Returns a vector of length corresponding to the number of nodes of the grid.
+The function can take either a vector or a numbers as arguments.
+E.g. for a two-dimensional grid `g`, both
 
-Map a function onto node coordinates of grid
+```
+ map(X->X[1]+X[2], g)
+```
+and
+```
+ map((x,y)->x+y, g)
+```
+
+are possible.
 """
-function Base.map(f::Function, grid::ExtendableGrid)
+function Base.map(f::Function, grid::ExtendableGrid{Tc, Ti}) where {Tc,Ti}
     coord = grid[Coordinates]
+    c1=coord[:,1]
     dim = dim_space(grid)
-    if dim == 1
-        @views Base.map(f, coord[1, :])
-    elseif dim == 2
-        @views Base.map(f, coord[1, :], coord[2, :])
+
+    ## Check if f can be called with numeric args like f(x,y) and returns a number
+    function checknumargs(f,args...)
+	if !hasmethod(f,Tuple(typeof.(args)))
+	    return false
+	end
+	try 
+	    y=f(args...)
+            if !isa(y,Number)
+                return false
+            end
+	catch e
+	    if isa(e,MethodError) 
+		return false
+	    end
+	    if isa(e,BoundsError) 
+		return false
+	    end
+	    rethrow(e)
+	end
+	return true
+    end
+
+    ## Check if f can be called with vector args like f(X::Vector) and returns a number
+    function checkvecargs(f,v)
+	if !hasmethod(f,Tuple{Vector})
+	    return false
+	end
+	try 
+	    y=f(v)
+            if !isa(y,Number)
+                return false
+            end
+	catch e
+	    if isa(e,MethodError) 
+		return false
+	    end
+	    rethrow(e)
+	end
+	return true
+    end
+    
+    use_numargs=checknumargs(f,c1...)
+    use_vecargs=checkvecargs(f,c1)
+
+    if use_numargs
+        if dim == 1
+            @views Base.map(f, coord[1, :])
+        elseif dim == 2
+            @views Base.map(f, coord[1, :], coord[2, :])
+        else
+            @views Base.map(f, coord[1, :], coord[2, :], coord[3, :])
+        end
+    elseif use_vecargs
+        Base.map(f,reinterpret(reshape, SVector{dim, Tc}, coord))
     else
-        @views Base.map(f, coord[1, :], coord[2, :], coord[3, :])
+        error("Cannot map function $f on grid. Check for consistency of function args and grid dimension.")
     end
 end
 
