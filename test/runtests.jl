@@ -161,6 +161,20 @@ end
     end
 end
 
+@testset "Base.map" begin
+    X=0:0.1:1
+    fx(x)=x
+    fxy(x,y)=x+y
+    fxyz(x,y,z)=x+y+z
+    fv(v)=sum(v)
+    gx=simplexgrid(X)
+    gxy=simplexgrid(X,X)
+    gxyz=simplexgrid(X,X,X)
+    @test map(fx,gx)==map(fv,gx)
+    @test map(fxy,gxy)==map(fv,gxy)
+    @test map(fxyz,gxyz)==map(fv,gxyz)    
+end
+
 function testrw(grid, format; confidence = :full, kwargs...)
     #@warn format
     ftmp = tempname() * "." * format
