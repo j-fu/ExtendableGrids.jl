@@ -172,14 +172,7 @@ This function initalizes and finalized gmsh.
 function simplexgrid_to_gmshfile(grid::ExtendableGrid; filename::String = "")
     gmsh.initialize()
 
-    if VERSION >= v"1.9"
-        # This possibility is new in 1.9, see
-        # https://github.com/JuliaLang/julia/blob/release-1.9/NEWS.md#new-language-features
-        gmsh.model = simplexgrid_to_mod(grid)
-        mod = gmsh.model
-    else
-        mod = simplexgrid_to_mod(grid)
-    end
+    mod = simplexgrid_to_mod(grid)
 
     if filename != ""
         gmsh.write(filename)
@@ -200,14 +193,8 @@ This function initializes and finalized gmsh.
 """
 function mixedgrid_to_gmshfile(grid::ExtendableGrid; filename::String = "")
     gmsh.initialize()
-    if VERSION >= v"1.9"
-        # This possibility is new in 1.9, see
-        # https://github.com/JuliaLang/julia/blob/release-1.9/NEWS.md#new-language-features
-        gmsh.model = mixedgrid_to_mod(grid)
-        mod = gmsh.model
-    else
-        mod = mixedgrid_to_mod(grid)
-    end
+
+    mod = mixedgrid_to_mod(grid)
 
     if filename != ""
         gmsh.write(filename)
