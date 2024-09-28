@@ -2,6 +2,7 @@ using Test, Aqua
 using ExampleJuggler
 
 using ExtendableGrids, SHA
+using ExtendableGrids: seal!
 
 using AbstractTrees, StatsBase
 
@@ -51,26 +52,39 @@ end
 end
 
 @testset "Basic" begin
-    @test let
-        nodes = [0.0 1;
-                 1 0;
-                 0 1;
-                 1 1]'
+    nodes = [0.0 1;
+             1 0;
+             0 1;
+             1 1]'
+    
+    cells = [1 2 3;
+             2 3 4]'
+    
+    cellmat = [1, 1]
+    bfaces = [1 2;
+              1 3;
+              2 4]'
+    
+    bfacemat = [1, 1]
+    
+    grid = simplexgrid(nodes, cells, cellmat, bfaces, bfacemat)
+    @test isconsistent(grid)
 
-        cells = [1 2 3;
-                 2 3 4]'
-
-        cellmat = [1, 1]
-        bfaces = [1 2;
-                  1 3;
-                  2 4]'
-
-        bfacemat = [1, 1]
-
-        grid = simplexgrid(nodes, cells, cellmat, bfaces, bfacemat)
-        isconsistent(grid)
-    end
-
+    grid = simplexgrid(nodes, cells, cellmat, bfaces)
+    @test isconsistent(grid)
+    seal!(grid)
+    @test isconsistent(grid)
+    
+    grid = simplexgrid(nodes, cells, cellmat)
+    @test isconsistent(grid)
+    seal!(grid)
+    @test isconsistent(grid)
+    
+    grid = simplexgrid(nodes, cells)
+    @test isconsistent(grid)
+    seal!(grid)
+    @test isconsistent(grid)
+    
     @test let
         nodes = [0.0 1;
                  1 0;

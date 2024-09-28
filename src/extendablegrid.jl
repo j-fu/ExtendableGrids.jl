@@ -307,7 +307,7 @@ $(TYPEDSIGNATURES)
 
 Instantiate number of bface regions
 """
-instantiate(grid, ::Type{NumBFaceRegions}) = maximum(grid[BFaceRegions])
+instantiate(grid, ::Type{NumBFaceRegions}) = length(grid[BFaceRegions])> 0  ? maximum(grid[BFaceRegions]) : 0
 
 """
 $(TYPEDSIGNATURES)
