@@ -183,19 +183,19 @@ function update_trafo!(T::L2GTransformer{<:Real,<:Integer,<:Parallelepiped3D,Car
     return nothing
 end
 
-function eval_trafo!(x::Vector, T::L2GTransformer{<:Real,<:Integer,<:Vertex0D,Cartesian1D}, xref)
+function eval_trafo!(x::AbstractArray, T::L2GTransformer{<:Real,<:Integer,<:Vertex0D,Cartesian1D}, xref)
     x[1] = T.b[1]
     return nothing
 end
 
-function eval_trafo!(x::Vector, T::L2GTransformer{<:Real,<:Integer,<:Union{Triangle2D, Parallelogram2D},Cartesian2D}, xref)
+function eval_trafo!(x::AbstractArray, T::L2GTransformer{<:Real,<:Integer,<:Union{Triangle2D, Parallelogram2D},Cartesian2D}, xref)
     x[1] = T.A[1,1]*xref[1] + T.A[1,2]*xref[2] + T.b[1]
     x[2] = T.A[2,1]*xref[1] + T.A[2,2]*xref[2] + T.b[2]
     return nothing
 end
 
 
-function eval_trafo!(x::Vector, T::L2GTransformer{<:Real,<:Integer,<:Union{Triangle2D, Parallelogram2D},Cartesian3D}, xref)
+function eval_trafo!(x::AbstractArray, T::L2GTransformer{<:Real,<:Integer,<:Union{Triangle2D, Parallelogram2D},Cartesian3D}, xref)
     x[1] = T.A[1,1]*xref[1] + T.A[1,2]*xref[2] + T.b[1]
     x[2] = T.A[2,1]*xref[1] + T.A[2,2]*xref[2] + T.b[2]
     x[3] = T.A[3,1]*xref[1] + T.A[3,2]*xref[2] + T.b[3]
@@ -203,7 +203,7 @@ function eval_trafo!(x::Vector, T::L2GTransformer{<:Real,<:Integer,<:Union{Trian
 end
 
 
-function eval_trafo!(x::Vector, T::L2GTransformer{<:Real,<:Integer,<:Union{Tetrahedron3D, Parallelepiped3D},Cartesian3D}, xref)
+function eval_trafo!(x::AbstractArray, T::L2GTransformer{<:Real,<:Integer,<:Union{Tetrahedron3D, Parallelepiped3D},Cartesian3D}, xref)
     x[1] = T.A[1,1]*xref[1] + T.A[1,2]*xref[2] + T.A[1,3]*xref[3] + T.b[1]
     x[2] = T.A[2,1]*xref[1] + T.A[2,2]*xref[2] + T.A[2,3]*xref[3] + T.b[2]
     x[3] = T.A[3,1]*xref[1] + T.A[3,2]*xref[2] + T.A[3,3]*xref[3] + T.b[3]
@@ -211,18 +211,18 @@ function eval_trafo!(x::Vector, T::L2GTransformer{<:Real,<:Integer,<:Union{Tetra
 end
 
 
-function eval_trafo!(x::Vector, T::L2GTransformer{<:Real,<:Integer,<:Edge1D,Cartesian1D}, xref)
+function eval_trafo!(x::AbstractArray, T::L2GTransformer{<:Real,<:Integer,<:Edge1D,Cartesian1D}, xref)
     x[1] = T.A[1,1]*xref[1] + T.b[1]
     return nothing
 end
 
-function eval_trafo!(x::Vector, T::L2GTransformer{<:Real,<:Integer,<:Edge1D,Cartesian2D}, xref)
+function eval_trafo!(x::AbstractArray, T::L2GTransformer{<:Real,<:Integer,<:Edge1D,Cartesian2D}, xref)
     x[1] = T.A[1,1]*xref[1] + T.b[1]
     x[2] = T.A[2,1]*xref[1] + T.b[2]
     return nothing
 end
 
-function eval_trafo!(x::Vector, T::L2GTransformer{<:Real,<:Integer,<:Edge1D,Cartesian3D}, xref)
+function eval_trafo!(x::AbstractArray, T::L2GTransformer{<:Real,<:Integer,<:Edge1D,Cartesian3D}, xref)
     x[1] = T.A[1,1]*xref[1] + T.b[1]
     x[2] = T.A[2,1]*xref[1] + T.b[2]
     x[3] = T.A[3,1]*xref[1] + T.b[3]
