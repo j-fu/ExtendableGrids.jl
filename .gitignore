@@ -3,6 +3,7 @@ test/*testfile*
 docs/build
 docs/src/*examples
 *~
-Manifest.toml
+Manifest*.toml
 .repl_history.jl
 quarry
+*.vtu
