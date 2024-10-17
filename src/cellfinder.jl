@@ -18,25 +18,25 @@ struct CellFinder{Tv,Ti}
 end
 
 ## postprocessing function that calcualte conditions to decide over which face to go next
-function postprocess_xreftest!(xreftest::Array{Tv}, ::Type{<:Edge1D}) where {Tv}
+function postprocess_xreftest!(xreftest::AbstractArray{Tv}, ::Type{<:Edge1D}) where {Tv}
     xreftest[2] = 1 - xreftest[1]
     return nothing
 end
-function postprocess_xreftest!(xreftest::Array{Tv}, ::Type{<:Triangle2D}) where {Tv}
+function postprocess_xreftest!(xreftest::AbstractArray{Tv}, ::Type{<:Triangle2D}) where {Tv}
     xreftest[3] = 1 - xreftest[1] - xreftest[2]
     return nothing
 end
-function postprocess_xreftest!(xreftest::Array{Tv}, ::Type{<:Tetrahedron3D}) where {Tv}
+function postprocess_xreftest!(xreftest::AbstractArray{Tv}, ::Type{<:Tetrahedron3D}) where {Tv}
     xreftest[4] = 1 - xreftest[1] - xreftest[2] - xreftest[3]
     return nothing
 end
-function postprocess_xreftest!(xreftest::Array{Tv}, ::Type{<:Parallelogram2D}) where {Tv}
+function postprocess_xreftest!(xreftest::AbstractArray{Tv}, ::Type{<:Parallelogram2D}) where {Tv}
     xreftest[3] = 1 - xreftest[1]
     xreftest[4] = 1 - xreftest[2]
     return nothing
 end
 
-function postprocess_xreftest!(xreftest::Array{Tv}, ::Type{<:Parallelepiped3D}) where {Tv}
+function postprocess_xreftest!(xreftest::AbstractArray{Tv}, ::Type{<:Parallelepiped3D}) where {Tv}
     xreftest[4] = 1 - xreftest[1]
     xreftest[5] = 1 - xreftest[2]
     xreftest[6] = 1 - xreftest[3]
